@@ -1,0 +1,40 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7C3AED"/>
+      <stop offset="0.45" stop-color="#A855F7"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.3" cy="0.22" r="0.85">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vig" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0.55" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#3b0764" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#F1E6FF"/>
+    </linearGradient>
+    <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="26" flood-color="#2e0640" flood-opacity="0.40"/>
+    </filter>
+    <mask id="cut">
+      <rect x="0" y="0" width="1024" height="1024" fill="white"/>
+      <rect x="470" y="397" width="30" height="230" rx="15" fill="black"/>
+      <rect x="534" y="418" width="30" height="188" rx="15" fill="black"/>
+      <rect x="598" y="452" width="30" height="120" rx="15" fill="black"/>
+    </mask>
+  </defs>
+
+  <circle cx="512" cy="512" r="512" fill="url(#bg)"/>
+  <circle cx="512" cy="512" r="512" fill="url(#vig)"/>
+  <circle cx="512" cy="512" r="512" fill="url(#glow)"/>
+
+  <g filter="url(#ds)">
+    <polygon points="356,300 356,724 742,512"
+      fill="url(#mark)" stroke="url(#mark)" stroke-width="58"
+      stroke-linejoin="round" mask="url(#cut)"/>
+  </g>
+</svg>

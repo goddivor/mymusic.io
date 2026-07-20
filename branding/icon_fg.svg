@@ -1,0 +1,24 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mark" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#F1E6FF"/>
+    </linearGradient>
+    <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="22" flood-color="#2e0640" flood-opacity="0.30"/>
+    </filter>
+    <mask id="cut">
+      <rect x="0" y="0" width="1024" height="1024" fill="white"/>
+      <rect x="462" y="376" width="35" height="271" rx="17" fill="black"/>
+      <rect x="538" y="401" width="35" height="222" rx="17" fill="black"/>
+      <rect x="614" y="441" width="35" height="142" rx="17" fill="black"/>
+    </mask>
+  </defs>
+
+  <!-- mark scaled ~1.18 about centre for the adaptive safe zone -->
+  <g filter="url(#ds)">
+    <polygon points="328,262 328,762 783,512"
+      fill="url(#mark)" stroke="url(#mark)" stroke-width="68"
+      stroke-linejoin="round" mask="url(#cut)"/>
+  </g>
+</svg>
