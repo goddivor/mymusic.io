@@ -9,7 +9,7 @@ import { t, tracksCount } from '../i18n';
 import { Gradient, gradients, playlistGradient } from '../theme';
 import { AppTrack } from '../types';
 
-export type CollectionKind = 'liked' | 'youtube' | 'local' | 'playlist' | 'album';
+export type CollectionKind = 'liked' | 'youtube' | 'local' | 'playlist' | 'album' | 'folder';
 
 export type Collection = {
   key: string;
