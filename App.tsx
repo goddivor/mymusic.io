@@ -3,19 +3,16 @@
  * @format
  */
 
-import {
-  Home09Icon,
-  LibraryIcon,
-  Settings01Icon,
-  YoutubeIcon,
-} from '@hugeicons/core-free-icons';
+import { Home09Icon, LibraryIcon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import {
+  Modal,
   PermissionsAndroid,
   Platform,
   StatusBar,
   StyleSheet,
   Text,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -24,7 +21,10 @@ import { ActionSheetProvider } from './src/components/ActionSheet';
 import { ConfirmProvider } from './src/components/ConfirmSheet';
 import AddToPlaylistSheet from './src/components/AddToPlaylistSheet';
 import Ic from './src/components/Ic';
+import DrawerLayout from './src/components/DrawerLayout';
+import BrandYoutubeIcon from './src/components/BrandYoutubeIcon';
 import PlayerBar from './src/components/PlayerBar';
+import ProfileDrawer, { DrawerItemKey } from './src/components/ProfileDrawer';
 import RecentTracker from './src/components/RecentTracker';
 import WebServerSync from './src/components/WebServerSync';
 import { Collection } from './src/lib/collections';
@@ -33,20 +33,56 @@ import HomeScreen from './src/screens/HomeScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
 import NowPlayingScreen from './src/screens/NowPlayingScreen';
 import QueueScreen from './src/screens/QueueScreen';
+import RecentsScreen from './src/screens/RecentsScreen';
+import SearchScreen from './src/screens/SearchScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import YoutubeScreen from './src/screens/YoutubeScreen';
+import { useI18n } from './src/i18n';
 import { LibraryProvider } from './src/store/library';
-import { theme } from './src/theme';
+import { ThemeProvider, useScheme, useTheme, useThemedStyles } from './src/store/theme';
+import { Palette } from './src/theme';
 import { AppTrack } from './src/types';
 
-type Tab = 'home' | 'library' | 'youtube' | 'settings';
+type Tab = 'home' | 'library' | 'youtube';
 
 function App(): React.JSX.Element {
+  return (
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
+  );
+}
+
+function AppInner(): React.JSX.Element {
+  const scheme = useScheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('home');
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [addTarget, setAddTarget] = useState<AppTrack | null>(null);
   const [detailKey, setDetailKey] = useState<string | null>(null);
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showRecents, setShowRecents] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const onDrawerSelect = (key: DrawerItemKey) => {
+    setShowDrawer(false);
+    switch (key) {
+      case 'recents':
+        setShowRecents(true);
+        break;
+      case 'settings':
+        setShowSettings(true);
+        break;
+      case 'connect':
+      case 'playerStyles':
+      case 'stats':
+        ToastAndroid.show(t('comingSoon'), ToastAndroid.SHORT);
+        break;
+    }
+  };
 
   useEffect(() => {
     if (Platform.OS === 'android' && (Platform.Version as number) >= 33) {
@@ -65,51 +101,61 @@ function App(): React.JSX.Element {
         <ConfirmProvider>
         <RecentTracker />
         <WebServerSync />
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <StatusBar
+          barStyle={scheme === 'light' ? 'dark-content' : 'light-content'}
+          backgroundColor="transparent"
+          translucent
+        />
+        <DrawerLayout
+          open={showDrawer}
+          gestureEnabled={tab === 'home' || tab === 'library'}
+          onOpen={() => setShowDrawer(true)}
+          onClose={() => setShowDrawer(false)}
+          drawer={<ProfileDrawer onSelect={onDrawerSelect} />}>
         <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
           <View style={[styles.screen, tab !== 'home' && styles.hidden]}>
-            <HomeScreen onOpen={openCollection} onAddToPlaylist={setAddTarget} />
+            <HomeScreen
+              onOpen={openCollection}
+              onAddToPlaylist={setAddTarget}
+              onOpenProfile={() => setShowDrawer(true)}
+              onOpenSearch={() => setShowSearch(true)}
+            />
           </View>
           <View style={[styles.screen, tab !== 'library' && styles.hidden]}>
-            <LibraryScreen onOpen={openCollection} />
+            <LibraryScreen
+              onOpen={openCollection}
+              onOpenProfile={() => setShowDrawer(true)}
+            />
           </View>
           {/* Kept mounted so the YouTube WebView preserves its navigation. */}
           <View style={[styles.screen, tab !== 'youtube' && styles.hidden]}>
             <YoutubeScreen active={tab === 'youtube'} />
-          </View>
-          <View style={[styles.screen, tab !== 'settings' && styles.hidden]}>
-            <SettingsScreen />
           </View>
 
           <PlayerBar onPress={() => setShowNowPlaying(true)} />
 
           <View style={styles.tabBar}>
             <TabButton
-              label="Accueil"
+              label={t('tabHome')}
               icon={Home09Icon}
               active={tab === 'home'}
               onPress={() => setTab('home')}
             />
             <TabButton
-              label="Bibliothèque"
+              label={t('tabLibrary')}
               icon={LibraryIcon}
               active={tab === 'library'}
               onPress={() => setTab('library')}
             />
             <TabButton
-              label="YouTube"
-              icon={YoutubeIcon}
+              label={t('tabYoutube')}
+              icon={BrandYoutubeIcon}
               active={tab === 'youtube'}
               onPress={() => setTab('youtube')}
             />
-            <TabButton
-              label="Réglages"
-              icon={Settings01Icon}
-              active={tab === 'settings'}
-              onPress={() => setTab('settings')}
-            />
           </View>
         </SafeAreaView>
+        </DrawerLayout>
 
         <CollectionDetailScreen
           collectionKey={detailKey}
@@ -125,6 +171,17 @@ function App(): React.JSX.Element {
         />
         <QueueScreen visible={showQueue} onClose={() => setShowQueue(false)} />
         <AddToPlaylistSheet track={addTarget} onClose={() => setAddTarget(null)} />
+
+        <SearchScreen visible={showSearch} onClose={() => setShowSearch(false)} />
+        <RecentsScreen visible={showRecents} onClose={() => setShowRecents(false)} />
+        <Modal
+          visible={showSettings}
+          animationType="slide"
+          onRequestClose={() => setShowSettings(false)}>
+          <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+            <SettingsScreen onClose={() => setShowSettings(false)} />
+          </SafeAreaView>
+        </Modal>
         </ConfirmProvider>
        </ActionSheetProvider>
       </LibraryProvider>
@@ -143,6 +200,8 @@ function TabButton({
   active: boolean;
   onPress: () => void;
 }) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
   return (
     <TouchableOpacity style={styles.tab} onPress={onPress} activeOpacity={0.7}>
       <Ic
@@ -156,7 +215,7 @@ function TabButton({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   screen: { flex: 1 },
   hidden: { display: 'none' },

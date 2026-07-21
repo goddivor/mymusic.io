@@ -2,7 +2,9 @@ import { MusicNote01Icon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { theme } from '../theme';
+import { useI18n } from '../i18n';
+import { useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import { AppTrack } from '../types';
 import Ic from './Ic';
 
@@ -18,6 +20,8 @@ type Props = {
 // The visual that gets captured to an image and shared to Stories / Status.
 const ShareCard = React.forwardRef<View, Props>(
   ({ track, artwork, fallbackArtwork }, ref) => {
+    const styles = useThemedStyles(makeStyles);
+    const { t } = useI18n();
     const initial = artwork ?? track?.artwork;
     const [src, setSrc] = useState<string | undefined>(initial);
 
@@ -45,7 +49,7 @@ const ShareCard = React.forwardRef<View, Props>(
         </Svg>
 
         <View style={styles.inner}>
-          <Text style={styles.kicker}>J'ÉCOUTE</Text>
+          <Text style={styles.kicker}>{t('iListen')}</Text>
           <View style={styles.artWrap}>
             {src ? (
               <Image source={{ uri: src }} style={styles.art} onError={onError} />
@@ -76,7 +80,7 @@ const ShareCard = React.forwardRef<View, Props>(
 
 export default ShareCard;
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   card: {
     width: SHARE_W,
     height: SHARE_H,

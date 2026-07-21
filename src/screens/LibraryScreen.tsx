@@ -1,4 +1,4 @@
-import { Add01Icon, Delete02Icon, PlayIcon } from '@hugeicons/core-free-icons';
+import { Add01Icon, Delete02Icon, PlayIcon, UserCircleIcon } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
 import {
   FlatList,
@@ -15,25 +15,31 @@ import CollectionRow from '../components/CollectionRow';
 import Ic from '../components/Ic';
 import SwipeableSheet from '../components/SwipeableSheet';
 import { buildCollections, Collection } from '../lib/collections';
+import { useI18n } from '../i18n';
 import { playTracks } from '../lib/player';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 
 type Props = {
   onOpen: (c: Collection) => void;
+  onOpenProfile: () => void;
 };
 
 const FILTERS = [
-  { key: 'all', label: 'Tout' },
-  { key: 'albums', label: 'Albums' },
-  { key: 'playlists', label: 'Playlists' },
-  { key: 'youtube', label: 'Youtube' },
-  { key: 'local', label: 'Local' },
+  { key: 'all', labelKey: 'filterAll' },
+  { key: 'albums', labelKey: 'filterAlbums' },
+  { key: 'playlists', labelKey: 'filterPlaylists' },
+  { key: 'youtube', labelKey: 'filterYoutube' },
+  { key: 'local', labelKey: 'filterLocal' },
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]['key'];
 
-export default function LibraryScreen({ onOpen }: Props) {
+export default function LibraryScreen({ onOpen, onOpenProfile }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const lib = useLibrary();
   const { createPlaylist, deletePlaylist, removeAlbum } = lib;
   const { show } = useActionSheet();
@@ -55,19 +61,19 @@ export default function LibraryScreen({ onOpen }: Props) {
         title: c.title,
         actions: [
           {
-            label: 'Jouer la playlist',
+            label: t('playPlaylist'),
             icon: PlayIcon,
             onPress: () => c.tracks.length && playTracks(c.tracks, 0),
           },
           {
-            label: 'Supprimer la playlist',
+            label: t('deletePlaylist'),
             icon: Delete02Icon,
             destructive: true,
             onPress: () =>
               confirm({
-                title: 'Supprimer la playlist ?',
-                message: `« ${c.title} » sera définitivement supprimée.`,
-                confirmLabel: 'Supprimer',
+                title: t('deletePlaylistQ'),
+                message: t('deletePlaylistMsg', { name: c.title }),
+                confirmLabel: t('delete'),
                 destructive: true,
                 onConfirm: () => deletePlaylist(c.playlistId!),
               }),
@@ -81,19 +87,19 @@ export default function LibraryScreen({ onOpen }: Props) {
         message: c.subtitle,
         actions: [
           {
-            label: "Jouer l'album",
+            label: t('playAlbum'),
             icon: PlayIcon,
             onPress: () => c.tracks.length && playTracks(c.tracks, 0),
           },
           {
-            label: "Supprimer l'album",
+            label: t('deleteAlbum'),
             icon: Delete02Icon,
             destructive: true,
             onPress: () =>
               confirm({
-                title: "Supprimer l'album ?",
-                message: `« ${c.title} » et ses titres téléchargés seront supprimés.`,
-                confirmLabel: 'Supprimer',
+                title: t('deleteAlbumQ'),
+                message: t('deleteAlbumMsg', { name: c.title }),
+                confirmLabel: t('delete'),
                 destructive: true,
                 onConfirm: () => removeAlbum(albumId),
               }),
@@ -112,7 +118,15 @@ export default function LibraryScreen({ onOpen }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Bibliothèque</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.avatar}
+            activeOpacity={0.7}
+            onPress={onOpenProfile}>
+            <Ic icon={UserCircleIcon} size={26} color={theme.textDim} strokeWidth={1.7} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('tabLibrary')}</Text>
+        </View>
         <TouchableOpacity onPress={() => setNewOpen(true)} hitSlop={10}>
           <Ic icon={Add01Icon} size={26} color={theme.text} />
         </TouchableOpacity>
@@ -134,7 +148,7 @@ export default function LibraryScreen({ onOpen }: Props) {
                   style={[styles.chip, on && styles.chipOn]}
                   onPress={() => setFilter(f.key)}>
                   <Text style={[styles.chipText, on && styles.chipTextOn]}>
-                    {f.label}
+                    {t(f.labelKey)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -157,10 +171,10 @@ export default function LibraryScreen({ onOpen }: Props) {
 
       <SwipeableSheet visible={newOpen} onClose={() => setNewOpen(false)}>
         <View style={styles.sheetBody}>
-          <Text style={styles.modalTitle}>Nouvelle playlist</Text>
+          <Text style={styles.modalTitle}>{t('newPlaylist')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Nom de la playlist"
+            placeholder={t('playlistName')}
             placeholderTextColor={theme.textFaint}
             value={newName}
             onChangeText={setNewName}
@@ -168,7 +182,7 @@ export default function LibraryScreen({ onOpen }: Props) {
             onSubmitEditing={handleCreate}
           />
           <TouchableOpacity style={styles.modalBtn} onPress={handleCreate}>
-            <Text style={styles.modalBtnText}>Créer</Text>
+            <Text style={styles.modalBtnText}>{t('create')}</Text>
           </TouchableOpacity>
         </View>
       </SwipeableSheet>
@@ -176,7 +190,7 @@ export default function LibraryScreen({ onOpen }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
   header: {
     flexDirection: 'row',
@@ -185,6 +199,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 8,
+  },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.surfaceHi,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: { color: theme.text, fontSize: 26, fontWeight: '800' },
   chips: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 10 },

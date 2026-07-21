@@ -1,4 +1,5 @@
 import { NativeModules } from 'react-native';
+import { t } from '../i18n';
 import RNFS from 'react-native-fs';
 import { AppTrack } from '../types';
 
@@ -77,7 +78,7 @@ export async function downloadYoutubeAudio(
   onInfo?: (info: { title: string; uploader: string; thumbnail: string }) => void,
 ): Promise<AppTrack> {
   const id = extractYoutubeId(url);
-  if (!id) throw new Error('URL YouTube invalide');
+  if (!id) throw new Error(t('invalidYoutubeUrl'));
 
   // NewPipeExtractor rejects URLs cluttered with list/start_radio/pp params,
   // so rebuild a clean canonical watch URL from the video id.
@@ -106,7 +107,7 @@ export async function downloadYoutubeAudio(
     });
     const result = await task.promise;
     if (result.statusCode >= 400) {
-      throw new Error(`Téléchargement échoué (HTTP ${result.statusCode})`);
+      throw new Error(t('downloadHttpError', { code: result.statusCode }));
     }
   }
 

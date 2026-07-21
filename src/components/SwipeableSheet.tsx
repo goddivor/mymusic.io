@@ -8,7 +8,8 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { theme } from '../theme';
+import { useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 
 type Props = {
   visible: boolean;
@@ -26,6 +27,7 @@ const SCREEN_H = Dimensions.get('window').height;
  * scrollable content (FlatList, ScrollView) keeps working without conflict.
  */
 export default function SwipeableSheet({ visible, onClose, children, sheetStyle }: Props) {
+  const styles = useThemedStyles(makeStyles);
   const translateY = useRef(new Animated.Value(SCREEN_H)).current;
   const backdrop = useRef(new Animated.Value(0)).current;
 
@@ -105,7 +107,7 @@ export default function SwipeableSheet({ visible, onClose, children, sheetStyle 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, justifyContent: 'flex-end' },
   backdrop: {
     position: 'absolute',

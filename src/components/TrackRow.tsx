@@ -3,7 +3,8 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useActiveTrack } from 'react-native-track-player';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import { AppTrack } from '../types';
 import Ic from './Ic';
 
@@ -15,6 +16,8 @@ type Props = {
 };
 
 export default function TrackRow({ track, onPress, onMore, number }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const active = useActiveTrack();
   const { isLiked } = useLibrary();
   const isActive = active?.id === track.id;
@@ -68,7 +71,7 @@ export default function TrackRow({ track, onPress, onMore, number }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 16 },
   art: { width: 50, height: 50, borderRadius: 8, backgroundColor: theme.surfaceHi },
   numberCell: { width: 50, height: 50, alignItems: 'center', justifyContent: 'center' },

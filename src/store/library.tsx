@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { t } from '../i18n';
 import { requestAudioPermission, scanLocalMusic } from '../lib/scanMusic';
 import {
   downloadYoutubeAudio,
@@ -198,7 +199,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         }
         const entry: Download = {
           id,
-          title: meta?.title ?? 'Préparation…',
+          title: meta?.title ?? t('preparing'),
           artwork: meta?.albumCover,
           status: 'extracting',
           progress: 0,
@@ -238,7 +239,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         .catch(e => {
           patchDownload(id, {
             status: 'error',
-            error: e?.message ?? 'Échec du téléchargement',
+            error: e?.message ?? t('downloadFailed'),
           });
         });
     },
