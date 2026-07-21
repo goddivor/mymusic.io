@@ -123,7 +123,8 @@ export default function HomeScreen({
           onPress={onOpenProfile}>
           <Ic icon={UserCircleIcon} size={26} color={theme.textDim} strokeWidth={1.7} />
         </TouchableOpacity>
-        <View style={styles.headerTexts} />
+        <Text style={styles.headerTitle}>{t('tabHome')}</Text>
+        <View style={styles.headerSpacer} />
         <TouchableOpacity
           style={styles.searchBtn}
           activeOpacity={0.7}
@@ -266,7 +267,8 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTexts: { flex: 1 },
+  headerTitle: { color: theme.text, fontSize: 26, fontWeight: '800', marginLeft: 12 },
+  headerSpacer: { flex: 1 },
   searchBtn: {
     width: 42,
     height: 42,

@@ -3,11 +3,7 @@
  * @format
  */
 
-import {
-  ArrowLeft01Icon,
-  Home09Icon,
-  LibraryIcon,
-} from '@hugeicons/core-free-icons';
+import { Home09Icon, LibraryIcon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import {
   Modal,
@@ -59,7 +55,6 @@ function App(): React.JSX.Element {
 
 function AppInner(): React.JSX.Element {
   const scheme = useScheme();
-  const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('home');
@@ -184,14 +179,7 @@ function AppInner(): React.JSX.Element {
           animationType="slide"
           onRequestClose={() => setShowSettings(false)}>
           <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-            <TouchableOpacity
-              style={styles.modalBack}
-              activeOpacity={0.7}
-              onPress={() => setShowSettings(false)}>
-              <Ic icon={ArrowLeft01Icon} size={24} color={theme.text} strokeWidth={2} />
-              <Text style={styles.modalBackLabel}>{t('back')}</Text>
-            </TouchableOpacity>
-            <SettingsScreen />
+            <SettingsScreen onClose={() => setShowSettings(false)} />
           </SafeAreaView>
         </Modal>
         </ConfirmProvider>
@@ -241,13 +229,6 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   tab: { flex: 1, alignItems: 'center', paddingVertical: 6 },
   tabLabel: { color: theme.textDim, fontSize: 11, marginTop: 3 },
   tabActive: { color: theme.accent, fontWeight: '700' },
-  modalBack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingTop: 10,
-  },
-  modalBackLabel: { color: theme.text, fontSize: 15, fontWeight: '600', marginLeft: 8 },
 });
 
 export default App;

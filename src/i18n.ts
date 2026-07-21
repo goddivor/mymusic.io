@@ -68,6 +68,11 @@ const fr = {
   // Récents
   noRecentPlays: 'Aucune écoute récente.',
 
+  // Recherche des réglages
+  settingsSearchPlaceholder: 'Rechercher un réglage',
+  settingsSearchTitle: 'Que cherches-tu ?',
+  settingsSearchSub: 'Cherche un réglage précis ou utilise quelques mots-clés.',
+
   // Bibliothèque
   filterAll: 'Tout',
   filterAlbums: 'Albums',
@@ -209,6 +214,10 @@ const en: Record<keyof typeof fr, string> = {
   searchIn: 'Search in “{name}”',
 
   noRecentPlays: 'No recent plays.',
+
+  settingsSearchPlaceholder: 'Search for a setting',
+  settingsSearchTitle: 'What are you looking for?',
+  settingsSearchSub: 'Search for a specific setting or use a few keywords.',
 
   filterAll: 'All',
   filterAlbums: 'Albums',
