@@ -234,9 +234,6 @@ function Carousel({
                     <Ic icon={MusicNote01Icon} size={34} color={theme.textFaint} />
                   </View>
                 )}
-                <View style={styles.playBadge}>
-                  <Ic icon={PlayIcon} size={16} color="#000" strokeWidth={2.5} />
-                </View>
               </View>
               <Text style={styles.cardTitle} numberOfLines={2}>
                 {t.title}
@@ -317,17 +314,6 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   cardArtWrap: { width: 140, height: 140 },
   cardArt: { width: 140, height: 140, borderRadius: 10, backgroundColor: theme.surfaceHi },
   cardPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  playBadge: {
-    position: 'absolute',
-    right: 8,
-    bottom: 8,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: theme.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   cardTitle: { color: theme.text, fontSize: 13.5, fontWeight: '600', marginTop: 8 },
   cardArtist: { color: theme.textDim, fontSize: 12, marginTop: 2 },
 });

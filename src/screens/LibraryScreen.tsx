@@ -1,4 +1,4 @@
-import { Add01Icon, Delete02Icon, PlayIcon } from '@hugeicons/core-free-icons';
+import { Add01Icon, Delete02Icon, PlayIcon, UserCircleIcon } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
 import {
   FlatList,
@@ -23,6 +23,7 @@ import { Palette } from '../theme';
 
 type Props = {
   onOpen: (c: Collection) => void;
+  onOpenProfile: () => void;
 };
 
 const FILTERS = [
@@ -35,7 +36,7 @@ const FILTERS = [
 
 type FilterKey = (typeof FILTERS)[number]['key'];
 
-export default function LibraryScreen({ onOpen }: Props) {
+export default function LibraryScreen({ onOpen, onOpenProfile }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
@@ -117,7 +118,15 @@ export default function LibraryScreen({ onOpen }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('tabLibrary')}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.avatar}
+            activeOpacity={0.7}
+            onPress={onOpenProfile}>
+            <Ic icon={UserCircleIcon} size={26} color={theme.textDim} strokeWidth={1.7} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t('tabLibrary')}</Text>
+        </View>
         <TouchableOpacity onPress={() => setNewOpen(true)} hitSlop={10}>
           <Ic icon={Add01Icon} size={26} color={theme.text} />
         </TouchableOpacity>
@@ -190,6 +199,15 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 8,
+  },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.surfaceHi,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: { color: theme.text, fontSize: 26, fontWeight: '800' },
   chips: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 10 },

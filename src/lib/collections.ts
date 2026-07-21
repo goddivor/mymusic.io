@@ -3,8 +3,8 @@ import {
   FavouriteIcon,
   MusicNote01Icon,
   Playlist03Icon,
-  YoutubeIcon,
 } from '@hugeicons/core-free-icons';
+import BrandYoutubeIcon from '../components/BrandYoutubeIcon';
 import { t, tracksCount } from '../i18n';
 import { Gradient, gradients, playlistGradient } from '../theme';
 import { AppTrack } from '../types';
@@ -98,7 +98,7 @@ export function buildCollections(lib: LibLike): Collection[] {
     kind: 'youtube',
     tracks: lib.youtubeTracks,
     gradient: gradients.youtube,
-    icon: YoutubeIcon,
+    icon: BrandYoutubeIcon,
   };
 
   const local: Collection = {

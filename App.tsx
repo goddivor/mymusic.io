@@ -7,7 +7,6 @@ import {
   ArrowLeft01Icon,
   Home09Icon,
   LibraryIcon,
-  YoutubeIcon,
 } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -27,6 +26,7 @@ import { ConfirmProvider } from './src/components/ConfirmSheet';
 import AddToPlaylistSheet from './src/components/AddToPlaylistSheet';
 import Ic from './src/components/Ic';
 import DrawerLayout from './src/components/DrawerLayout';
+import BrandYoutubeIcon from './src/components/BrandYoutubeIcon';
 import PlayerBar from './src/components/PlayerBar';
 import ProfileDrawer, { DrawerItemKey } from './src/components/ProfileDrawer';
 import RecentTracker from './src/components/RecentTracker';
@@ -113,7 +113,7 @@ function AppInner(): React.JSX.Element {
         />
         <DrawerLayout
           open={showDrawer}
-          gestureEnabled={tab === 'home'}
+          gestureEnabled={tab === 'home' || tab === 'library'}
           onOpen={() => setShowDrawer(true)}
           onClose={() => setShowDrawer(false)}
           drawer={<ProfileDrawer onSelect={onDrawerSelect} />}>
@@ -127,7 +127,10 @@ function AppInner(): React.JSX.Element {
             />
           </View>
           <View style={[styles.screen, tab !== 'library' && styles.hidden]}>
-            <LibraryScreen onOpen={openCollection} />
+            <LibraryScreen
+              onOpen={openCollection}
+              onOpenProfile={() => setShowDrawer(true)}
+            />
           </View>
           {/* Kept mounted so the YouTube WebView preserves its navigation. */}
           <View style={[styles.screen, tab !== 'youtube' && styles.hidden]}>
@@ -151,7 +154,7 @@ function AppInner(): React.JSX.Element {
             />
             <TabButton
               label={t('tabYoutube')}
-              icon={YoutubeIcon}
+              icon={BrandYoutubeIcon}
               active={tab === 'youtube'}
               onPress={() => setTab('youtube')}
             />
