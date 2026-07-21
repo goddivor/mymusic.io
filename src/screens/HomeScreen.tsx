@@ -4,6 +4,8 @@ import {
   MusicNote01Icon,
   PlayIcon,
   Queue01Icon,
+  Search01Icon,
+  UserCircleIcon,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 import {
@@ -26,6 +28,8 @@ import { AppTrack } from '../types';
 type Props = {
   onOpen: (c: Collection) => void;
   onAddToPlaylist: (track: AppTrack) => void;
+  onOpenProfile: () => void;
+  onOpenSearch: () => void;
 };
 
 type QuickItem =
@@ -40,7 +44,12 @@ function greeting(): string {
   return 'Bonsoir';
 }
 
-export default function HomeScreen({ onOpen, onAddToPlaylist }: Props) {
+export default function HomeScreen({
+  onOpen,
+  onAddToPlaylist,
+  onOpenProfile,
+  onOpenSearch,
+}: Props) {
   const lib = useLibrary();
   const { show } = useActionSheet();
   const collections = buildCollections(lib);
@@ -110,8 +119,22 @@ export default function HomeScreen({ onOpen, onAddToPlaylist }: Props) {
       contentContainerStyle={{ paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>{greeting()}</Text>
-        <Text style={styles.brand}>Ta musique, à toi.</Text>
+        <TouchableOpacity
+          style={styles.avatar}
+          activeOpacity={0.7}
+          onPress={onOpenProfile}>
+          <Ic icon={UserCircleIcon} size={26} color={theme.textDim} strokeWidth={1.7} />
+        </TouchableOpacity>
+        <View style={styles.headerTexts}>
+          <Text style={styles.greeting}>{greeting()}</Text>
+          <Text style={styles.brand}>Ta musique, à toi.</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.searchBtn}
+          activeOpacity={0.7}
+          onPress={onOpenSearch}>
+          <Ic icon={Search01Icon} size={22} color={theme.text} strokeWidth={2} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.grid}>
@@ -222,9 +245,31 @@ function Carousel({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  header: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
-  greeting: { color: theme.text, fontSize: 26, fontWeight: '800' },
-  brand: { color: theme.textDim, fontSize: 13, marginTop: 4 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 4,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.surfaceHi,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTexts: { flex: 1, marginLeft: 12 },
+  searchBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  greeting: { color: theme.text, fontSize: 22, fontWeight: '800' },
+  brand: { color: theme.textDim, fontSize: 12.5, marginTop: 2 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
