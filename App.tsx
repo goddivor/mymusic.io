@@ -26,6 +26,7 @@ import { ActionSheetProvider } from './src/components/ActionSheet';
 import { ConfirmProvider } from './src/components/ConfirmSheet';
 import AddToPlaylistSheet from './src/components/AddToPlaylistSheet';
 import Ic from './src/components/Ic';
+import DrawerLayout from './src/components/DrawerLayout';
 import PlayerBar from './src/components/PlayerBar';
 import ProfileDrawer, { DrawerItemKey } from './src/components/ProfileDrawer';
 import RecentTracker from './src/components/RecentTracker';
@@ -40,13 +41,27 @@ import RecentsScreen from './src/screens/RecentsScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import YoutubeScreen from './src/screens/YoutubeScreen';
+import { useI18n } from './src/i18n';
 import { LibraryProvider } from './src/store/library';
-import { theme } from './src/theme';
+import { ThemeProvider, useScheme, useTheme, useThemedStyles } from './src/store/theme';
+import { Palette } from './src/theme';
 import { AppTrack } from './src/types';
 
 type Tab = 'home' | 'library' | 'youtube';
 
 function App(): React.JSX.Element {
+  return (
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
+  );
+}
+
+function AppInner(): React.JSX.Element {
+  const scheme = useScheme();
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>('home');
   const [showNowPlaying, setShowNowPlaying] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
@@ -69,7 +84,7 @@ function App(): React.JSX.Element {
       case 'connect':
       case 'playerStyles':
       case 'stats':
-        ToastAndroid.show('Bientôt disponible', ToastAndroid.SHORT);
+        ToastAndroid.show(t('comingSoon'), ToastAndroid.SHORT);
         break;
     }
   };
@@ -91,7 +106,17 @@ function App(): React.JSX.Element {
         <ConfirmProvider>
         <RecentTracker />
         <WebServerSync />
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <StatusBar
+          barStyle={scheme === 'light' ? 'dark-content' : 'light-content'}
+          backgroundColor="transparent"
+          translucent
+        />
+        <DrawerLayout
+          open={showDrawer}
+          gestureEnabled={tab === 'home'}
+          onOpen={() => setShowDrawer(true)}
+          onClose={() => setShowDrawer(false)}
+          drawer={<ProfileDrawer onSelect={onDrawerSelect} />}>
         <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
           <View style={[styles.screen, tab !== 'home' && styles.hidden]}>
             <HomeScreen
@@ -113,25 +138,26 @@ function App(): React.JSX.Element {
 
           <View style={styles.tabBar}>
             <TabButton
-              label="Accueil"
+              label={t('tabHome')}
               icon={Home09Icon}
               active={tab === 'home'}
               onPress={() => setTab('home')}
             />
             <TabButton
-              label="Bibliothèque"
+              label={t('tabLibrary')}
               icon={LibraryIcon}
               active={tab === 'library'}
               onPress={() => setTab('library')}
             />
             <TabButton
-              label="YouTube"
+              label={t('tabYoutube')}
               icon={YoutubeIcon}
               active={tab === 'youtube'}
               onPress={() => setTab('youtube')}
             />
           </View>
         </SafeAreaView>
+        </DrawerLayout>
 
         <CollectionDetailScreen
           collectionKey={detailKey}
@@ -148,11 +174,6 @@ function App(): React.JSX.Element {
         <QueueScreen visible={showQueue} onClose={() => setShowQueue(false)} />
         <AddToPlaylistSheet track={addTarget} onClose={() => setAddTarget(null)} />
 
-        <ProfileDrawer
-          visible={showDrawer}
-          onClose={() => setShowDrawer(false)}
-          onSelect={onDrawerSelect}
-        />
         <SearchScreen visible={showSearch} onClose={() => setShowSearch(false)} />
         <RecentsScreen visible={showRecents} onClose={() => setShowRecents(false)} />
         <Modal
@@ -165,7 +186,7 @@ function App(): React.JSX.Element {
               activeOpacity={0.7}
               onPress={() => setShowSettings(false)}>
               <Ic icon={ArrowLeft01Icon} size={24} color={theme.text} strokeWidth={2} />
-              <Text style={styles.modalBackLabel}>Retour</Text>
+              <Text style={styles.modalBackLabel}>{t('back')}</Text>
             </TouchableOpacity>
             <SettingsScreen />
           </SafeAreaView>
@@ -188,6 +209,8 @@ function TabButton({
   active: boolean;
   onPress: () => void;
 }) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
   return (
     <TouchableOpacity style={styles.tab} onPress={onPress} activeOpacity={0.7}>
       <Ic
@@ -201,7 +224,7 @@ function TabButton({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   screen: { flex: 1 },
   hidden: { display: 'none' },

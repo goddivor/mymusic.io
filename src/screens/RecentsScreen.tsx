@@ -14,9 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ic from '../components/Ic';
+import { useI18n } from '../i18n';
 import { playTracks } from '../lib/player';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import { AppTrack } from '../types';
 
 type Props = {
@@ -26,6 +28,9 @@ type Props = {
 
 /** Historique d'écoute (titres joués récemment, du plus récent au plus ancien). */
 export default function RecentsScreen({ visible, onClose }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const lib = useLibrary();
   const tracks = lib.recentIds
     .map(id => lib.tracksById[id])
@@ -61,7 +66,7 @@ export default function RecentsScreen({ visible, onClose }: Props) {
           <TouchableOpacity onPress={onClose} style={styles.back} activeOpacity={0.7}>
             <Ic icon={ArrowLeft01Icon} size={24} color={theme.text} strokeWidth={2} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Récents</Text>
+          <Text style={styles.headerTitle}>{t('recents')}</Text>
         </View>
 
         <FlatList
@@ -70,7 +75,7 @@ export default function RecentsScreen({ visible, onClose }: Props) {
           renderItem={renderRow}
           contentContainerStyle={{ paddingBottom: 24 }}
           ListEmptyComponent={
-            <Text style={styles.empty}>Aucune écoute récente.</Text>
+            <Text style={styles.empty}>{t('noRecentPlays')}</Text>
           }
         />
       </SafeAreaView>
@@ -78,7 +83,7 @@ export default function RecentsScreen({ visible, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
   header: {
     flexDirection: 'row',

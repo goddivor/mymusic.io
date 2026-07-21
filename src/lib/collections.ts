@@ -5,6 +5,7 @@ import {
   Playlist03Icon,
   YoutubeIcon,
 } from '@hugeicons/core-free-icons';
+import { t, tracksCount } from '../i18n';
 import { Gradient, gradients, playlistGradient } from '../theme';
 import { AppTrack } from '../types';
 
@@ -31,15 +32,11 @@ type LibLike = {
   playlistTracks: (p: { id: string; name: string; trackIds: string[] }) => AppTrack[];
 };
 
-function plural(n: number): string {
-  return `${n} titre${n > 1 ? 's' : ''}`;
-}
-
 export function buildCollections(lib: LibLike): Collection[] {
   const liked: Collection = {
     key: 'liked',
-    title: 'Titres likés',
-    subtitle: `Playlist auto · ${plural(lib.likedTracks.length)}`,
+    title: t('likedTracks'),
+    subtitle: `${t('autoPlaylist')} · ${tracksCount(lib.likedTracks.length)}`,
     kind: 'liked',
     tracks: lib.likedTracks,
     gradient: gradients.liked,
@@ -71,8 +68,8 @@ export function buildCollections(lib: LibLike): Collection[] {
       const first = sorted[0];
       return {
         key: 'album:' + albumId,
-        title: first.album ?? 'Album',
-        subtitle: `Album · ${first.albumArtist ?? first.artist}`,
+        title: first.album ?? t('album'),
+        subtitle: `${t('album')} · ${first.albumArtist ?? first.artist}`,
         kind: 'album' as const,
         tracks: sorted,
         gradient: playlistGradient(albumId),
@@ -86,7 +83,7 @@ export function buildCollections(lib: LibLike): Collection[] {
   const playlistCollections: Collection[] = lib.playlists.map(p => ({
     key: p.id,
     title: p.name,
-    subtitle: `Playlist · ${plural(p.trackIds.length)}`,
+    subtitle: `${t('playlist')} · ${tracksCount(p.trackIds.length)}`,
     kind: 'playlist' as const,
     tracks: lib.playlistTracks(p),
     gradient: playlistGradient(p.id + p.name),
@@ -96,8 +93,8 @@ export function buildCollections(lib: LibLike): Collection[] {
 
   const youtube: Collection = {
     key: 'youtube',
-    title: 'Youtube',
-    subtitle: `Téléchargements · ${plural(lib.youtubeTracks.length)}`,
+    title: t('youtubeCollection'),
+    subtitle: `${t('downloadsSub')} · ${tracksCount(lib.youtubeTracks.length)}`,
     kind: 'youtube',
     tracks: lib.youtubeTracks,
     gradient: gradients.youtube,
@@ -106,8 +103,8 @@ export function buildCollections(lib: LibLike): Collection[] {
 
   const local: Collection = {
     key: 'local',
-    title: 'Ma musique',
-    subtitle: `Fichiers locaux · ${plural(lib.localTracks.length)}`,
+    title: t('myMusic'),
+    subtitle: `${t('localFiles')} · ${tracksCount(lib.localTracks.length)}`,
     kind: 'local',
     tracks: lib.localTracks,
     gradient: gradients.local,

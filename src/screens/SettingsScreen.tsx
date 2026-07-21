@@ -1,140 +1,107 @@
 import {
-  ComputerIcon,
-  EnergyIcon,
-  GlobalIcon,
   InformationCircleIcon,
+  Moon02Icon,
   MusicNote01Icon,
+  TranslateIcon,
 } from '@hugeicons/core-free-icons';
-import React, { useEffect, useState } from 'react';
-import {
-  Linking,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  ToastAndroid,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useActionSheet } from '../components/ActionSheet';
 import Ic from '../components/Ic';
-import { buildSnapshot, WebServer } from '../lib/webServer';
-import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { I18nKey, setLang, useI18n } from '../i18n';
+import {
+  effectiveLanguage,
+  getSettings,
+  LanguagePref,
+  saveSettings,
+  ThemePref,
+} from '../store/settings';
+import { useTheme, useThemeControls, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 
-type ServerInfo = { ip: string; port: number; pin: string | null };
+const LANGUAGE_LABELS: Record<LanguagePref, I18nKey> = {
+  system: 'system',
+  fr: 'french',
+  en: 'english',
+};
+
+const THEME_LABELS: Record<ThemePref, I18nKey> = {
+  system: 'system',
+  dark: 'darkTheme',
+  light: 'lightTheme',
+};
 
 export default function SettingsScreen() {
-  const lib = useLibrary();
-  const [enabled, setEnabled] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [info, setInfo] = useState<ServerInfo | null>(null);
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
+  const { pref: themePref, setPref: setThemePref } = useThemeControls();
+  const { show } = useActionSheet();
 
-  useEffect(() => {
-    if (!WebServer.available) return;
-    WebServer.status().then(s => {
-      setEnabled(s.running);
-      if (s.running) setInfo({ ip: s.ip, port: s.port, pin: s.pin });
+  const pickLanguage = () =>
+    show({
+      title: t('language'),
+      actions: (['system', 'fr', 'en'] as LanguagePref[]).map(l => ({
+        label: t(LANGUAGE_LABELS[l]),
+        onPress: async () => {
+          await saveSettings({ language: l });
+          // Application immédiate : re-rend toute l'interface.
+          setLang(effectiveLanguage());
+        },
+      })),
     });
-  }, []);
 
-  const toggle = async (next: boolean) => {
-    if (!WebServer.available) {
-      ToastAndroid.show('Module serveur indisponible (rebuild requis)', ToastAndroid.LONG);
-      return;
-    }
-    if (busy) return;
-    setBusy(true);
-    try {
-      if (next) {
-        const res = await WebServer.start();
-        setInfo(res);
-        setEnabled(true);
-        // Seed the server with the current library immediately.
-        WebServer.updateLibrary(buildSnapshot(lib));
-      } else {
-        await WebServer.stop();
-        setInfo(null);
-        setEnabled(false);
-      }
-    } catch (e: any) {
-      ToastAndroid.show(e?.message ?? 'Erreur serveur', ToastAndroid.SHORT);
-    } finally {
-      setBusy(false);
-    }
-  };
+  const pickTheme = () =>
+    show({
+      title: t('themeLabel'),
+      actions: (['system', 'dark', 'light'] as ThemePref[]).map(p => ({
+        label: t(THEME_LABELS[p]),
+        onPress: () => setThemePref(p),
+      })),
+    });
 
-  const openBatterySettings = () => {
-    Linking.sendIntent('android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS').catch(
-      () => Linking.openSettings().catch(() => {}),
-    );
-  };
-
-  const url = info ? `http://${info.ip}:${info.port}` : '';
+  const settings = getSettings();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 28 }}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Réglages</Text>
+        <Text style={styles.headerTitle}>{t('settings')}</Text>
       </View>
 
-      {/* --- Accès web --- */}
-      <Text style={styles.sectionLabel}>ACCÈS WEB</Text>
+      {/* --- Général --- */}
+      <Text style={styles.sectionLabel}>{t('sectionGeneral')}</Text>
       <View style={styles.card}>
-        <View style={styles.rowTop}>
+        <TouchableOpacity style={styles.rowTop} activeOpacity={0.7} onPress={pickLanguage}>
           <View style={styles.iconWrap}>
-            <Ic icon={GlobalIcon} size={22} color={theme.accent} strokeWidth={2.1} />
+            <Ic icon={TranslateIcon} size={22} color={theme.accent} strokeWidth={2.1} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.rowTitle} numberOfLines={1}>
-              Écouter sur le web
+              {t('language')}
             </Text>
-            <Text style={styles.rowSub} numberOfLines={1} ellipsizeMode="tail">
-              Diffuse ta musique sur le même Wi-Fi.
-            </Text>
-          </View>
-          <Switch
-            value={enabled}
-            onValueChange={toggle}
-            disabled={busy}
-            trackColor={{ false: theme.border, true: theme.accent }}
-            thumbColor="#fff"
-          />
-        </View>
-
-        {enabled && info && (
-          <View style={styles.connectBox}>
-            <View style={styles.connectRow}>
-              <Ic icon={ComputerIcon} size={18} color={theme.textDim} />
-              <Text style={styles.connectLabel}>Adresse</Text>
-              <Text style={styles.connectValue} selectable>
-                {url}
-              </Text>
-            </View>
-            <View style={styles.connectRow}>
-              <Ic icon={GlobalIcon} size={18} color={theme.textDim} />
-              <Text style={styles.connectLabel}>Code PIN</Text>
-              <Text style={[styles.connectValue, styles.pin]} selectable>
-                {info.pin}
-              </Text>
-            </View>
-            <Text style={styles.hint}>
-              Ouvre {url} dans un navigateur puis saisis le PIN.
+            <Text style={styles.rowSub} numberOfLines={1}>
+              {t(LANGUAGE_LABELS[settings.language])}
             </Text>
           </View>
-        )}
+        </TouchableOpacity>
+        <View style={styles.rowSep} />
+        <TouchableOpacity style={styles.rowTop} activeOpacity={0.7} onPress={pickTheme}>
+          <View style={styles.iconWrap}>
+            <Ic icon={Moon02Icon} size={22} color={theme.accent} strokeWidth={2.1} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.rowTitle} numberOfLines={1}>
+              {t('themeLabel')}
+            </Text>
+            <Text style={styles.rowSub} numberOfLines={1}>
+              {t(THEME_LABELS[themePref])}
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
-      {enabled && (
-        <TouchableOpacity style={styles.battery} onPress={openBatterySettings} activeOpacity={0.8}>
-          <Ic icon={EnergyIcon} size={20} color={theme.accent} />
-          <Text style={styles.batteryText} numberOfLines={1} ellipsizeMode="tail">
-            Empêcher la mise en veille (batterie)
-          </Text>
-        </TouchableOpacity>
-      )}
-
       {/* --- Qualité audio --- */}
-      <Text style={styles.sectionLabel}>LECTURE</Text>
+      <Text style={styles.sectionLabel}>{t('sectionPlayback')}</Text>
       <View style={styles.card}>
         <View style={styles.rowTop}>
           <View style={styles.iconWrap}>
@@ -142,17 +109,17 @@ export default function SettingsScreen() {
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.rowTitle} numberOfLines={1}>
-              Qualité audio
+              {t('audioQuality')}
             </Text>
             <Text style={styles.rowSub} numberOfLines={1} ellipsizeMode="tail">
-              Audio-only haute qualité, repli auto.
+              {t('audioQualitySub')}
             </Text>
           </View>
         </View>
       </View>
 
       {/* --- À propos --- */}
-      <Text style={styles.sectionLabel}>À PROPOS</Text>
+      <Text style={styles.sectionLabel}>{t('sectionAbout')}</Text>
       <View style={styles.card}>
         <View style={styles.rowTop}>
           <View style={styles.iconWrap}>
@@ -160,10 +127,10 @@ export default function SettingsScreen() {
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.rowTitle} numberOfLines={1}>
-              Ta musique, à toi.
+              {t('aboutTitle')}
             </Text>
             <Text style={styles.rowSub} numberOfLines={1} ellipsizeMode="tail">
-              Local + YouTube · v1.0
+              {t('aboutSub')}
             </Text>
           </View>
         </View>
@@ -172,7 +139,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
   header: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
   headerTitle: { color: theme.text, fontSize: 26, fontWeight: '800' },
@@ -192,6 +159,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   rowTop: { flexDirection: 'row', alignItems: 'center' },
+  rowSep: { height: 1, backgroundColor: theme.border, marginVertical: 12 },
   iconWrap: {
     width: 40,
     height: 40,
@@ -202,27 +170,4 @@ const styles = StyleSheet.create({
   },
   rowTitle: { color: theme.text, fontSize: 15.5, fontWeight: '700' },
   rowSub: { color: theme.textDim, fontSize: 12.5, marginTop: 3, lineHeight: 17 },
-  connectBox: {
-    marginTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: theme.border,
-    paddingTop: 12,
-  },
-  connectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, gap: 10 },
-  connectLabel: { color: theme.textDim, fontSize: 13, width: 64 },
-  connectValue: { color: theme.text, fontSize: 14, fontWeight: '700', flex: 1 },
-  pin: { color: theme.accent, letterSpacing: 3, fontSize: 18 },
-  hint: { color: theme.textFaint, fontSize: 12, marginTop: 8, lineHeight: 17 },
-  battery: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 14,
-    marginTop: 10,
-    backgroundColor: theme.surfaceHi,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-  },
-  batteryText: { color: theme.text, fontSize: 13.5, fontWeight: '600', flex: 1 },
 });

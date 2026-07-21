@@ -31,9 +31,11 @@ import Ic from '../components/Ic';
 import PlayerBar from '../components/PlayerBar';
 import TrackRow from '../components/TrackRow';
 import { buildCollections } from '../lib/collections';
+import { useI18n } from '../i18n';
 import { playNext, playTracks } from '../lib/player';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import { AppTrack } from '../types';
 
 type Props = {
@@ -51,6 +53,9 @@ export default function CollectionDetailScreen({
   onAddToPlaylist,
   onOpenNowPlaying,
 }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const lib = useLibrary();
   const { isLiked, toggleLike, removeYoutube, removeFromPlaylist } = lib;
   const { show } = useActionSheet();
@@ -110,31 +115,31 @@ export default function CollectionDetailScreen({
     const liked = isLiked(item.id);
     const actions = [
       {
-        label: liked ? 'Retirer des likes' : 'Liker',
+        label: liked ? t('unlike') : t('like'),
         icon: FavouriteIcon,
         onPress: () => toggleLike(item),
       },
       {
-        label: 'Lire ensuite',
+        label: t('playNext'),
         icon: Queue01Icon,
         onPress: () => playNext(item),
       },
       {
-        label: 'Ajouter à une playlist',
+        label: t('addToPlaylist'),
         icon: Add01Icon,
         onPress: () => onAddToPlaylist(item),
       },
     ];
     if (collection.kind === 'youtube' || collection.kind === 'album') {
       actions.push({
-        label: 'Supprimer le téléchargement',
+        label: t('removeDownload'),
         icon: Delete02Icon,
         destructive: true,
         onPress: () =>
           confirm({
-            title: 'Supprimer le téléchargement ?',
-            message: `« ${item.title} » sera supprimé de l'appareil.`,
-            confirmLabel: 'Supprimer',
+            title: t('removeDownloadQ'),
+            message: t('removeDownloadMsg', { name: item.title }),
+            confirmLabel: t('delete'),
             destructive: true,
             onConfirm: () => removeYoutube(item.id),
           }),
@@ -143,14 +148,14 @@ export default function CollectionDetailScreen({
     if (collection.kind === 'playlist' && collection.playlistId) {
       const pid = collection.playlistId;
       actions.push({
-        label: 'Retirer de la playlist',
+        label: t('removeFromPlaylist'),
         icon: RemoveCircleIcon,
         destructive: true,
         onPress: () =>
           confirm({
-            title: 'Retirer de la playlist ?',
-            message: `« ${item.title} » sera retiré de « ${collection.title} ».`,
-            confirmLabel: 'Retirer',
+            title: t('removeFromPlaylistQ'),
+            message: t('removeFromPlaylistMsg', { track: item.title, collection: collection.title }),
+            confirmLabel: t('remove'),
             destructive: true,
             onConfirm: () => removeFromPlaylist(pid, item.id),
           }),
@@ -193,7 +198,7 @@ export default function CollectionDetailScreen({
                     <Ic icon={Search01Icon} size={18} color={theme.textDim} />
                     <TextInput
                       style={styles.searchInput}
-                      placeholder={`Rechercher dans « ${collection.title} »`}
+                      placeholder={t('searchIn', { name: collection.title })}
                       placeholderTextColor={theme.textFaint}
                       value={query}
                       onChangeText={setQuery}
@@ -211,7 +216,7 @@ export default function CollectionDetailScreen({
                       setQuery('');
                     }}
                     hitSlop={8}>
-                    <Text style={styles.cancel}>Annuler</Text>
+                    <Text style={styles.cancel}>{t('cancel')}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -232,7 +237,7 @@ export default function CollectionDetailScreen({
                       activeOpacity={0.7}
                       onPress={() => setSearching(true)}>
                       <Ic icon={Search01Icon} size={18} color={theme.textDim} />
-                      <Text style={styles.searchPillText}>Rechercher</Text>
+                      <Text style={styles.searchPillText}>{t('search')}</Text>
                     </TouchableOpacity>
                     <View style={styles.actionsRight}>
                       <TouchableOpacity
@@ -272,12 +277,12 @@ export default function CollectionDetailScreen({
             ListEmptyComponent={
               <Text style={styles.empty}>
                 {collection.kind === 'liked'
-                  ? 'Aucun titre liké pour l’instant.'
+                  ? t('emptyLiked')
                   : collection.kind === 'youtube'
-                  ? 'Aucun téléchargement. Va dans l’onglet YouTube.'
+                  ? t('emptyYoutube')
                   : collection.kind === 'playlist'
-                  ? 'Playlist vide. Ajoute des titres via ⋯.'
-                  : 'Aucun fichier audio trouvé.'}
+                  ? t('emptyPlaylist')
+                  : t('emptyLocal')}
               </Text>
             }
             contentContainerStyle={{ paddingBottom: 28 }}
@@ -289,7 +294,7 @@ export default function CollectionDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   fallback: { flex: 1, backgroundColor: theme.bg },
   backFloating: { position: 'absolute', top: 50, left: 16 },

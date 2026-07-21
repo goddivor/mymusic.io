@@ -17,9 +17,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ic from '../components/Ic';
+import { useI18n } from '../i18n';
 import { playTracks } from '../lib/player';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import { AppTrack } from '../types';
 
 type Props = {
@@ -36,6 +38,9 @@ function fmt(s?: number): string {
 
 /** Recherche plein écran sur toute la bibliothèque (locale + YouTube). */
 export default function SearchScreen({ visible, onClose }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const lib = useLibrary();
   const [query, setQuery] = useState('');
 
@@ -98,7 +103,7 @@ export default function SearchScreen({ visible, onClose }: Props) {
             <Ic icon={Search01Icon} size={18} color={theme.textFaint} strokeWidth={2} />
             <TextInput
               style={styles.input}
-              placeholder="Titre, artiste, album…"
+              placeholder={t('searchPlaceholder')}
               placeholderTextColor={theme.textFaint}
               value={query}
               onChangeText={setQuery}
@@ -121,7 +126,7 @@ export default function SearchScreen({ visible, onClose }: Props) {
           contentContainerStyle={{ paddingBottom: 24 }}
           ListEmptyComponent={
             <Text style={styles.empty}>
-              {q ? 'Aucun résultat.' : 'Cherche dans toute ta bibliothèque.'}
+              {q ? t('noResults') : t('searchHint')}
             </Text>
           }
         />
@@ -130,7 +135,7 @@ export default function SearchScreen({ visible, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
   header: {
     flexDirection: 'row',

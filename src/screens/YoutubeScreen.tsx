@@ -23,10 +23,15 @@ import {
   extractYoutubeId,
   isAlbumPlaylistId,
 } from '../lib/ytExtractor';
+import { t as tr, useI18n } from '../i18n';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 
 export default function YoutubeScreen({ active }: { active: boolean }) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const { startDownload, downloadCollection, activeDownloadCount, downloads } =
     useLibrary();
   const webRef = useRef<WebView>(null);
@@ -63,16 +68,16 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
     setCollecting(true);
     try {
       const res = await downloadCollection(currentUrl);
-      const kind = res.isAlbum ? 'Album' : 'Playlist';
+      const kind = res.isAlbum ? tr('album') : tr('playlist');
       const capped =
         res.total > res.queued ? ` (max ${res.queued}/${res.total})` : '';
       ToastAndroid.show(
-        `${kind} « ${res.title} » — ${res.queued} titres en téléchargement${capped}`,
+        tr('collectionQueued', { kind, title: res.title, n: res.queued, capped }),
         ToastAndroid.LONG,
       );
     } catch (e: any) {
       ToastAndroid.show(
-        e?.message ?? 'Impossible de récupérer la liste',
+        e?.message ?? tr('cantFetchList'),
         ToastAndroid.SHORT,
       );
     } finally {
@@ -104,13 +109,13 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
       {offline && (
         <View style={styles.offline}>
           <Ic icon={NoInternetIcon} size={72} color={theme.textDim} strokeWidth={1.6} />
-          <Text style={styles.offlineTitle}>Pas de connexion</Text>
+          <Text style={styles.offlineTitle}>{t('noConnection')}</Text>
           <Text style={styles.offlineMsg}>
-            Vérifie ton réseau pour parcourir et télécharger depuis YouTube.
+            {t('noConnectionMsg')}
           </Text>
           <TouchableOpacity style={styles.retry} activeOpacity={0.85} onPress={retry}>
             <Ic icon={RefreshIcon} size={20} color="#1a1020" strokeWidth={2.3} />
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryText}>{t('retry')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -131,10 +136,10 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
             />
             <Text style={styles.pillAltText}>
               {collecting
-                ? 'Préparation…'
+                ? t('preparing')
                 : isAlbum
-                ? "Télécharger l'album"
-                : 'Télécharger la playlist'}
+                ? t('downloadAlbum')
+                : t('downloadPlaylist')}
             </Text>
           </TouchableOpacity>
         )}
@@ -146,7 +151,7 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
             activeOpacity={0.85}
             onPress={() => startDownload(currentUrl)}>
             <Ic icon={DownloadCircle01Icon} size={22} color="#1a1020" strokeWidth={2.2} />
-            <Text style={styles.pillText}>Télécharger en audio</Text>
+            <Text style={styles.pillText}>{t('downloadAudio')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -172,7 +177,7 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   web: { flex: 1 },
   offline: {

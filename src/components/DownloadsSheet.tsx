@@ -14,8 +14,10 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { t as tr, useI18n } from '../i18n';
 import { Download, useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import Ic from './Ic';
 
 type Props = {
@@ -26,17 +28,20 @@ type Props = {
 function statusLabel(d: Download): string {
   switch (d.status) {
     case 'extracting':
-      return 'Extraction…';
+      return tr('extracting');
     case 'downloading':
-      return `Téléchargement ${Math.round(d.progress * 100)}%`;
+      return tr('downloadingPct', { pct: Math.round(d.progress * 100) });
     case 'done':
-      return 'Terminé';
+      return tr('done');
     case 'error':
-      return d.error ?? 'Erreur';
+      return d.error ?? tr('error');
   }
 }
 
 export default function DownloadsSheet({ visible, onClose }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const { downloads, clearFinishedDownloads } = useLibrary();
 
   return (
@@ -47,10 +52,10 @@ export default function DownloadsSheet({ visible, onClose }: Props) {
       <View style={styles.sheet}>
         <View style={styles.handle} />
         <View style={styles.headerRow}>
-          <Text style={styles.title}>Téléchargements</Text>
+          <Text style={styles.title}>{t('downloads')}</Text>
           {downloads.some(d => d.status === 'done' || d.status === 'error') && (
             <TouchableOpacity onPress={clearFinishedDownloads} hitSlop={8}>
-              <Text style={styles.clear}>Effacer terminés</Text>
+              <Text style={styles.clear}>{t('clearFinished')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -106,7 +111,7 @@ export default function DownloadsSheet({ visible, onClose }: Props) {
           ListEmptyComponent={
             <View style={styles.empty}>
               <Ic icon={Cancel01Icon} size={26} color={theme.textFaint} />
-              <Text style={styles.emptyText}>Aucun téléchargement</Text>
+              <Text style={styles.emptyText}>{t('noDownloads')}</Text>
             </View>
           }
         />
@@ -115,7 +120,7 @@ export default function DownloadsSheet({ visible, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
   sheet: {
     backgroundColor: theme.surface,
