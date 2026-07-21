@@ -40,8 +40,7 @@ export async function setupPlayer(): Promise<void> {
   if (isSetup) return;
   try {
     await TrackPlayer.setupPlayer();
-  } catch (e) {
-  }
+  } catch {}
   await TrackPlayer.updateOptions({
     android: {
       appKilledPlaybackBehavior:

@@ -143,19 +143,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     rescanLocal();
   }, [rescanLocal]);
 
-  const persistYt = useCallback((next: AppTrack[]) => {
-    setYoutubeTracks(next);
-    AsyncStorage.setItem(KEY_YT, JSON.stringify(next));
-  }, []);
-  const persistLikes = useCallback((next: string[]) => {
-    setLikedIds(next);
-    AsyncStorage.setItem(KEY_LIKES, JSON.stringify(next));
-  }, []);
-  const persistPlaylists = useCallback((next: Playlist[]) => {
-    setPlaylists(next);
-    AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
-  }, []);
-
   const addYoutube = useCallback(
     (track: AppTrack) => {
       setYoutubeTracks(prev => {
