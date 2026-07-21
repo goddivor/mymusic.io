@@ -10,8 +10,8 @@ type Props = {
 };
 
 // Thin wrapper around HugeIcons to enforce consistent defaults app-wide.
-// Accepte aussi un composant React (ex. BrandYoutubeIcon) à la place d'une
-// icône HugeIcons, pour les logos de marques.
+// Also accepts a React component (e.g. BrandYoutubeIcon) instead of a
+// HugeIcons icon, for brand logos.
 export default function Ic({ icon, size = 24, color, strokeWidth = 1.9 }: Props) {
   const theme = useTheme();
   if (typeof icon === 'function') {

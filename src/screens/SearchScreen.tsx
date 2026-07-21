@@ -36,7 +36,6 @@ function fmt(s?: number): string {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
-/** Recherche plein écran sur toute la bibliothèque (locale + YouTube). */
 export default function SearchScreen({ visible, onClose }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);

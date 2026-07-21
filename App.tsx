@@ -1,5 +1,4 @@
 /**
- * MusicApp — lecteur de musique locale + téléchargement audio YouTube.
  * @format
  */
 
@@ -127,7 +126,6 @@ function AppInner(): React.JSX.Element {
               onOpenProfile={() => setShowDrawer(true)}
             />
           </View>
-          {/* Kept mounted so the YouTube WebView preserves its navigation. */}
           <View style={[styles.screen, tab !== 'youtube' && styles.hidden]}>
             <YoutubeScreen active={tab === 'youtube'} />
           </View>

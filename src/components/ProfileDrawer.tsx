@@ -34,7 +34,6 @@ const ITEMS = [
   { key: 'stats', labelKey: 'listeningStats', icon: ChartHistogramIcon },
 ] as const;
 
-/** Contenu du panneau latéral (affiché par DrawerLayout). */
 export default function ProfileDrawer({ onSelect }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);

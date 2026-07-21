@@ -32,7 +32,7 @@ export async function requestAudioPermission(): Promise<boolean> {
   return res === PermissionsAndroid.RESULTS.GRANTED;
 }
 
-// Mémos vocaux, enregistrements d'appels, notifications… ne sont pas des chansons.
+// Voice memos, call recordings, notifications, etc. are not songs.
 const EXCLUDED_PATH = /voice ?notes?|recordings?|\/call ?rec|\/notifications?\/|\/ringtones?\//i;
 
 function fileTitle(path: string): string {
@@ -40,21 +40,15 @@ function fileTitle(path: string): string {
   return name.replace(/\.[^/.]+$/, '');
 }
 
-/**
- * Scan via MediaStore (index média du système) : tous les morceaux du
- * téléphone, avec métadonnées et pochette d'album.
- */
 async function scanViaMediaStore(): Promise<AppTrack[]> {
   const rows = await MediaScanner!.queryAudio();
   const tracks: AppTrack[] = [];
   for (const r of rows) {
     if (EXCLUDED_PATH.test(r.path)) continue;
-    // Garde les vrais morceaux ; écarte les sons courts non musicaux.
     if (!r.isMusic && r.duration < 30) continue;
 
     const artwork = r.artwork || undefined;
     tracks.push({
-      // Même format d'id que l'ancien scan : likes/playlists existants préservés.
       id: 'local:' + r.path,
       url: 'file://' + r.path,
       title: r.title || fileTitle(r.path),
@@ -72,8 +66,6 @@ async function scanViaMediaStore(): Promise<AppTrack[]> {
   return tracks;
 }
 
-// ---- Repli : ancien scan fichier (module natif absent) ----
-
 function isAudio(name: string): boolean {
   const ext = name.split('.').pop()?.toLowerCase();
   return !!ext && AUDIO_EXT.includes(ext);
@@ -85,7 +77,7 @@ async function scanDir(dir: string, depth: number, acc: AppTrack[]): Promise<voi
   try {
     items = await RNFS.readDir(dir);
   } catch {
-    return; // dir missing or not readable
+    return;
   }
   for (const item of items) {
     if (item.isFile() && isAudio(item.name)) {
@@ -102,6 +94,7 @@ async function scanDir(dir: string, depth: number, acc: AppTrack[]): Promise<voi
   }
 }
 
+// Fallback file-system scan used when the native MediaScanner module is absent.
 async function scanViaFs(): Promise<AppTrack[]> {
   const acc: AppTrack[] = [];
   const ext = RNFS.ExternalStorageDirectoryPath;

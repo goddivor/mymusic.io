@@ -26,7 +26,6 @@ type Props = {
   onClose: () => void;
 };
 
-/** Historique d'écoute (titres joués récemment, du plus récent au plus ancien). */
 export default function RecentsScreen({ visible, onClose }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);

@@ -70,7 +70,9 @@ export function getAudioStream(url: string): Promise<YtStreamInfo> {
 /**
  * Extracts the best audio stream for a YouTube URL and downloads it to the
  * app's private storage, returning a playable AppTrack. Skips the download
- * if the file already exists.
+ * if the file already exists. A clean canonical watch URL is rebuilt from the
+ * video id because NewPipeExtractor rejects URLs cluttered with
+ * list/start_radio/pp params.
  */
 export async function downloadYoutubeAudio(
   url: string,
@@ -80,8 +82,6 @@ export async function downloadYoutubeAudio(
   const id = extractYoutubeId(url);
   if (!id) throw new Error(t('invalidYoutubeUrl'));
 
-  // NewPipeExtractor rejects URLs cluttered with list/start_radio/pp params,
-  // so rebuild a clean canonical watch URL from the video id.
   const cleanUrl = `https://www.youtube.com/watch?v=${id}`;
   const info = await getAudioStream(cleanUrl);
   if (onInfo) {

@@ -18,7 +18,7 @@ import Ic from './Ic';
 
 type ServerInfo = { ip: string; port: number; pin: string | null };
 
-/** Partage Wi-Fi de la bibliothèque : toggle du serveur embarqué + infos de connexion. */
+/** Wi-Fi library sharing: toggles the embedded web server and shows connection info. */
 export default function WebAccessCard() {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
@@ -48,7 +48,6 @@ export default function WebAccessCard() {
         const res = await WebServer.start();
         setInfo(res);
         setEnabled(true);
-        // Seed the server with the current library immediately.
         WebServer.updateLibrary(buildSnapshot(lib));
       } else {
         await WebServer.stop();

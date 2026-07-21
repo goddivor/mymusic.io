@@ -3,7 +3,6 @@ import { useSyncExternalStore } from 'react';
 export type Lang = 'fr' | 'en';
 
 const fr = {
-  // Navigation / global
   tabHome: 'Accueil',
   tabLibrary: 'Bibliothèque',
   tabYoutube: 'YouTube',
@@ -12,7 +11,6 @@ const fr = {
   confirm: 'Confirmer',
   comingSoon: 'Bientôt disponible',
 
-  // Tiroir de profil
   guest: 'Invité',
   notConnected: 'Non connecté',
   signIn: 'Se connecter',
@@ -21,14 +19,12 @@ const fr = {
   playerStyles: 'Styles du lecteur',
   listeningStats: "Statistiques d'écoute",
 
-  // Accès web
   webAccessTitle: 'Écouter sur le web',
   webAccessSub: 'Diffuse sur le même Wi-Fi.',
   webAccessUnavailable: 'Module serveur indisponible (rebuild requis)',
   webAccessError: 'Erreur serveur',
   preventSleep: 'Empêcher la mise en veille',
 
-  // Réglages
   sectionGeneral: 'GÉNÉRAL',
   language: 'Langue',
   themeLabel: 'Thème',
@@ -44,36 +40,30 @@ const fr = {
   aboutTitle: 'Ta musique, à toi.',
   aboutSub: 'Local + YouTube · v1.0',
 
-  // Accueil
   recentlyAdded: 'Récemment ajouté',
   yourLocalLibrary: 'Ta bibliothèque locale',
   showAll: 'Tout afficher',
   downloadFromYoutubeHint: "Télécharge depuis l'onglet YouTube",
   noAudioFound: 'Aucun fichier audio trouvé',
 
-  // Menus piste
   play: 'Jouer',
   like: 'Liker',
   unlike: 'Retirer des likes',
   playNext: 'Lire ensuite',
   addToPlaylist: 'Ajouter à une playlist',
 
-  // Recherche
   searchPlaceholder: 'Titre, artiste, album…',
   searchHint: 'Cherche dans toute ta bibliothèque.',
   noResults: 'Aucun résultat.',
   search: 'Rechercher',
   searchIn: 'Rechercher dans « {name} »',
 
-  // Récents
   noRecentPlays: 'Aucune écoute récente.',
 
-  // Recherche des réglages
   settingsSearchPlaceholder: 'Rechercher un réglage',
   settingsSearchTitle: 'Que cherches-tu ?',
   settingsSearchSub: 'Cherche un réglage précis ou utilise quelques mots-clés.',
 
-  // Bibliothèque
   filterAll: 'Tout',
   filterAlbums: 'Albums',
   filterPlaylists: 'Playlists',
@@ -92,7 +82,6 @@ const fr = {
   playlistName: 'Nom de la playlist',
   create: 'Créer',
 
-  // Collections
   likedTracks: 'Titres likés',
   autoPlaylist: 'Playlist auto',
   album: 'Album',
@@ -102,7 +91,6 @@ const fr = {
   myMusic: 'Ma musique',
   localFiles: 'Fichiers locaux',
 
-  // Détail collection
   removeDownload: 'Supprimer le téléchargement',
   removeDownloadQ: 'Supprimer le téléchargement ?',
   removeDownloadMsg: "« {name} » sera supprimé de l'appareil.",
@@ -115,7 +103,6 @@ const fr = {
   emptyPlaylist: 'Playlist vide. Ajoute des titres via ⋯.',
   emptyLocal: 'Aucun fichier audio trouvé.',
 
-  // Lecteur
   nowPlaying: 'EN LECTURE',
   upNext: 'À SUIVRE',
   share: 'Partager',
@@ -126,7 +113,6 @@ const fr = {
   listeningTo: "J'écoute « {title} » — {artist}",
   iListen: "J'ÉCOUTE",
 
-  // YouTube
   noConnection: 'Pas de connexion',
   noConnectionMsg: 'Vérifie ton réseau pour parcourir et télécharger depuis YouTube.',
   retry: 'Réessayer',
@@ -137,7 +123,6 @@ const fr = {
   collectionQueued: '{kind} « {title} » — {n} titres en téléchargement{capped}',
   cantFetchList: 'Impossible de récupérer la liste',
 
-  // Téléchargements
   downloads: 'Téléchargements',
   clearFinished: 'Effacer terminés',
   extracting: 'Extraction…',
@@ -147,12 +132,10 @@ const fr = {
   noDownloads: 'Aucun téléchargement',
   downloadFailed: 'Échec du téléchargement',
 
-  // Ajouter à une playlist
   addTrackTitle: 'Ajouter « {title} »',
   alreadyAddedRemove: 'Déjà ajouté — retirer',
   addToLikes: 'Ajouter aux likes',
 
-  // Erreurs extraction
   invalidYoutubeUrl: 'URL YouTube invalide',
   downloadHttpError: 'Téléchargement échoué (HTTP {code})',
 };
@@ -306,7 +289,6 @@ export function getLang(): Lang {
   return currentLang;
 }
 
-/** Change la langue active et notifie les composants abonnés (useI18n). */
 export function setLang(lang: Lang) {
   if (lang === currentLang) return;
   currentLang = lang;
@@ -318,7 +300,6 @@ function subscribe(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
-/** Traduit une clé, avec interpolation de paramètres {x}. */
 export function t(key: I18nKey, params?: Record<string, string | number>): string {
   let str = dicts[currentLang][key] ?? fr[key] ?? key;
   if (params) {
@@ -329,15 +310,14 @@ export function t(key: I18nKey, params?: Record<string, string | number>): strin
   return str;
 }
 
-/** « 3 titres » / « 3 tracks » — avec pluriel. */
 export function tracksCount(n: number): string {
   const s = n > 1 ? 's' : '';
   return currentLang === 'fr' ? `${n} titre${s}` : `${n} track${s}`;
 }
 
 /**
- * Abonne le composant aux changements de langue : tout composant qui affiche
- * du texte doit appeler ce hook pour se re-rendre quand la langue change.
+ * Subscribes the component to language changes: any component that renders
+ * text must call this hook so it re-renders when the language changes.
  */
 export function useI18n(): { t: typeof t; lang: Lang; tracksCount: typeof tracksCount } {
   useSyncExternalStore(subscribe, getLang);

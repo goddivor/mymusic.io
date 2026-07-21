@@ -23,12 +23,10 @@ const Ctx = createContext<ThemeCtx>({
   setPref: () => {},
 });
 
-/** Fournit le thème actif ; le changement de préférence s'applique en direct. */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [pref, setPrefState] = useState<ThemePref>(getSettings().theme);
   const [sysScheme, setSysScheme] = useState(Appearance.getColorScheme());
 
-  // Suit le thème système en direct quand la préférence est « Système ».
   useEffect(() => {
     const sub = Appearance.addChangeListener(({ colorScheme }) =>
       setSysScheme(colorScheme),
@@ -39,7 +37,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const scheme: ThemeScheme =
     pref === 'system' ? (sysScheme === 'light' ? 'light' : 'dark') : pref;
 
-  // Garde l'objet `theme` legacy en phase (filet pour le code non réactif).
   useEffect(() => {
     applyTheme(scheme);
   }, [scheme]);
@@ -73,7 +70,6 @@ export function useThemeControls(): { pref: ThemePref; setPref: (p: ThemePref) =
   return { pref, setPref };
 }
 
-/** Styles dépendants du thème, reconstruits quand le thème change. */
 export function useThemedStyles<T>(make: (theme: Palette) => T): T {
   const theme = useTheme();
   return useMemo(() => make(theme), [make, theme]);

@@ -13,12 +13,11 @@ export type AppSettings = {
 
 const KEY = 'app_settings';
 
-// Par défaut, langue et thème suivent le système.
 let current: AppSettings = { language: 'system', theme: 'system' };
 
 /**
- * Charge les préférences et applique la palette. Doit être awaité AVANT le
- * require de l'app (index.js) pour que les StyleSheet figent la bonne palette.
+ * Loads the preferences and applies the palette. Must be awaited BEFORE the
+ * app is required (index.js) so the StyleSheets freeze the right palette.
  */
 export async function loadSettings(): Promise<AppSettings> {
   try {
@@ -41,13 +40,11 @@ export async function saveSettings(patch: Partial<AppSettings>): Promise<void> {
   } catch {}
 }
 
-/** Thème effectif : préférence explicite, sinon celui du système. */
 export function effectiveScheme(): ThemeScheme {
   if (current.theme !== 'system') return current.theme;
   return Appearance.getColorScheme() === 'light' ? 'light' : 'dark';
 }
 
-/** Langue effective : préférence explicite, sinon celle du système. */
 export function effectiveLanguage(): 'fr' | 'en' {
   if (current.language !== 'system') return current.language;
   try {

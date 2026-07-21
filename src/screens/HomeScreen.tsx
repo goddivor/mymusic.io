@@ -55,7 +55,6 @@ export default function HomeScreen({
     collections.filter(c => c.kind === 'album').map(c => [c.key, c]),
   );
 
-  // Liked (pinned) + up to 4 most-recently-played items (LRU).
   const seen = new Set<string>();
   const recents: QuickItem[] = [];
   for (const id of lib.recentIds) {

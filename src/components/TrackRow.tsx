@@ -12,7 +12,7 @@ type Props = {
   track: AppTrack;
   onPress: () => void;
   onMore?: () => void;
-  number?: number; // show a track number instead of artwork (album view)
+  number?: number;
 };
 
 export default function TrackRow({ track, onPress, onMore, number }: Props) {
