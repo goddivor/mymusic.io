@@ -46,14 +46,22 @@ export function buildCollections(lib: LibLike): Collection[] {
     icon: FavouriteIcon,
   };
 
-  // Group downloaded album tracks by albumId into Album collections.
+  // Group album tracks by albumId into Album collections (YouTube + local).
   const albumsMap = new Map<string, AppTrack[]>();
-  for (const t of lib.youtubeTracks) {
+  for (const t of [...lib.youtubeTracks, ...lib.localTracks]) {
     if (t.albumId) {
       const arr = albumsMap.get(t.albumId) ?? [];
       arr.push(t);
       albumsMap.set(t.albumId, arr);
     }
+  }
+  // Les « albums » MediaStore dérivés d'un nom de dossier (WhatsApp Audio,
+  // Download…) sont du bruit : on ne garde que les vrais albums tagués
+  // (n° de piste ou artiste d'album présents) d'au moins 2 titres.
+  for (const [albumId, tracks] of albumsMap) {
+    if (!albumId.startsWith('mslocal:')) continue;
+    const tagged = tracks.some(t => t.trackNumber || t.albumArtist);
+    if (tracks.length < 2 || !tagged) albumsMap.delete(albumId);
   }
   const albumCollections: Collection[] = Array.from(albumsMap.entries()).map(
     ([albumId, tracks]) => {

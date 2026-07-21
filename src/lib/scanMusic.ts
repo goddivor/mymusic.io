@@ -1,8 +1,25 @@
-import { PermissionsAndroid, Platform } from 'react-native';
+import { NativeModules, PermissionsAndroid, Platform } from 'react-native';
 import RNFS from 'react-native-fs';
 import { AppTrack } from '../types';
 
 const AUDIO_EXT = ['mp3', 'm4a', 'aac', 'wav', 'flac', 'ogg', 'opus', 'wma'];
+
+type MediaStoreTrack = {
+  mediaId: number;
+  path: string;
+  title: string;
+  artist: string;
+  album: string;
+  albumId: number;
+  albumArtist: string;
+  trackNumber: number;
+  duration: number;
+  isMusic: boolean;
+  artwork: string;
+};
+
+const MediaScanner: { queryAudio(): Promise<MediaStoreTrack[]> } | undefined =
+  NativeModules.MediaScanner;
 
 export async function requestAudioPermission(): Promise<boolean> {
   if (Platform.OS !== 'android') return true;
@@ -14,6 +31,48 @@ export async function requestAudioPermission(): Promise<boolean> {
   const res = await PermissionsAndroid.request(perm);
   return res === PermissionsAndroid.RESULTS.GRANTED;
 }
+
+// Mémos vocaux, enregistrements d'appels, notifications… ne sont pas des chansons.
+const EXCLUDED_PATH = /voice ?notes?|recordings?|\/call ?rec|\/notifications?\/|\/ringtones?\//i;
+
+function fileTitle(path: string): string {
+  const name = path.split('/').pop() ?? path;
+  return name.replace(/\.[^/.]+$/, '');
+}
+
+/**
+ * Scan via MediaStore (index média du système) : tous les morceaux du
+ * téléphone, avec métadonnées et pochette d'album.
+ */
+async function scanViaMediaStore(): Promise<AppTrack[]> {
+  const rows = await MediaScanner!.queryAudio();
+  const tracks: AppTrack[] = [];
+  for (const r of rows) {
+    if (EXCLUDED_PATH.test(r.path)) continue;
+    // Garde les vrais morceaux ; écarte les sons courts non musicaux.
+    if (!r.isMusic && r.duration < 30) continue;
+
+    const artwork = r.artwork || undefined;
+    tracks.push({
+      // Même format d'id que l'ancien scan : likes/playlists existants préservés.
+      id: 'local:' + r.path,
+      url: 'file://' + r.path,
+      title: r.title || fileTitle(r.path),
+      artist: r.artist || 'Local',
+      artwork,
+      duration: r.duration || undefined,
+      source: 'local',
+      albumId: r.albumId > 0 ? 'mslocal:' + r.albumId : undefined,
+      album: r.album || undefined,
+      albumArtist: r.albumArtist || undefined,
+      albumCover: artwork,
+      trackNumber: r.trackNumber > 0 ? r.trackNumber : undefined,
+    });
+  }
+  return tracks;
+}
+
+// ---- Repli : ancien scan fichier (module natif absent) ----
 
 function isAudio(name: string): boolean {
   const ext = name.split('.').pop()?.toLowerCase();
@@ -43,7 +102,7 @@ async function scanDir(dir: string, depth: number, acc: AppTrack[]): Promise<voi
   }
 }
 
-export async function scanLocalMusic(): Promise<AppTrack[]> {
+async function scanViaFs(): Promise<AppTrack[]> {
   const acc: AppTrack[] = [];
   const ext = RNFS.ExternalStorageDirectoryPath;
   const roots = [`${ext}/Music`, `${ext}/Download`, RNFS.DownloadDirectoryPath];
@@ -54,8 +113,22 @@ export async function scanLocalMusic(): Promise<AppTrack[]> {
     visited.add(root);
     await scanDir(root, 3, acc);
   }
+  return acc;
+}
+
+export async function scanLocalMusic(): Promise<AppTrack[]> {
+  let tracks: AppTrack[] = [];
+  if (MediaScanner) {
+    try {
+      tracks = await scanViaMediaStore();
+    } catch {
+      tracks = await scanViaFs();
+    }
+  } else {
+    tracks = await scanViaFs();
+  }
 
   const map = new Map<string, AppTrack>();
-  for (const t of acc) map.set(t.id, t);
+  for (const t of tracks) map.set(t.id, t);
   return Array.from(map.values()).sort((a, b) => a.title.localeCompare(b.title));
 }
