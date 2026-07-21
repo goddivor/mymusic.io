@@ -9,9 +9,9 @@ import { name as appName } from './app.json';
 import { loadSettings } from './src/store/settings';
 
 /**
- * Charge les préférences (langue, thème) AVANT d'importer l'app : les
- * StyleSheet des écrans figent la palette au moment du require, donc le
- * thème choisi doit être appliqué en premier.
+ * Loads the preferences (language, theme) BEFORE importing the app: screen
+ * StyleSheets freeze the palette at require time, so the chosen theme must
+ * be applied first.
  */
 function Root() {
   const [App, setApp] = useState(null);

@@ -110,10 +110,12 @@ export default function NowPlayingScreen({
     });
   };
 
+  // Pan-to-dismiss responder: hijacks the gesture only when the inner list is
+  // scrolled to the very top and the user pulls down; otherwise the ScrollView
+  // scrolls normally. Past a distance/velocity threshold the screen animates
+  // off and closes, else it springs back.
   const pan = useRef(
     PanResponder.create({
-      // Only hijack the gesture for dismissal when the list is at the very top
-      // and the user pulls DOWN — otherwise let the ScrollView scroll normally.
       onMoveShouldSetPanResponder: (_, g) =>
         scrollY.current <= 0 && g.dy > 8 && g.dy > Math.abs(g.dx),
       onPanResponderMove: (_, g) => {
@@ -165,7 +167,6 @@ export default function NowPlayingScreen({
     source: String(track.id).startsWith('youtube:') ? 'youtube' : 'local',
   };
 
-  // "Dans le genre" — related tracks from the library (same artist first).
   const pool = [...lib.youtubeTracks, ...lib.localTracks].filter(
     t => t.id !== appTrack.id,
   );
@@ -194,7 +195,6 @@ export default function NowPlayingScreen({
         message: t('listeningTo', { title: appTrack.title, artist: appTrack.artist }),
       });
     } catch {
-      // cancelled or failed — ignore
     }
   };
 
@@ -367,7 +367,6 @@ export default function NowPlayingScreen({
           </View>
         </SafeAreaView>
 
-        {/* Off-screen card used only for capture → share image */}
         <View style={styles.offscreen} pointerEvents="none">
           <ShareCard
             ref={cardRef}

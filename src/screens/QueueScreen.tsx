@@ -34,9 +34,6 @@ export default function QueueScreen({ visible, onClose }: Props) {
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
   const active = useActiveTrack();
-  // `queue` only holds the currently playing track + what's coming next.
-  // Already-played tracks are not shown. `baseIndex` maps a local row back to
-  // the real RNTP queue index.
   const [queue, setQueue] = useState<QTrack[]>([]);
   const [baseIndex, setBaseIndex] = useState(0);
   const [dragging, setDragging] = useState<number | null>(null);
@@ -44,10 +41,13 @@ export default function QueueScreen({ visible, onClose }: Props) {
   const panY = useRef(new Animated.Value(0)).current;
   const dragIndexRef = useRef<number | null>(null);
 
+  // Rebuilds the local queue view: only the playing track and what comes next
+  // are shown (already-played tracks are hidden). `baseIndex` maps a local row
+  // back to its real index in the RNTP queue.
   const reload = useCallback(async () => {
     const q = await TrackPlayer.getQueue();
     const idx = (await TrackPlayer.getActiveTrackIndex()) ?? 0;
-    const upcoming = q.slice(idx); // current first, then the rest
+    const upcoming = q.slice(idx);
     setQueue(
       upcoming.map((t: any) => ({
         id: String(t.id ?? t.url),
@@ -63,6 +63,9 @@ export default function QueueScreen({ visible, onClose }: Props) {
     if (visible) reload();
   }, [visible, reload, active?.id]);
 
+  // Drag-reorder responder for a queue row: tracks the vertical drag, then on
+  // release converts the displacement into a target row (clamped so row 0, the
+  // playing track, stays pinned) and moves the track in the RNTP queue.
   const makeResponder = (index: number) =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -75,7 +78,6 @@ export default function QueueScreen({ visible, onClose }: Props) {
       onPanResponderMove: (_, g) => panY.setValue(g.dy),
       onPanResponderRelease: async (_, g) => {
         const from = dragIndexRef.current ?? index;
-        // Local row 0 is the playing track — keep it pinned, only reorder "next".
         const to = Math.max(
           1,
           Math.min(queue.length - 1, from + Math.round(g.dy / ROW_H)),
@@ -104,7 +106,7 @@ export default function QueueScreen({ visible, onClose }: Props) {
   };
 
   const removeAt = async (localIndex: number) => {
-    if (localIndex === 0) return; // don't remove the playing track
+    if (localIndex === 0) return;
     try {
       await TrackPlayer.remove(baseIndex + localIndex);
     } catch {}

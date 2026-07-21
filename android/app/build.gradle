@@ -117,11 +117,11 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
-    // Extraction YouTube (module natif YtExtractor)
+    // YouTube extraction (YtExtractor native module)
     implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.4")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // Serveur HTTP embarqué (module natif WebServer)
+    // Embedded HTTP server (WebServer native module)
     implementation("org.nanohttpd:nanohttpd:2.3.1")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 

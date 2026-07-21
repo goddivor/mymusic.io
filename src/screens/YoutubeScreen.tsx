@@ -46,7 +46,6 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
     webRef.current?.reload();
   };
 
-  // Hardware back navigates within the WebView instead of leaving the app.
   useEffect(() => {
     if (!active) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -97,7 +96,6 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
         }}
         onLoadStart={() => setOffline(false)}
         onError={({ nativeEvent }) => {
-          // Main-frame failure (no connection, DNS, etc.) → show offline screen.
           if (nativeEvent.url && !nativeEvent.url.startsWith('about:')) {
             setOffline(true);
           }
@@ -121,7 +119,6 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
       )}
 
       <View style={styles.pills}>
-        {/* Whole album / playlist */}
         {playlistId && (
           <TouchableOpacity
             style={[styles.pill, styles.pillAlt]}
@@ -144,7 +141,6 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
           </TouchableOpacity>
         )}
 
-        {/* Current video — fires in the background, no popup. */}
         {videoId && (
           <TouchableOpacity
             style={styles.pill}
@@ -156,7 +152,6 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
         )}
       </View>
 
-      {/* Floating button → downloads list */}
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.85}

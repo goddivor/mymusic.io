@@ -167,7 +167,6 @@ export default function CollectionDetailScreen({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onBack}>
       <View style={styles.root}>
-        {/* Colored gradient backdrop behind the header */}
         <Svg width="100%" height={HEADER_H} style={StyleSheet.absoluteFill}>
           <Defs>
             <LinearGradient id="hdr" x1="0" y1="0" x2="0" y2="1">

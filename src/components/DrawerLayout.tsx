@@ -14,15 +14,14 @@ import { Palette } from '../theme';
 const SCREEN_W = Dimensions.get('window').width;
 export const DRAWER_WIDTH = Math.min(SCREEN_W * 0.78, 320);
 /**
- * Zone de capture du swipe d'ouverture depuis le bord gauche. Large (60 px)
- * car les ~30 premiers px sont mangés par le geste retour système (MIUI &
- * co en navigation gestuelle) : le swipe utile démarre juste après.
+ * Left-edge capture zone for the opening swipe. Kept wide (60 px) because the
+ * first ~30 px are eaten by the system back gesture (MIUI & co in gesture
+ * navigation): the usable swipe starts right after.
  */
 const EDGE = 60;
 
 type Props = {
   open: boolean;
-  /** Autorise le geste d'ouverture (ex. : seulement sur l'onglet Accueil). */
   gestureEnabled: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -31,9 +30,9 @@ type Props = {
 };
 
 /**
- * Tiroir « push » à la YouTube Music : le panneau vit sous la page, la page
- * se fait tirer vers la droite pour le révéler. Le geste suit le doigt
- * (setValue) et se termine par un spring, transforms sur le native driver.
+ * YouTube Music-style "push" drawer: the panel sits under the page, and the
+ * page is dragged right to reveal it. The gesture tracks the finger
+ * (setValue) and settles with a spring, using native-driver transforms.
  */
 export default function DrawerLayout({
   open,
@@ -62,7 +61,6 @@ export default function DrawerLayout({
     enabledRef.current = gestureEnabled;
   }, [gestureEnabled]);
 
-  // Bouton retour Android : ferme le tiroir s'il est ouvert.
   useEffect(() => {
     if (!open) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -91,8 +89,8 @@ export default function DrawerLayout({
       onMoveShouldSetPanResponderCapture: (_evt, g) => {
         const horizontal = Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5;
         if (!horizontal) return false;
-        if (openRef.current) return g.dx < 0; // fermeture : swipe gauche
-        return enabledRef.current && g.x0 <= EDGE && g.dx > 0; // ouverture : bord gauche
+        if (openRef.current) return g.dx < 0;
+        return enabledRef.current && g.x0 <= EDGE && g.dx > 0;
       },
       onPanResponderMove: (_evt, g) => {
         const base = openRef.current ? DRAWER_WIDTH : 0;
@@ -114,7 +112,6 @@ export default function DrawerLayout({
     inputRange: [0, 1],
     outputRange: [0, DRAWER_WIDTH],
   });
-  // Parallaxe : le panneau finit sa course plus lentement que la page.
   const drawerTranslate = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [-DRAWER_WIDTH * 0.35, 0],

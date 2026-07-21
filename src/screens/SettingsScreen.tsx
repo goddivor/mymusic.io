@@ -60,7 +60,6 @@ export default function SettingsScreen({ onClose }: Props) {
         label: t(LANGUAGE_LABELS[l]),
         onPress: async () => {
           await saveSettings({ language: l });
-          // Application immédiate : re-rend toute l'interface.
           setLang(effectiveLanguage());
         },
       })),
@@ -77,7 +76,6 @@ export default function SettingsScreen({ onClose }: Props) {
 
   const settings = getSettings();
 
-  // Registre des réglages, utilisé par la liste ET par la recherche.
   const items = [
     {
       key: 'language',
@@ -150,7 +148,6 @@ export default function SettingsScreen({ onClose }: Props) {
     </React.Fragment>
   );
 
-  // ---- Vue recherche ----
   if (searching) {
     return (
       <View style={styles.container}>
@@ -189,7 +186,6 @@ export default function SettingsScreen({ onClose }: Props) {
     );
   }
 
-  // ---- Vue normale ----
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -206,7 +202,6 @@ export default function SettingsScreen({ onClose }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 28 }}>
-        {/* --- Général --- */}
         <Text style={styles.sectionLabel}>{t('sectionGeneral')}</Text>
         <View style={styles.card}>
           {items
@@ -214,13 +209,11 @@ export default function SettingsScreen({ onClose }: Props) {
             .map((it, i, arr) => renderItemRow(it, i === arr.length - 1))}
         </View>
 
-        {/* --- Qualité audio --- */}
         <Text style={styles.sectionLabel}>{t('sectionPlayback')}</Text>
         <View style={styles.card}>
           {renderItemRow(items.find(it => it.key === 'audioQuality')!, true)}
         </View>
 
-        {/* --- À propos --- */}
         <Text style={styles.sectionLabel}>{t('sectionAbout')}</Text>
         <View style={styles.card}>
           {renderItemRow(items.find(it => it.key === 'about')!, true)}

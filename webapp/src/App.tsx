@@ -81,7 +81,7 @@ export default function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [lib, setLib] = useState<Lib | null>(null);
   const [authNeeded, setAuthNeeded] = useState(false);
-  const [view, setView] = useState<string>('home'); // 'home' | collection key
+  const [view, setView] = useState<string>('home');
   const [search, setSearch] = useState('');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -206,7 +206,6 @@ export default function App() {
       )
     : [];
 
-  // ----- shared track row -----
   const TrackRow = ({ list, i, ctx }: { list: Track[]; i: number; ctx?: string }) => {
     const t = list[i];
     const isCur = current?.id === t.id;
@@ -234,7 +233,6 @@ export default function App() {
     );
   };
 
-  // ----- big card (Listen again) -----
   const BigCard = ({ c }: { c: Collection }) => {
     const cc = colCover(c);
     return (

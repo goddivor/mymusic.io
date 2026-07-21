@@ -20,10 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import fi.iki.elonen.NanoHTTPD;
 
 /**
- * Serveur HTTP embarqué : sert la webapp (assets/webapp), la bibliothèque en
- * JSON et le streaming des fichiers audio avec support des requêtes Range.
+ * Embedded HTTP server: serves the webapp (assets/webapp), the library as JSON
+ * and streams audio files with HTTP Range request support.
  *
- * Auth : POST /pair?pin=XXXX -> {token}; ensuite chaque requête passe ?t=token.
+ * Auth: POST /pair?pin=XXXX -> {token}; every subsequent request passes ?t=token.
  */
 public class MusicHttpServer extends NanoHTTPD {
     private final AssetManager assets;
@@ -107,11 +107,9 @@ public class MusicHttpServer extends NanoHTTPD {
         return t != null && tokens.contains(t);
     }
 
-    // ---- static webapp ----
-
+    /** Serves the static webapp; extension-less routes fall back to index.html (SPA). */
     private Response serveAsset(String uri) throws IOException {
         String path = uri.equals("/") ? "index.html" : uri.substring(1);
-        // SPA : toute route sans extension retombe sur index.html
         if (!path.contains(".")) path = "index.html";
         InputStream in;
         try {
@@ -146,8 +144,6 @@ public class MusicHttpServer extends NanoHTTPD {
         return "application/octet-stream";
     }
 
-    // ---- audio streaming with Range support ----
-
     private Response serveFile(File file, String rangeHeader) throws IOException {
         if (!file.exists() || !file.isFile()) {
             return status(Response.Status.NOT_FOUND, "fichier absent");
@@ -169,7 +165,6 @@ public class MusicHttpServer extends NanoHTTPD {
                         start = Long.parseLong(s);
                         if (!e.isEmpty()) end = Math.min(Long.parseLong(e), length - 1);
                     } else if (!e.isEmpty()) {
-                        // suffixe : les N derniers octets
                         start = Math.max(0, length - Long.parseLong(e));
                     }
                     partial = true;
@@ -201,8 +196,6 @@ public class MusicHttpServer extends NanoHTTPD {
         }
         return res;
     }
-
-    // ---- helpers ----
 
     private static Response json(String body) {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);

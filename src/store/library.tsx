@@ -108,7 +108,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [downloads, setDownloads] = useState<Download[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
 
-  // Load persisted state once.
   useEffect(() => {
     (async () => {
       const [yt, likes, pls, recent] = await Promise.all([
@@ -144,19 +143,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     rescanLocal();
   }, [rescanLocal]);
 
-  const persistYt = useCallback((next: AppTrack[]) => {
-    setYoutubeTracks(next);
-    AsyncStorage.setItem(KEY_YT, JSON.stringify(next));
-  }, []);
-  const persistLikes = useCallback((next: string[]) => {
-    setLikedIds(next);
-    AsyncStorage.setItem(KEY_LIKES, JSON.stringify(next));
-  }, []);
-  const persistPlaylists = useCallback((next: Playlist[]) => {
-    setPlaylists(next);
-    AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
-  }, []);
-
   const addYoutube = useCallback(
     (track: AppTrack) => {
       setYoutubeTracks(prev => {
@@ -191,7 +177,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
       let skip = false;
       setDownloads(prev => {
-        // Skip if already running or finished successfully.
         const existing = prev.find(d => d.id === id);
         if (existing && existing.status !== 'error') {
           skip = true;
@@ -208,7 +193,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       });
       if (skip) return;
 
-      // Fire-and-forget: runs in the background, multiple can run at once.
       downloadYoutubeAudio(
         url,
         pct => patchDownload(id, { status: 'downloading', progress: pct }),
@@ -308,9 +292,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     return map;
   }, [localTracks, youtubeTracks]);
 
-  // Keep liked artwork/metadata snapshot so liked youtube tracks survive even if
-  // not currently in a list. We store the full track for likes via tracksById,
-  // falling back to a minimal record kept in a side map.
   const [likedSnapshots, setLikedSnapshots] = useState<Record<string, AppTrack>>({});
   useEffect(() => {
     const raw = likedSnapshots;

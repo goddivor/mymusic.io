@@ -15,7 +15,6 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  /** Extra style applied to the sheet container (e.g. maxHeight). */
   sheetStyle?: any;
 };
 

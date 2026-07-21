@@ -75,7 +75,6 @@ public class YtExtractorModule extends ReactContextBaseJavaModule {
                 String ext = "m4a";
                 int bitrate = 0;
 
-                // 1) Real audio-only stream (needs no poToken only in rare cases).
                 List<AudioStream> audioStreams = info.getAudioStreams();
                 if (audioStreams != null && !audioStreams.isEmpty()) {
                     AudioStream best = null;
@@ -92,7 +91,6 @@ public class YtExtractorModule extends ReactContextBaseJavaModule {
                     }
                 }
 
-                // 2) Fallback: muxed progressive stream (video+audio).
                 if (audioUrl == null) {
                     List<VideoStream> videoStreams = info.getVideoStreams();
                     if (videoStreams != null) {
@@ -132,7 +130,6 @@ public class YtExtractorModule extends ReactContextBaseJavaModule {
     }
 
     private static int resolutionOf(VideoStream v) {
-        // "360p" / "720p60" -> 360 / 720
         String res = v.getResolution();
         if (res == null) return 0;
         StringBuilder digits = new StringBuilder();

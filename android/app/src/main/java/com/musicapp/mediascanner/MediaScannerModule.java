@@ -20,9 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Interroge l'index MediaStore du système : tous les fichiers audio du
- * téléphone (toutes cartes/dossiers confondus) avec leurs métadonnées
- * (titre, artiste, album, durée, n° de piste, pochette).
+ * Queries the system MediaStore index: every audio file on the device
+ * (all storage volumes and folders) with its metadata (title, artist,
+ * album, duration, track number, artwork).
  */
 public class MediaScannerModule extends ReactContextBaseJavaModule {
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
@@ -37,6 +37,10 @@ public class MediaScannerModule extends ReactContextBaseJavaModule {
         return "MediaScanner";
     }
 
+    /**
+     * MediaStore's TRACK column sometimes encodes disc*1000 + track number;
+     * values above 1000 are reduced modulo 1000 to keep only the track part.
+     */
     @ReactMethod
     public void queryAudio(final Promise promise) {
         EXECUTOR.execute(() -> {
@@ -89,7 +93,6 @@ public class MediaScannerModule extends ReactContextBaseJavaModule {
                         m.putDouble("albumId", albumId);
                         m.putString("albumArtist", iAlbumArtist >= 0
                                 ? clean(cursor.getString(iAlbumArtist)) : "");
-                        // TRACK encode parfois disque*1000 + piste
                         int track = cursor.getInt(iTrack);
                         m.putInt("trackNumber", track > 1000 ? track % 1000 : track);
                         m.putDouble("duration", cursor.getLong(iDuration) / 1000.0);
@@ -108,7 +111,7 @@ public class MediaScannerModule extends ReactContextBaseJavaModule {
         });
     }
 
-    /** MediaStore renvoie "<unknown>" pour les champs absents. */
+    /** MediaStore returns "&lt;unknown&gt;" for missing fields. */
     private static String clean(String s) {
         if (s == null || "<unknown>".equals(s)) return "";
         return s;

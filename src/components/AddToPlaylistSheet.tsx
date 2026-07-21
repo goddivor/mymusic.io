@@ -63,7 +63,6 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
           {t('addTrackTitle', { title: track?.title ?? '' })}
         </Text>
 
-        {/* Titres likés est une playlist à part entière → toujours en premier */}
         <TouchableOpacity style={styles.row} onPress={handleToggleLiked}>
           <GradientTile colors={gradients.liked} size={44} radius={9}>
             <Ic icon={FavouriteIcon} size={20} color="#fff" strokeWidth={2.2} />

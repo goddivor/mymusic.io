@@ -9,11 +9,11 @@ import { AppTrack } from '../types';
 import Ic from './Ic';
 
 export const SHARE_W = 360;
-export const SHARE_H = 640; // ~9:16 story format
+export const SHARE_H = 640;
 
 type Props = {
   track: AppTrack | null;
-  artwork?: string; // high-res override (e.g. maxresdefault)
+  artwork?: string;
   fallbackArtwork?: string;
 };
 

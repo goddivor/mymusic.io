@@ -9,7 +9,7 @@ const dark = {
   text: '#F5F5F8',
   textDim: '#9B9BAC',
   textFaint: '#63636F',
-  accent: '#B57BFF', // violet — active / highlight (our accent, not Spotify green)
+  accent: '#B57BFF',
   accent2: '#FF6FB5',
   border: '#23232F',
 };
@@ -32,10 +32,10 @@ export type Palette = typeof dark;
 export const palettes: Record<ThemeScheme, Palette> = { dark, light };
 
 /**
- * Palette « legacy » mutable, gardée en phase avec le thème actif par le
- * ThemeProvider (src/store/theme.tsx). Les composants doivent préférer
- * useTheme()/useThemedStyles() ; cet objet ne sert que de filet de sécurité
- * pour du code non réactif.
+ * Mutable "legacy" palette, kept in sync with the active theme by the
+ * ThemeProvider (src/store/theme.tsx). Components should prefer
+ * useTheme()/useThemedStyles(); this object is only a safety net for
+ * non-reactive code.
  */
 export const theme: Palette = { ...dark };
 
