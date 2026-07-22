@@ -8,8 +8,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useI18n } from '../i18n';
 import { useLibrary } from '../store/library';
-import { gradients, playlistGradient, theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { gradients, Palette, playlistGradient } from '../theme';
 import { AppTrack } from '../types';
 import GradientTile from './GradientTile';
 import Ic from './Ic';
@@ -21,6 +23,9 @@ type Props = {
 };
 
 export default function AddToPlaylistSheet({ track, onClose }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t, tracksCount } = useI18n();
   const { playlists, createPlaylist, addToPlaylist, isLiked, toggleLike } = useLibrary();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
@@ -55,19 +60,18 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
     <SwipeableSheet visible={visible} onClose={close}>
       <View style={styles.body}>
         <Text style={styles.title} numberOfLines={1}>
-          Ajouter « {track?.title} »
+          {t('addTrackTitle', { title: track?.title ?? '' })}
         </Text>
 
-        {/* Titres likés est une playlist à part entière → toujours en premier */}
         <TouchableOpacity style={styles.row} onPress={handleToggleLiked}>
           <GradientTile colors={gradients.liked} size={44} radius={9}>
             <Ic icon={FavouriteIcon} size={20} color="#fff" strokeWidth={2.2} />
           </GradientTile>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.rowName} numberOfLines={1}>
-              Titres likés
+              {t('likedTracks')}
             </Text>
-            <Text style={styles.rowCount}>{liked ? 'Déjà ajouté — retirer' : 'Ajouter aux likes'}</Text>
+            <Text style={styles.rowCount}>{liked ? t('alreadyAddedRemove') : t('addToLikes')}</Text>
           </View>
           {liked && <Text style={styles.added}>✓</Text>}
         </TouchableOpacity>
@@ -76,7 +80,7 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
           <View style={styles.createRow}>
             <TextInput
               style={styles.input}
-              placeholder="Nom de la playlist"
+              placeholder={t('playlistName')}
               placeholderTextColor={theme.textFaint}
               value={name}
               onChangeText={setName}
@@ -84,7 +88,7 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
               onSubmitEditing={handleCreate}
             />
             <TouchableOpacity style={styles.createBtn} onPress={handleCreate}>
-              <Text style={styles.createBtnText}>Créer</Text>
+              <Text style={styles.createBtnText}>{t('create')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -92,7 +96,7 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
             <View style={styles.newIcon}>
               <Ic icon={Add01Icon} size={24} color={theme.accent} strokeWidth={2.2} />
             </View>
-            <Text style={styles.newText}>Nouvelle playlist</Text>
+            <Text style={styles.newText}>{t('newPlaylist')}</Text>
           </TouchableOpacity>
         )}
 
@@ -110,7 +114,7 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
                 <Text style={styles.rowName} numberOfLines={1}>
                   {item.name}
                 </Text>
-                <Text style={styles.rowCount}>{item.trackIds.length} titre(s)</Text>
+                <Text style={styles.rowCount}>{tracksCount(item.trackIds.length)}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -120,7 +124,7 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   body: { paddingHorizontal: 18, paddingTop: 4 },
   title: { color: theme.text, fontSize: 16, fontWeight: '700', marginBottom: 14 },
   newRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },

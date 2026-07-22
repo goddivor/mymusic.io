@@ -10,8 +10,6 @@ type Props = {
   children?: React.ReactNode;
 };
 
-// Square tile with a diagonal gradient (drawn in SVG, no extra native dep),
-// with optional centered content (an icon).
 export default function GradientTile({
   colors,
   size = 56,

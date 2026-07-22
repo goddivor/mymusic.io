@@ -17,7 +17,6 @@ import Slider from '@react-native-community/slider';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   Image,
   Modal,
   PanResponder,
@@ -48,11 +47,11 @@ import {
   subscribePlayer,
   toggleShuffle,
 } from '../lib/player';
+import { useI18n } from '../i18n';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import { AppTrack } from '../types';
-
-const { height: SCREEN_H } = Dimensions.get('window');
 
 type Props = {
   visible: boolean;
@@ -74,6 +73,9 @@ export default function NowPlayingScreen({
   onAddToPlaylist,
   onOpenQueue,
 }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const track = useActiveTrack();
   const { playing } = useIsPlaying();
   const { position, duration } = useProgress();
@@ -95,20 +97,15 @@ export default function NowPlayingScreen({
   }, [visible, translateY]);
 
   const dismiss = () => {
-    Animated.timing(translateY, {
-      toValue: SCREEN_H,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      onClose();
-      translateY.setValue(0);
-    });
+    onClose();
   };
 
+  // Pan-to-dismiss responder: hijacks the gesture only when the inner list is
+  // scrolled to the very top and the user pulls down; otherwise the ScrollView
+  // scrolls normally. Past a distance/velocity threshold the screen animates
+  // off and closes, else it springs back.
   const pan = useRef(
     PanResponder.create({
-      // Only hijack the gesture for dismissal when the list is at the very top
-      // and the user pulls DOWN — otherwise let the ScrollView scroll normally.
       onMoveShouldSetPanResponder: (_, g) =>
         scrollY.current <= 0 && g.dy > 8 && g.dy > Math.abs(g.dx),
       onPanResponderMove: (_, g) => {
@@ -116,14 +113,7 @@ export default function NowPlayingScreen({
       },
       onPanResponderRelease: (_, g) => {
         if (g.dy > 120 || g.vy > 1.1) {
-          Animated.timing(translateY, {
-            toValue: SCREEN_H,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(() => {
-            onClose();
-            translateY.setValue(0);
-          });
+          onClose();
         } else {
           Animated.spring(translateY, {
             toValue: 0,
@@ -154,13 +144,12 @@ export default function NowPlayingScreen({
   const appTrack: AppTrack = {
     id: String(track.id),
     url: String(track.url),
-    title: track.title || 'Titre',
+    title: track.title || t('track'),
     artist: track.artist || '',
     artwork: track.artwork ? String(track.artwork) : undefined,
     source: String(track.id).startsWith('youtube:') ? 'youtube' : 'local',
   };
 
-  // "Dans le genre" — related tracks from the library (same artist first).
   const pool = [...lib.youtubeTracks, ...lib.localTracks].filter(
     t => t.id !== appTrack.id,
   );
@@ -186,10 +175,9 @@ export default function NowPlayingScreen({
         url: fileUri,
         type: 'image/png',
         failOnCancel: false,
-        message: `J'écoute « ${appTrack.title} » — ${appTrack.artist}`,
+        message: t('listeningTo', { title: appTrack.title, artist: appTrack.artist }),
       });
     } catch {
-      // cancelled or failed — ignore
     }
   };
 
@@ -200,13 +188,13 @@ export default function NowPlayingScreen({
       message: item.artist,
       actions: [
         {
-          label: lk ? 'Retirer des likes' : 'Liker',
+          label: lk ? t('unlike') : t('like'),
           icon: FavouriteIcon,
           onPress: () => toggleLike(item),
         },
-        { label: 'Lire ensuite', icon: Queue01Icon, onPress: () => playNext(item) },
+        { label: t('playNext'), icon: Queue01Icon, onPress: () => playNext(item) },
         {
-          label: 'Ajouter à une playlist',
+          label: t('addToPlaylist'),
           icon: Add01Icon,
           onPress: () => onAddToPlaylist(item),
         },
@@ -233,7 +221,7 @@ export default function NowPlayingScreen({
             <TouchableOpacity onPress={dismiss} hitSlop={12}>
               <Ic icon={ArrowDown01Icon} size={28} color={theme.text} />
             </TouchableOpacity>
-            <Text style={styles.headerLabel}>EN LECTURE</Text>
+            <Text style={styles.headerLabel}>{t('nowPlaying')}</Text>
             <TouchableOpacity onPress={() => onAddToPlaylist(appTrack)} hitSlop={12}>
               <Ic icon={Add01Icon} size={26} color={theme.text} />
             </TouchableOpacity>
@@ -337,17 +325,17 @@ export default function NowPlayingScreen({
             <View style={styles.footer}>
               <TouchableOpacity style={styles.footerBtn} onPress={onShare} hitSlop={10}>
                 <Ic icon={Share08Icon} size={22} color={theme.textDim} />
-                <Text style={styles.footerLabel}>Partager</Text>
+                <Text style={styles.footerLabel}>{t('share')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.footerBtn} onPress={onOpenQueue} hitSlop={10}>
                 <Ic icon={Queue01Icon} size={22} color={theme.textDim} />
-                <Text style={styles.footerLabel}>File d'attente</Text>
+                <Text style={styles.footerLabel}>{t('queue')}</Text>
               </TouchableOpacity>
             </View>
 
             {similar.length > 0 && (
               <View style={styles.similar}>
-                <Text style={styles.similarTitle}>Dans le genre</Text>
+                <Text style={styles.similarTitle}>{t('inTheGenre')}</Text>
                 {similar.map((t, i) => (
                   <TrackRow
                     key={t.id}
@@ -362,7 +350,6 @@ export default function NowPlayingScreen({
           </View>
         </SafeAreaView>
 
-        {/* Off-screen card used only for capture → share image */}
         <View style={styles.offscreen} pointerEvents="none">
           <ShareCard
             ref={cardRef}
@@ -376,7 +363,7 @@ export default function NowPlayingScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   safe: { flex: 1, paddingHorizontal: 24 },
   header: {

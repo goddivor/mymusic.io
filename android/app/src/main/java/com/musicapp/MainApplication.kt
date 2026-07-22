@@ -6,6 +6,8 @@ import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
+import com.musicapp.appupdater.AppUpdaterPackage
+import com.musicapp.mediascanner.MediaScannerPackage
 import com.musicapp.webserver.WebServerPackage
 import com.musicapp.ytextractor.YtExtractorPackage
 
@@ -18,6 +20,8 @@ class MainApplication : Application(), ReactApplication {
         PackageList(this).packages.apply {
           add(YtExtractorPackage())
           add(WebServerPackage())
+          add(MediaScannerPackage())
+          add(AppUpdaterPackage())
         },
     )
   }

@@ -19,7 +19,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TrackPlayer, { useActiveTrack } from 'react-native-track-player';
 import Ic from '../components/Ic';
-import { theme } from '../theme';
+import { t as tr, useI18n } from '../i18n';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 
 type Props = { visible: boolean; onClose: () => void };
 
@@ -28,10 +30,10 @@ type QTrack = { id: string; title: string; artist: string; artwork?: string };
 const ROW_H = 64;
 
 export default function QueueScreen({ visible, onClose }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const active = useActiveTrack();
-  // `queue` only holds the currently playing track + what's coming next.
-  // Already-played tracks are not shown. `baseIndex` maps a local row back to
-  // the real RNTP queue index.
   const [queue, setQueue] = useState<QTrack[]>([]);
   const [baseIndex, setBaseIndex] = useState(0);
   const [dragging, setDragging] = useState<number | null>(null);
@@ -39,14 +41,17 @@ export default function QueueScreen({ visible, onClose }: Props) {
   const panY = useRef(new Animated.Value(0)).current;
   const dragIndexRef = useRef<number | null>(null);
 
+  // Rebuilds the local queue view: only the playing track and what comes next
+  // are shown (already-played tracks are hidden). `baseIndex` maps a local row
+  // back to its real index in the RNTP queue.
   const reload = useCallback(async () => {
     const q = await TrackPlayer.getQueue();
     const idx = (await TrackPlayer.getActiveTrackIndex()) ?? 0;
-    const upcoming = q.slice(idx); // current first, then the rest
+    const upcoming = q.slice(idx);
     setQueue(
       upcoming.map((t: any) => ({
         id: String(t.id ?? t.url),
-        title: t.title ?? 'Titre',
+        title: t.title ?? tr('track'),
         artist: t.artist ?? '',
         artwork: t.artwork ? String(t.artwork) : undefined,
       })),
@@ -58,6 +63,9 @@ export default function QueueScreen({ visible, onClose }: Props) {
     if (visible) reload();
   }, [visible, reload, active?.id]);
 
+  // Drag-reorder responder for a queue row: tracks the vertical drag, then on
+  // release converts the displacement into a target row (clamped so row 0, the
+  // playing track, stays pinned) and moves the track in the RNTP queue.
   const makeResponder = (index: number) =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -70,7 +78,6 @@ export default function QueueScreen({ visible, onClose }: Props) {
       onPanResponderMove: (_, g) => panY.setValue(g.dy),
       onPanResponderRelease: async (_, g) => {
         const from = dragIndexRef.current ?? index;
-        // Local row 0 is the playing track — keep it pinned, only reorder "next".
         const to = Math.max(
           1,
           Math.min(queue.length - 1, from + Math.round(g.dy / ROW_H)),
@@ -99,7 +106,7 @@ export default function QueueScreen({ visible, onClose }: Props) {
   };
 
   const removeAt = async (localIndex: number) => {
-    if (localIndex === 0) return; // don't remove the playing track
+    if (localIndex === 0) return;
     try {
       await TrackPlayer.remove(baseIndex + localIndex);
     } catch {}
@@ -114,21 +121,21 @@ export default function QueueScreen({ visible, onClose }: Props) {
             <TouchableOpacity onPress={onClose} hitSlop={12}>
               <Ic icon={ArrowDown01Icon} size={28} color={theme.text} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>File d'attente</Text>
+            <Text style={styles.headerTitle}>{t('queue')}</Text>
             <View style={{ width: 28 }} />
           </View>
 
           <ScrollView
             scrollEnabled={dragging === null}
             contentContainerStyle={{ paddingBottom: 30 }}>
-            {queue.length > 0 && <Text style={styles.sectionLabel}>EN LECTURE</Text>}
+            {queue.length > 0 && <Text style={styles.sectionLabel}>{t('nowPlaying')}</Text>}
             <View>
-              {queue.map((t, i) => {
+              {queue.map((tk, i) => {
                 const isActive = i === 0;
                 const isDragged = dragging === i;
                 return (
-                  <React.Fragment key={t.id + '_' + i}>
-                    {i === 1 && <Text style={styles.sectionLabel}>À SUIVRE</Text>}
+                  <React.Fragment key={tk.id + '_' + i}>
+                    {i === 1 && <Text style={styles.sectionLabel}>{t('upNext')}</Text>}
                     <Animated.View
                       style={[
                         styles.row,
@@ -139,8 +146,8 @@ export default function QueueScreen({ visible, onClose }: Props) {
                         style={styles.rowMain}
                         activeOpacity={0.6}
                         onPress={() => jumpTo(i)}>
-                        {t.artwork ? (
-                          <Image source={{ uri: t.artwork }} style={styles.art} />
+                        {tk.artwork ? (
+                          <Image source={{ uri: tk.artwork }} style={styles.art} />
                         ) : (
                           <View style={[styles.art, styles.placeholder]} />
                         )}
@@ -148,10 +155,10 @@ export default function QueueScreen({ visible, onClose }: Props) {
                           <Text
                             style={[styles.title, isActive && styles.activeTitle]}
                             numberOfLines={1}>
-                            {t.title}
+                            {tk.title}
                           </Text>
                           <Text style={styles.artist} numberOfLines={1}>
-                            {t.artist}
+                            {tk.artist}
                           </Text>
                         </View>
                       </TouchableOpacity>
@@ -183,7 +190,7 @@ export default function QueueScreen({ visible, onClose }: Props) {
             </View>
 
             {queue.length <= 1 && (
-              <Text style={styles.empty}>Rien d'autre dans la file.</Text>
+              <Text style={styles.empty}>{t('queueEmpty')}</Text>
             )}
           </ScrollView>
         </SafeAreaView>
@@ -192,7 +199,7 @@ export default function QueueScreen({ visible, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   header: {
     flexDirection: 'row',

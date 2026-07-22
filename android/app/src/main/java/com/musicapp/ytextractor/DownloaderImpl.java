@@ -14,7 +14,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 
-/** OkHttp-based HTTP client required by NewPipeExtractor. */
 public class DownloaderImpl extends Downloader {
     public static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0";

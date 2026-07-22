@@ -11,10 +11,13 @@ import TrackPlayer, {
   useIsPlaying,
   useProgress,
 } from 'react-native-track-player';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import Ic from './Ic';
 
 export default function PlayerBar({ onPress }: { onPress?: () => void }) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
   const track = useActiveTrack();
   const { playing } = useIsPlaying();
   const { position, duration } = useProgress();
@@ -63,7 +66,7 @@ export default function PlayerBar({ onPress }: { onPress?: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   wrap: {
     marginHorizontal: 8,
     marginBottom: 4,

@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read app version
+        id: version
+        run: echo "version=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if release already exists
+        id: guard
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.exists == 'false'
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        if: steps.guard.outputs.exists == 'false'
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        if: steps.guard.outputs.exists == 'false'
+        run: npm ci
+
+      - name: Build embedded webapp
+        if: steps.guard.outputs.exists == 'false'
+        run: |
+          cd webapp && npm ci && cd ..
+          npm run webapp:build
+
+      - name: Decode release keystore
+        if: steps.guard.outputs.exists == 'false'
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+
+      - name: Build signed release APK
+        if: steps.guard.outputs.exists == 'false'
+        env:
+          RELEASE_STORE_FILE: release.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: cd android && ./gradlew :app:assembleRelease --no-daemon
+
+      - name: Rename APK
+        if: steps.guard.outputs.exists == 'false'
+        run: cp android/app/build/outputs/apk/release/app-release.apk "MusicApp-v${{ steps.version.outputs.version }}.apk"
+
+      - name: Create GitHub release
+        if: steps.guard.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: MusicApp v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: MusicApp-v${{ steps.version.outputs.version }}.apk

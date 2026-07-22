@@ -1,4 +1,5 @@
 import { NativeModules } from 'react-native';
+import { t } from '../i18n';
 import RNFS from 'react-native-fs';
 import { AppTrack } from '../types';
 
@@ -6,6 +7,12 @@ const { YtExtractor } = NativeModules as {
   YtExtractor: {
     getAudioStream(url: string): Promise<YtStreamInfo>;
     getPlaylist(url: string): Promise<YtPlaylist>;
+    getSuggestions(query: string): Promise<string[]>;
+    search(query: string): Promise<YtSearchPage>;
+    searchMore(query: string): Promise<YtSearchPage>;
+    getTrending(): Promise<{ items: YtVideoItem[] }>;
+    getVideoInfo(url: string): Promise<YtVideoInfo>;
+    getComments(url: string): Promise<{ items: YtComment[] }>;
   };
 };
 
@@ -33,6 +40,68 @@ export type YtPlaylist = {
   thumbnail: string;
   items: YtPlaylistItem[];
 };
+
+export type YtVideoItem = {
+  url: string;
+  title: string;
+  uploader: string;
+  duration: number;
+  views: number;
+  uploadedDate: string;
+  thumbnail: string;
+};
+
+export type YtSearchPage = {
+  items: YtVideoItem[];
+  hasMore: boolean;
+};
+
+export type YtVideoInfo = {
+  url: string;
+  title: string;
+  uploader: string;
+  uploaderAvatar: string;
+  views: number;
+  likes: number;
+  duration: number;
+  thumbnail: string;
+  description: string;
+  audioUrl: string;
+  ext: string;
+  related: YtVideoItem[];
+};
+
+export type YtComment = {
+  author: string;
+  avatar: string;
+  text: string;
+  likes: number;
+  date: string;
+};
+
+export function getSuggestions(query: string): Promise<string[]> {
+  return YtExtractor.getSuggestions(query);
+}
+
+export function searchYoutube(query: string): Promise<YtSearchPage> {
+  return YtExtractor.search(query);
+}
+
+export function searchYoutubeMore(query: string): Promise<YtSearchPage> {
+  return YtExtractor.searchMore(query);
+}
+
+export function getTrending(): Promise<{ items: YtVideoItem[] }> {
+  return YtExtractor.getTrending();
+}
+
+export function getVideoInfo(url: string): Promise<YtVideoInfo> {
+  return YtExtractor.getVideoInfo(url);
+}
+
+export function getComments(url: string): Promise<{ items: YtComment[] }> {
+  return YtExtractor.getComments(url);
+}
 
 export function getPlaylist(url: string): Promise<YtPlaylist> {
   return YtExtractor.getPlaylist(url);
@@ -69,7 +138,9 @@ export function getAudioStream(url: string): Promise<YtStreamInfo> {
 /**
  * Extracts the best audio stream for a YouTube URL and downloads it to the
  * app's private storage, returning a playable AppTrack. Skips the download
- * if the file already exists.
+ * if the file already exists. A clean canonical watch URL is rebuilt from the
+ * video id because NewPipeExtractor rejects URLs cluttered with
+ * list/start_radio/pp params.
  */
 export async function downloadYoutubeAudio(
   url: string,
@@ -77,10 +148,8 @@ export async function downloadYoutubeAudio(
   onInfo?: (info: { title: string; uploader: string; thumbnail: string }) => void,
 ): Promise<AppTrack> {
   const id = extractYoutubeId(url);
-  if (!id) throw new Error('URL YouTube invalide');
+  if (!id) throw new Error(t('invalidYoutubeUrl'));
 
-  // NewPipeExtractor rejects URLs cluttered with list/start_radio/pp params,
-  // so rebuild a clean canonical watch URL from the video id.
   const cleanUrl = `https://www.youtube.com/watch?v=${id}`;
   const info = await getAudioStream(cleanUrl);
   if (onInfo) {
@@ -106,7 +175,7 @@ export async function downloadYoutubeAudio(
     });
     const result = await task.promise;
     if (result.statusCode >= 400) {
-      throw new Error(`Téléchargement échoué (HTTP ${result.statusCode})`);
+      throw new Error(t('downloadHttpError', { code: result.statusCode }));
     }
   }
 

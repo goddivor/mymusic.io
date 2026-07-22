@@ -7,9 +7,9 @@ import { AppTrack } from '../types';
 
 let isSetup = false;
 
-// ---- Player state we own (RNTP has no native shuffle) -------------------
-// The "context" is the ordered list the current playback came from, so we can
-// reshuffle the upcoming tracks or restore the original order on demand.
+// RNTP has no native shuffle, so we own this state. The "context" is the
+// ordered list the current playback came from, used to reshuffle the upcoming
+// tracks or restore the original order on demand.
 let context: AppTrack[] = [];
 let shuffleOn = false;
 const listeners = new Set<() => void>();
@@ -40,9 +40,7 @@ export async function setupPlayer(): Promise<void> {
   if (isSetup) return;
   try {
     await TrackPlayer.setupPlayer();
-  } catch (e) {
-    // Already initialized (e.g. after a fast refresh) — ignore.
-  }
+  } catch {}
   await TrackPlayer.updateOptions({
     android: {
       appKilledPlaybackBehavior:
@@ -78,7 +76,6 @@ export function toRNTPTrack(t: AppTrack) {
   };
 }
 
-// Insert a track right after the current one without disturbing the rest.
 export async function playNext(t: AppTrack): Promise<void> {
   await setupPlayer();
   const idx = await TrackPlayer.getActiveTrackIndex();
@@ -98,14 +95,12 @@ export async function playTracks(
   if (tracks.length === 0) return;
   await setupPlayer();
 
-  // Playing a new context always clears (replaces) the queue first.
   context = tracks;
   shuffleOn = opts?.shuffle ?? false;
 
   let ordered = tracks;
   let start = startIndex;
   if (shuffleOn) {
-    // Keep the chosen track first, shuffle the rest.
     const head = tracks[startIndex];
     const rest = shuffleArr(tracks.filter((_, i) => i !== startIndex));
     ordered = [head, ...rest];
@@ -148,7 +143,6 @@ export async function setShuffle(
     let pool = context.filter(t => t.id !== currentId);
     if (pool.length === 0 && enrichPool && enrichPool.length) {
       pool = enrichPool.filter(t => t.id !== currentId);
-      // Adopt the enriched pool as the new context so toggling off behaves.
       const head = context.find(t => t.id === currentId);
       context = head ? [head, ...pool] : pool;
     }

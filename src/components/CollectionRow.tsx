@@ -2,7 +2,8 @@ import { MoreHorizontalIcon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Collection } from '../lib/collections';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import GradientTile from './GradientTile';
 import Ic from './Ic';
 
@@ -14,6 +15,8 @@ type Props = {
 };
 
 export default function CollectionRow({ collection, onPress, onMore, onLongPress }: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
   return (
     <TouchableOpacity
       style={styles.row}
@@ -45,7 +48,7 @@ export default function CollectionRow({ collection, onPress, onMore, onLongPress
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, paddingHorizontal: 16 },
   cover: { width: 56, height: 56, borderRadius: 12, backgroundColor: theme.surfaceHi },
   meta: { flex: 1, marginLeft: 14 },

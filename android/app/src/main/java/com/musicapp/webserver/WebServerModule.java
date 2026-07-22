@@ -21,8 +21,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Partage de la bibliothèque sur le Wi-Fi local : démarre un serveur HTTP
- * embarqué qui sert la webapp + le streaming des pistes (voir MusicHttpServer).
+ * Shares the music library over the local Wi-Fi network: starts an embedded
+ * HTTP server that serves the webapp and streams tracks (see MusicHttpServer).
  */
 public class WebServerModule extends ReactContextBaseJavaModule {
     private static final String PREFS = "webserver";
@@ -131,7 +131,7 @@ public class WebServerModule extends ReactContextBaseJavaModule {
         if (server != null) server.updateLibrary(json);
     }
 
-    /** Première IPv4 site-local (wlan de préférence). */
+    /** First site-local IPv4 address, preferring wlan interfaces. */
     private static String localIp() {
         try {
             String fallback = "";

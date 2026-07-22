@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { theme } from '../theme';
+import { useI18n } from '../i18n';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import Ic from './Ic';
 import SwipeableSheet from './SwipeableSheet';
 
@@ -24,6 +26,9 @@ export function useActionSheet() {
 }
 
 export function ActionSheetProvider({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const [config, setConfig] = useState<SheetConfig | null>(null);
   const show = useCallback((c: SheetConfig) => setConfig(c), []);
   const close = useCallback(() => setConfig(null), []);
@@ -72,7 +77,7 @@ export function ActionSheetProvider({ children }: { children: React.ReactNode })
             ))}
           </View>
           <TouchableOpacity style={styles.cancel} onPress={close} activeOpacity={0.7}>
-            <Text style={styles.cancelLabel}>Annuler</Text>
+            <Text style={styles.cancelLabel}>{t('cancel')}</Text>
           </TouchableOpacity>
         </View>
       </SwipeableSheet>
@@ -80,7 +85,7 @@ export function ActionSheetProvider({ children }: { children: React.ReactNode })
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   body: { paddingHorizontal: 18, paddingTop: 4 },
   title: { color: theme.text, fontSize: 16, fontWeight: '800', marginBottom: 2 },
   message: { color: theme.textDim, fontSize: 13, marginBottom: 6 },

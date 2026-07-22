@@ -4,6 +4,8 @@ import {
   MusicNote01Icon,
   PlayIcon,
   Queue01Icon,
+  Search01Icon,
+  UserCircleIcon,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 import {
@@ -18,62 +20,48 @@ import { useActionSheet } from '../components/ActionSheet';
 import GradientTile from '../components/GradientTile';
 import Ic from '../components/Ic';
 import { buildCollections, Collection } from '../lib/collections';
+import { useI18n } from '../i18n';
 import { playNext, playTracks } from '../lib/player';
 import { useLibrary } from '../store/library';
-import { theme } from '../theme';
+import { useTheme, useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import { AppTrack } from '../types';
 
 type Props = {
   onOpen: (c: Collection) => void;
   onAddToPlaylist: (track: AppTrack) => void;
+  onOpenProfile: () => void;
+  onOpenSearch: () => void;
 };
 
 type QuickItem =
   | { type: 'collection'; collection: Collection }
   | { type: 'track'; track: AppTrack };
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 6) return 'Bonne nuit';
-  if (h < 12) return 'Bonjour';
-  if (h < 18) return 'Bon après-midi';
-  return 'Bonsoir';
-}
-
-export default function HomeScreen({ onOpen, onAddToPlaylist }: Props) {
+export default function HomeScreen({
+  onOpen,
+  onAddToPlaylist,
+  onOpenProfile,
+  onOpenSearch,
+}: Props) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const lib = useLibrary();
   const { show } = useActionSheet();
   const collections = buildCollections(lib);
   const liked = collections.find(c => c.kind === 'liked')!;
-  const albumByKey = new Map(
-    collections.filter(c => c.kind === 'album').map(c => [c.key, c]),
-  );
 
-  // Liked (pinned) + up to 4 most-recently-played items (LRU).
-  const seen = new Set<string>();
-  const recents: QuickItem[] = [];
-  for (const id of lib.recentIds) {
-    const t = lib.tracksById[id];
-    if (!t) continue;
-    if (t.albumId) {
-      const key = 'album:' + t.albumId;
-      if (seen.has(key)) continue;
-      const col = albumByKey.get(key);
-      if (col) {
-        seen.add(key);
-        recents.push({ type: 'collection', collection: col });
-      }
-    } else {
-      if (seen.has(t.id)) continue;
-      seen.add(t.id);
-      recents.push({ type: 'track', track: t });
-    }
-    if (recents.length >= 4) break;
-  }
+  const mostPlayed: QuickItem[] = Object.entries(lib.playCounts)
+    .filter(([id]) => lib.tracksById[id])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([id]) => ({ type: 'track' as const, track: lib.tracksById[id] }));
   const youtube = collections.find(c => c.kind === 'youtube');
+  const localCol = collections.find(c => c.kind === 'local');
   const quick: QuickItem[] = [
     { type: 'collection', collection: liked },
-    ...recents,
+    ...mostPlayed,
     ...(youtube ? [{ type: 'collection' as const, collection: youtube }] : []),
   ];
 
@@ -88,15 +76,15 @@ export default function HomeScreen({ onOpen, onAddToPlaylist }: Props) {
       title: track.title,
       message: track.artist,
       actions: [
-        { label: 'Jouer', icon: PlayIcon, onPress: () => playTracks([track], 0) },
+        { label: t('play'), icon: PlayIcon, onPress: () => playTracks([track], 0) },
         {
-          label: liked ? 'Retirer des likes' : 'Liker',
+          label: liked ? t('unlike') : t('like'),
           icon: FavouriteIcon,
           onPress: () => lib.toggleLike(track),
         },
-        { label: 'Lire ensuite', icon: Queue01Icon, onPress: () => playNext(track) },
+        { label: t('playNext'), icon: Queue01Icon, onPress: () => playNext(track) },
         {
-          label: 'Ajouter à une playlist',
+          label: t('addToPlaylist'),
           icon: Add01Icon,
           onPress: () => onAddToPlaylist(track),
         },
@@ -110,8 +98,20 @@ export default function HomeScreen({ onOpen, onAddToPlaylist }: Props) {
       contentContainerStyle={{ paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>{greeting()}</Text>
-        <Text style={styles.brand}>Ta musique, à toi.</Text>
+        <TouchableOpacity
+          style={styles.avatar}
+          activeOpacity={0.7}
+          onPress={onOpenProfile}>
+          <Ic icon={UserCircleIcon} size={26} color={theme.textDim} strokeWidth={1.7} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t('tabHome')}</Text>
+        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.searchBtn}
+          activeOpacity={0.7}
+          onPress={onOpenSearch}>
+          <Ic icon={Search01Icon} size={22} color={theme.text} strokeWidth={2} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.grid}>
@@ -150,16 +150,18 @@ export default function HomeScreen({ onOpen, onAddToPlaylist }: Props) {
       </View>
 
       <Carousel
-        title="Récemment ajouté"
+        title={t('recentlyAdded')}
         tracks={lib.youtubeTracks}
-        emptyHint="Télécharge depuis l'onglet YouTube"
+        emptyHint={t('downloadFromYoutubeHint')}
         onLongPressTrack={openTrackMenu}
+        onShowAll={youtube ? () => onOpen(youtube) : undefined}
       />
       <Carousel
-        title="Ta bibliothèque locale"
+        title={t('yourLocalLibrary')}
         tracks={lib.localTracks}
-        emptyHint="Aucun fichier audio trouvé"
+        emptyHint={t('noAudioFound')}
         onLongPressTrack={openTrackMenu}
+        onShowAll={localCol ? () => onOpen(localCol) : undefined}
       />
     </ScrollView>
   );
@@ -170,15 +172,27 @@ function Carousel({
   tracks,
   emptyHint,
   onLongPressTrack,
+  onShowAll,
 }: {
   title: string;
   tracks: AppTrack[];
   emptyHint: string;
   onLongPressTrack?: (t: AppTrack) => void;
+  onShowAll?: () => void;
 }) {
+  const theme = useTheme();
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionHead}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {onShowAll && tracks.length > 0 && (
+          <TouchableOpacity onPress={onShowAll} activeOpacity={0.7}>
+            <Text style={styles.showAll}>{t('showAll')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       {tracks.length === 0 ? (
         <Text style={styles.empty}>{emptyHint}</Text>
       ) : (
@@ -202,9 +216,6 @@ function Carousel({
                     <Ic icon={MusicNote01Icon} size={34} color={theme.textFaint} />
                   </View>
                 )}
-                <View style={styles.playBadge}>
-                  <Ic icon={PlayIcon} size={16} color="#000" strokeWidth={2.5} />
-                </View>
               </View>
               <Text style={styles.cardTitle} numberOfLines={2}>
                 {t.title}
@@ -220,11 +231,32 @@ function Carousel({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  header: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
-  greeting: { color: theme.text, fontSize: 26, fontWeight: '800' },
-  brand: { color: theme.textDim, fontSize: 13, marginTop: 4 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 4,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.surfaceHi,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: { color: theme.text, fontSize: 26, fontWeight: '800', marginLeft: 12 },
+  headerSpacer: { flex: 1 },
+  searchBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -251,29 +283,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   section: { marginTop: 26 },
-  sectionTitle: {
-    color: theme.text,
-    fontSize: 19,
-    fontWeight: '800',
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginBottom: 12,
   },
+  sectionTitle: { color: theme.text, fontSize: 19, fontWeight: '800' },
+  showAll: { color: theme.accent, fontSize: 13, fontWeight: '700' },
   empty: { color: theme.textFaint, fontSize: 13, paddingHorizontal: 16 },
   card: { width: 140, marginRight: 14 },
   cardArtWrap: { width: 140, height: 140 },
   cardArt: { width: 140, height: 140, borderRadius: 10, backgroundColor: theme.surfaceHi },
   cardPlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  playBadge: {
-    position: 'absolute',
-    right: 8,
-    bottom: 8,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: theme.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   cardTitle: { color: theme.text, fontSize: 13.5, fontWeight: '600', marginTop: 8 },
   cardArtist: { color: theme.textDim, fontSize: 12, marginTop: 2 },
 });

@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { theme } from '../theme';
+import { useI18n } from '../i18n';
+import { useThemedStyles } from '../store/theme';
+import { Palette } from '../theme';
 import SwipeableSheet from './SwipeableSheet';
 
 export type ConfirmConfig = {
@@ -18,6 +20,8 @@ export function useConfirm() {
 }
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
+  const styles = useThemedStyles(makeStyles);
+  const { t } = useI18n();
   const [config, setConfig] = useState<ConfirmConfig | null>(null);
   const confirm = useCallback((c: ConfirmConfig) => setConfig(c), []);
   const close = useCallback(() => setConfig(null), []);
@@ -42,11 +46,11 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 styles.confirmLabel,
                 config?.destructive && styles.confirmLabelDestructive,
               ]}>
-              {config?.confirmLabel ?? 'Confirmer'}
+              {config?.confirmLabel ?? t('confirm')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancel} onPress={close} activeOpacity={0.7}>
-            <Text style={styles.cancelLabel}>Annuler</Text>
+            <Text style={styles.cancelLabel}>{t('cancel')}</Text>
           </TouchableOpacity>
         </View>
       </SwipeableSheet>
@@ -54,7 +58,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme: Palette) => StyleSheet.create({
   body: { paddingHorizontal: 18, paddingTop: 4 },
   title: { color: theme.text, fontSize: 17, fontWeight: '800', marginBottom: 6 },
   message: { color: theme.textDim, fontSize: 14, lineHeight: 20, marginBottom: 8 },

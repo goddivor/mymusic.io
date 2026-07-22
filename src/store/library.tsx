@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { t } from '../i18n';
 import { requestAudioPermission, scanLocalMusic } from '../lib/scanMusic';
 import {
   downloadYoutubeAudio,
@@ -20,13 +21,21 @@ import { AppTrack } from '../types';
 const KEY_YT = 'youtube_playlist';
 const KEY_LIKES = 'liked_ids';
 const KEY_PLAYLISTS = 'user_playlists';
+const KEY_FOLDERS = 'user_folders';
 const KEY_RECENT = 'recent_ids';
+const KEY_PLAYCOUNTS = 'play_counts';
 const RECENT_MAX = 12;
 
 export type Playlist = {
   id: string;
   name: string;
   trackIds: string[];
+};
+
+export type Folder = {
+  id: string;
+  name: string;
+  playlistIds: string[];
 };
 
 export type DownloadStatus = 'extracting' | 'downloading' | 'done' | 'error';
@@ -41,6 +50,7 @@ export type Download = {
 };
 
 export type DownloadMeta = {
+  playlistId?: string;
   title?: string;
   albumId?: string;
   album?: string;
@@ -61,6 +71,7 @@ type LibraryState = {
   youtubeTracks: AppTrack[];
   likedIds: string[];
   playlists: Playlist[];
+  folders: Folder[];
   scanning: boolean;
   permissionDenied: boolean;
 
@@ -74,6 +85,7 @@ type LibraryState = {
   clearFinishedDownloads: () => void;
 
   recentIds: string[];
+  playCounts: Record<string, number>;
   markPlayed: (id: string) => void;
   removeAlbum: (albumId: string) => void;
 
@@ -84,6 +96,10 @@ type LibraryState = {
   removeYoutube: (id: string) => void;
   createPlaylist: (name: string) => string;
   deletePlaylist: (id: string) => void;
+  createFolder: (name: string) => string;
+  deleteFolder: (id: string) => void;
+  addPlaylistToFolder: (folderId: string, playlistId: string) => void;
+  removePlaylistFromFolder: (playlistId: string) => void;
   addToPlaylist: (playlistId: string, trackId: string) => void;
   removeFromPlaylist: (playlistId: string, trackId: string) => void;
   playlistTracks: (playlist: Playlist) => AppTrack[];
@@ -102,24 +118,29 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [youtubeTracks, setYoutubeTracks] = useState<AppTrack[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [scanning, setScanning] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [downloads, setDownloads] = useState<Download[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [playCounts, setPlayCounts] = useState<Record<string, number>>({});
 
-  // Load persisted state once.
   useEffect(() => {
     (async () => {
-      const [yt, likes, pls, recent] = await Promise.all([
+      const [yt, likes, pls, recent, flds, counts] = await Promise.all([
         AsyncStorage.getItem(KEY_YT),
         AsyncStorage.getItem(KEY_LIKES),
         AsyncStorage.getItem(KEY_PLAYLISTS),
         AsyncStorage.getItem(KEY_RECENT),
+        AsyncStorage.getItem(KEY_FOLDERS),
+        AsyncStorage.getItem(KEY_PLAYCOUNTS),
       ]);
       if (yt) setYoutubeTracks(safeParse(yt, []));
       if (likes) setLikedIds(safeParse(likes, []));
       if (pls) setPlaylists(safeParse(pls, []));
       if (recent) setRecentIds(safeParse(recent, []));
+      if (flds) setFolders(safeParse(flds, []));
+      if (counts) setPlayCounts(safeParse(counts, {}));
     })();
   }, []);
 
@@ -142,19 +163,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     rescanLocal();
   }, [rescanLocal]);
-
-  const persistYt = useCallback((next: AppTrack[]) => {
-    setYoutubeTracks(next);
-    AsyncStorage.setItem(KEY_YT, JSON.stringify(next));
-  }, []);
-  const persistLikes = useCallback((next: string[]) => {
-    setLikedIds(next);
-    AsyncStorage.setItem(KEY_LIKES, JSON.stringify(next));
-  }, []);
-  const persistPlaylists = useCallback((next: Playlist[]) => {
-    setPlaylists(next);
-    AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
-  }, []);
 
   const addYoutube = useCallback(
     (track: AppTrack) => {
@@ -183,6 +191,31 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     setDownloads(prev => prev.map(d => (d.id === id ? { ...d, ...patch } : d)));
   }, []);
 
+  const createPlaylist = useCallback(
+    (name: string) => {
+      const id = makeId();
+      setPlaylists(prev => {
+        const next = [...prev, { id, name: name.trim() || 'Playlist', trackIds: [] }];
+        AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
+        return next;
+      });
+      return id;
+    },
+    [],
+  );
+
+  const addToPlaylist = useCallback((playlistId: string, trackId: string) => {
+    setPlaylists(prev => {
+      const next = prev.map(p =>
+        p.id === playlistId && !p.trackIds.includes(trackId)
+          ? { ...p, trackIds: [...p.trackIds, trackId] }
+          : p,
+      );
+      AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const startDownload = useCallback(
     (url: string, meta?: DownloadMeta) => {
       const id = extractYoutubeId(url);
@@ -190,7 +223,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
       let skip = false;
       setDownloads(prev => {
-        // Skip if already running or finished successfully.
         const existing = prev.find(d => d.id === id);
         if (existing && existing.status !== 'error') {
           skip = true;
@@ -198,7 +230,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         }
         const entry: Download = {
           id,
-          title: meta?.title ?? 'Préparation…',
+          title: meta?.title ?? t('preparing'),
           artwork: meta?.albumCover,
           status: 'extracting',
           progress: 0,
@@ -207,7 +239,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       });
       if (skip) return;
 
-      // Fire-and-forget: runs in the background, multiple can run at once.
       downloadYoutubeAudio(
         url,
         pct => patchDownload(id, { status: 'downloading', progress: pct }),
@@ -228,6 +259,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
             artwork: track.artwork ?? meta?.albumCover,
           };
           addYoutube(merged);
+          if (meta?.playlistId) addToPlaylist(meta.playlistId, merged.id);
           patchDownload(id, {
             status: 'done',
             progress: 1,
@@ -238,14 +270,28 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         .catch(e => {
           patchDownload(id, {
             status: 'error',
-            error: e?.message ?? 'Échec du téléchargement',
+            error: e?.message ?? t('downloadFailed'),
           });
         });
     },
-    [addYoutube, patchDownload],
+    [addYoutube, addToPlaylist, patchDownload],
   );
 
   const MAX_COLLECTION = 50;
+
+  const playlistsRef = React.useRef(playlists);
+  playlistsRef.current = playlists;
+
+  const getOrCreatePlaylist = useCallback(
+    (name: string) => {
+      const existing = playlistsRef.current.find(
+        p => p.name.trim().toLowerCase() === name.trim().toLowerCase(),
+      );
+      if (existing) return existing.id;
+      return createPlaylist(name);
+    },
+    [createPlaylist],
+  );
 
   const downloadCollection = useCallback(
     async (url: string): Promise<CollectionDownloadResult> => {
@@ -253,9 +299,11 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       const listId = extractPlaylistId(url);
       const isAlbum = !!listId && isAlbumPlaylistId(listId);
       const items = pl.items.slice(0, MAX_COLLECTION);
+      const playlistId = isAlbum ? undefined : getOrCreatePlaylist(pl.title);
 
       items.forEach((it, i) => {
         startDownload(it.url, {
+          playlistId,
           title: it.title,
           albumId: isAlbum ? listId ?? undefined : undefined,
           album: isAlbum ? pl.title : undefined,
@@ -272,7 +320,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         total: pl.items.length,
       };
     },
-    [startDownload],
+    [startDownload, getOrCreatePlaylist],
   );
 
   const clearFinishedDownloads = useCallback(() => {
@@ -288,6 +336,11 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       if (prev[0] === id) return prev;
       const next = [id, ...prev.filter(x => x !== id)].slice(0, RECENT_MAX);
       AsyncStorage.setItem(KEY_RECENT, JSON.stringify(next));
+      return next;
+    });
+    setPlayCounts(prev => {
+      const next = { ...prev, [id]: (prev[id] ?? 0) + 1 };
+      AsyncStorage.setItem(KEY_PLAYCOUNTS, JSON.stringify(next));
       return next;
     });
   }, []);
@@ -307,9 +360,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     return map;
   }, [localTracks, youtubeTracks]);
 
-  // Keep liked artwork/metadata snapshot so liked youtube tracks survive even if
-  // not currently in a list. We store the full track for likes via tracksById,
-  // falling back to a minimal record kept in a side map.
   const [likedSnapshots, setLikedSnapshots] = useState<Record<string, AppTrack>>({});
   useEffect(() => {
     const raw = likedSnapshots;
@@ -348,35 +398,61 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const createPlaylist = useCallback(
-    (name: string) => {
-      const id = makeId();
-      setPlaylists(prev => {
-        const next = [...prev, { id, name: name.trim() || 'Playlist', trackIds: [] }];
-        AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
-        return next;
-      });
-      return id;
-    },
-    [],
-  );
-
   const deletePlaylist = useCallback((id: string) => {
     setPlaylists(prev => {
       const next = prev.filter(p => p.id !== id);
       AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
       return next;
     });
+    setFolders(prev => {
+      const next = prev.map(f =>
+        f.playlistIds.includes(id)
+          ? { ...f, playlistIds: f.playlistIds.filter(p => p !== id) }
+          : f,
+      );
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
-  const addToPlaylist = useCallback((playlistId: string, trackId: string) => {
-    setPlaylists(prev => {
-      const next = prev.map(p =>
-        p.id === playlistId && !p.trackIds.includes(trackId)
-          ? { ...p, trackIds: [...p.trackIds, trackId] }
-          : p,
-      );
-      AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
+  const createFolder = useCallback((name: string) => {
+    const id = makeId();
+    setFolders(prev => {
+      const next = [...prev, { id, name: name.trim() || 'Folder', playlistIds: [] }];
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
+    return id;
+  }, []);
+
+  const deleteFolder = useCallback((id: string) => {
+    setFolders(prev => {
+      const next = prev.filter(f => f.id !== id);
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const addPlaylistToFolder = useCallback((folderId: string, playlistId: string) => {
+    setFolders(prev => {
+      const next = prev.map(f => {
+        const cleaned = f.playlistIds.filter(p => p !== playlistId);
+        return f.id === folderId
+          ? { ...f, playlistIds: [...cleaned, playlistId] }
+          : { ...f, playlistIds: cleaned };
+      });
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const removePlaylistFromFolder = useCallback((playlistId: string) => {
+    setFolders(prev => {
+      const next = prev.map(f => ({
+        ...f,
+        playlistIds: f.playlistIds.filter(p => p !== playlistId),
+      }));
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
       return next;
     });
   }, []);
@@ -409,6 +485,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     youtubeTracks,
     likedIds,
     playlists,
+    folders,
     scanning,
     permissionDenied,
     downloads,
@@ -417,6 +494,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     downloadCollection,
     clearFinishedDownloads,
     recentIds,
+    playCounts,
     markPlayed,
     removeAlbum,
     tracksById,
@@ -428,6 +506,10 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     removeYoutube,
     createPlaylist,
     deletePlaylist,
+    createFolder,
+    deleteFolder,
+    addPlaylistToFolder,
+    removePlaylistFromFolder,
     addToPlaylist,
     removeFromPlaylist,
     playlistTracks,
