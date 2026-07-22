@@ -1,243 +1,359 @@
 import {
-  AlbumIcon,
+  ArrowLeft01Icon,
+  Cancel01Icon,
   Download04Icon,
-  DownloadCircle01Icon,
-  NoInternetIcon,
-  Playlist03Icon,
+  GlobalIcon,
   RefreshIcon,
+  Search01Icon,
 } from '@hugeicons/core-free-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   BackHandler,
+  FlatList,
   StyleSheet,
   Text,
-  ToastAndroid,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+import BrandYoutubeIcon from '../components/BrandYoutubeIcon';
 import DownloadsSheet from '../components/DownloadsSheet';
 import Ic from '../components/Ic';
+import YtVideoRow from '../components/YtVideoRow';
+import { useI18n } from '../i18n';
 import {
-  extractPlaylistId,
-  extractYoutubeId,
-  isAlbumPlaylistId,
+  getSuggestions,
+  getTrending,
+  searchYoutube,
+  searchYoutubeMore,
+  YtVideoItem,
 } from '../lib/ytExtractor';
-import { t as tr, useI18n } from '../i18n';
 import { useLibrary } from '../store/library';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
+import YoutubeVideoScreen from './YoutubeVideoScreen';
+import YoutubeWebScreen from './YoutubeWebScreen';
 
+/**
+ * Native YouTube tab built on NewPipeExtractor (InnerTube): trending feed,
+ * search with live suggestions, native video page — no WebView involved.
+ */
 export default function YoutubeScreen({ active }: { active: boolean }) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
-  const { startDownload, downloadCollection, activeDownloadCount, downloads } =
-    useLibrary();
-  const webRef = useRef<WebView>(null);
-  const [currentUrl, setCurrentUrl] = useState('');
-  const [canGoBack, setCanGoBack] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [collecting, setCollecting] = useState(false);
-  const [offline, setOffline] = useState(false);
+  const { startDownload, activeDownloadCount, downloads } = useLibrary();
 
-  const retry = () => {
-    setOffline(false);
-    webRef.current?.reload();
-  };
+  const [trending, setTrending] = useState<YtVideoItem[] | null>(null);
+  const [trendingFailed, setTrendingFailed] = useState(false);
+  const [searchMode, setSearchMode] = useState(false);
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [results, setResults] = useState<YtVideoItem[] | null>(null);
+  const [resultsQuery, setResultsQuery] = useState('');
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [webOpen, setWebOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const loadedRef = useRef(false);
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const loadTrending = useCallback(async () => {
+    setTrendingFailed(false);
+    setTrending(null);
+    try {
+      const res = await getTrending();
+      setTrending(res.items);
+    } catch {
+      setTrending([]);
+      setTrendingFailed(true);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!active) return;
+    if (active && !loadedRef.current) {
+      loadedRef.current = true;
+      loadTrending();
+    }
+  }, [active, loadTrending]);
+
+  const closeSearch = useCallback(() => {
+    setSearchMode(false);
+    setQuery('');
+    setSuggestions([]);
+    setResults(null);
+    setResultsQuery('');
+  }, []);
+
+  useEffect(() => {
+    if (!active || !searchMode) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (canGoBack && webRef.current) {
-        webRef.current.goBack();
-        return true;
-      }
-      return false;
+      closeSearch();
+      return true;
     });
     return () => sub.remove();
-  }, [active, canGoBack]);
+  }, [active, searchMode, closeSearch]);
 
-  const videoId = extractYoutubeId(currentUrl);
-  const playlistId = extractPlaylistId(currentUrl);
-  const isAlbum = !!playlistId && isAlbumPlaylistId(playlistId);
+  const onQueryChange = (text: string) => {
+    setQuery(text);
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    if (!text.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    suggestTimer.current = setTimeout(() => {
+      getSuggestions(text)
+        .then(setSuggestions)
+        .catch(() => setSuggestions([]));
+    }, 220);
+  };
 
-  const downloadList = async () => {
-    if (collecting) return;
-    setCollecting(true);
+  const runSearch = async (q: string) => {
+    const clean = q.trim();
+    if (!clean) return;
+    setQuery(clean);
+    setSuggestions([]);
+    setSearching(true);
+    setResults(null);
+    setResultsQuery(clean);
     try {
-      const res = await downloadCollection(currentUrl);
-      const kind = res.isAlbum ? tr('album') : tr('playlist');
-      const capped =
-        res.total > res.queued ? ` (max ${res.queued}/${res.total})` : '';
-      ToastAndroid.show(
-        tr('collectionQueued', { kind, title: res.title, n: res.queued, capped }),
-        ToastAndroid.LONG,
-      );
-    } catch (e: any) {
-      ToastAndroid.show(
-        e?.message ?? tr('cantFetchList'),
-        ToastAndroid.SHORT,
-      );
+      const res = await searchYoutube(clean);
+      setResults(res.items);
+      setHasMore(res.hasMore);
+    } catch {
+      setResults([]);
+      setHasMore(false);
     } finally {
-      setCollecting(false);
+      setSearching(false);
     }
   };
 
+  const loadMore = async () => {
+    if (loadingMore || !hasMore || !resultsQuery) return;
+    setLoadingMore(true);
+    try {
+      const res = await searchYoutubeMore(resultsQuery);
+      setResults(prev => [...(prev ?? []), ...res.items]);
+      setHasMore(res.hasMore);
+    } catch {
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const listData = results ?? trending ?? [];
+  const showSuggestions = searchMode && suggestions.length > 0 && results === null && !searching;
+  const showList = !showSuggestions;
+  const loading = searching || (results === null && trending === null);
+
   return (
     <View style={styles.container}>
-      <WebView
-        ref={webRef}
-        source={{ uri: 'https://m.youtube.com' }}
-        style={styles.web}
-        onNavigationStateChange={nav => {
-          setCurrentUrl(nav.url);
-          setCanGoBack(nav.canGoBack);
-        }}
-        onLoadStart={() => setOffline(false)}
-        onError={({ nativeEvent }) => {
-          if (nativeEvent.url && !nativeEvent.url.startsWith('about:')) {
-            setOffline(true);
-          }
-        }}
-        allowsBackForwardNavigationGestures
-        mediaPlaybackRequiresUserAction
-      />
-
-      {offline && (
-        <View style={styles.offline}>
-          <Ic icon={NoInternetIcon} size={72} color={theme.textDim} strokeWidth={1.6} />
-          <Text style={styles.offlineTitle}>{t('noConnection')}</Text>
-          <Text style={styles.offlineMsg}>
-            {t('noConnectionMsg')}
-          </Text>
-          <TouchableOpacity style={styles.retry} activeOpacity={0.85} onPress={retry}>
-            <Ic icon={RefreshIcon} size={20} color="#1a1020" strokeWidth={2.3} />
-            <Text style={styles.retryText}>{t('retry')}</Text>
+      {searchMode ? (
+        <View style={styles.searchBar}>
+          <TouchableOpacity onPress={closeSearch} hitSlop={10} style={styles.iconBtn}>
+            <Ic icon={ArrowLeft01Icon} size={24} color={theme.text} strokeWidth={2} />
           </TouchableOpacity>
+          <TextInput
+            style={styles.searchInput}
+            placeholder={t('searchYoutube')}
+            placeholderTextColor={theme.textDim}
+            value={query}
+            onChangeText={onQueryChange}
+            onSubmitEditing={() => runSearch(query)}
+            autoFocus
+            returnKeyType="search"
+          />
+          {query.length > 0 && (
+            <TouchableOpacity
+              onPress={() => onQueryChange('')}
+              hitSlop={10}
+              style={styles.iconBtn}>
+              <Ic icon={Cancel01Icon} size={18} color={theme.textDim} strokeWidth={2} />
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <View style={styles.header}>
+          <View style={styles.brandRow}>
+            <BrandYoutubeIcon size={26} color="#FF0000" />
+            <Text style={styles.brandTitle}>YouTube</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              onPress={() => setSearchMode(true)}
+              hitSlop={10}
+              style={styles.iconBtn}>
+              <Ic icon={Search01Icon} size={23} color={theme.text} strokeWidth={2} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setWebOpen(true)}
+              hitSlop={10}
+              style={styles.iconBtn}>
+              <Ic icon={GlobalIcon} size={22} color={theme.textDim} strokeWidth={1.9} />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
-      <View style={styles.pills}>
-        {playlistId && (
-          <TouchableOpacity
-            style={[styles.pill, styles.pillAlt]}
-            activeOpacity={0.85}
-            onPress={downloadList}
-            disabled={collecting}>
-            <Ic
-              icon={isAlbum ? AlbumIcon : Playlist03Icon}
-              size={20}
-              color={theme.text}
-              strokeWidth={2.2}
-            />
-            <Text style={styles.pillAltText}>
-              {collecting
-                ? t('preparing')
-                : isAlbum
-                ? t('downloadAlbum')
-                : t('downloadPlaylist')}
-            </Text>
-          </TouchableOpacity>
-        )}
+      {showSuggestions && (
+        <FlatList
+          data={suggestions}
+          keyExtractor={(s, i) => s + i}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.suggestion}
+              activeOpacity={0.7}
+              onPress={() => runSearch(item)}>
+              <Ic icon={Search01Icon} size={17} color={theme.textFaint} strokeWidth={2} />
+              <Text style={styles.suggestionText} numberOfLines={1}>
+                {item}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+      )}
 
-        {videoId && (
-          <TouchableOpacity
-            style={styles.pill}
-            activeOpacity={0.85}
-            onPress={() => startDownload(currentUrl)}>
-            <Ic icon={DownloadCircle01Icon} size={22} color="#1a1020" strokeWidth={2.2} />
-            <Text style={styles.pillText}>{t('downloadAudio')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {showList &&
+        (loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={theme.accent} size="large" />
+          </View>
+        ) : trendingFailed && results === null ? (
+          <View style={styles.center}>
+            <Text style={styles.error}>{t('loadError')}</Text>
+            <TouchableOpacity
+              style={styles.retryBtn}
+              activeOpacity={0.85}
+              onPress={loadTrending}>
+              <Ic icon={RefreshIcon} size={18} color="#1a1020" strokeWidth={2.3} />
+              <Text style={styles.retryText}>{t('retry')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={listData}
+            keyExtractor={(v, i) => v.url + i}
+            keyboardShouldPersistTaps="handled"
+            ListHeaderComponent={
+              results === null ? (
+                <Text style={styles.sectionTitle}>{t('trending')}</Text>
+              ) : null
+            }
+            renderItem={({ item }) => (
+              <YtVideoRow
+                item={item}
+                onPress={() => setVideoUrl(item.url)}
+                onDownload={() => startDownload(item.url)}
+              />
+            )}
+            ListFooterComponent={
+              results !== null && hasMore ? (
+                <TouchableOpacity
+                  style={styles.moreBtn}
+                  activeOpacity={0.8}
+                  onPress={loadMore}
+                  disabled={loadingMore}>
+                  {loadingMore ? (
+                    <ActivityIndicator color={theme.accent} />
+                  ) : (
+                    <Text style={styles.moreText}>{t('loadMore')}</Text>
+                  )}
+                </TouchableOpacity>
+              ) : null
+            }
+            contentContainerStyle={{ paddingBottom: 90 }}
+          />
+        ))}
 
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.85}
         onPress={() => setSheetOpen(true)}>
-        <Ic icon={Download04Icon} size={26} color="#fff" strokeWidth={2.1} />
+        <Ic icon={Download04Icon} size={26} color={theme.text} strokeWidth={2.1} />
         {activeDownloadCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{activeDownloadCount}</Text>
           </View>
         )}
-        {activeDownloadCount === 0 && downloads.length > 0 && (
-          <View style={styles.dot} />
-        )}
+        {activeDownloadCount === 0 && downloads.length > 0 && <View style={styles.dot} />}
       </TouchableOpacity>
 
+      <YoutubeVideoScreen
+        url={videoUrl}
+        onClose={() => setVideoUrl(null)}
+        onOpenVideo={u => setVideoUrl(u)}
+      />
+      <YoutubeWebScreen visible={webOpen} onClose={() => setWebOpen(false)} />
       <DownloadsSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
     </View>
   );
 }
 
 const makeStyles = (theme: Palette) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  web: { flex: 1 },
-  offline: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: theme.bg,
+  container: { flex: 1, backgroundColor: theme.bg },
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 6,
   },
-  offlineTitle: {
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandTitle: { color: theme.text, fontSize: 21, fontWeight: '800' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingTop: 6,
+    paddingBottom: 2,
+  },
+  searchInput: { flex: 1, color: theme.text, fontSize: 16, paddingVertical: 10 },
+  suggestion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+  },
+  suggestionText: { color: theme.text, fontSize: 14.5, flex: 1 },
+  sectionTitle: {
     color: theme.text,
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '800',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  error: { color: theme.textDim, fontSize: 14, textAlign: 'center' },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: theme.accent,
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
     marginTop: 18,
   },
-  offlineMsg: {
-    color: theme.textDim,
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginTop: 8,
-  },
-  retry: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: theme.accent,
-    borderRadius: 26,
-    paddingHorizontal: 22,
-    paddingVertical: 12,
-    marginTop: 22,
-  },
-  retryText: { color: '#1a1020', fontSize: 15, fontWeight: '800' },
-  pills: {
-    position: 'absolute',
-    left: 16,
-    right: 84,
-    bottom: 20,
-    gap: 10,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: theme.accent,
-    borderRadius: 28,
-    paddingVertical: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 6,
-  },
-  pillText: { color: '#1a1020', fontSize: 15, fontWeight: '800' },
-  pillAlt: {
+  retryText: { color: '#1a1020', fontSize: 14, fontWeight: '800' },
+  moreBtn: {
+    alignSelf: 'center',
     backgroundColor: theme.surfaceHi,
-    borderWidth: 1,
-    borderColor: theme.border,
+    borderRadius: 22,
+    paddingHorizontal: 24,
+    paddingVertical: 11,
+    marginTop: 10,
   },
-  pillAltText: { color: theme.text, fontSize: 15, fontWeight: '700' },
+  moreText: { color: theme.text, fontSize: 14, fontWeight: '700' },
   fab: {
     position: 'absolute',
     right: 16,
@@ -268,7 +384,7 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 5,
     borderWidth: 2,
-    borderColor: '#000',
+    borderColor: theme.bg,
   },
   badgeText: { color: '#1a1020', fontSize: 12, fontWeight: '800' },
   dot: {
