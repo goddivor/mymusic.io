@@ -51,35 +51,17 @@ export default function HomeScreen({
   const { show } = useActionSheet();
   const collections = buildCollections(lib);
   const liked = collections.find(c => c.kind === 'liked')!;
-  const albumByKey = new Map(
-    collections.filter(c => c.kind === 'album').map(c => [c.key, c]),
-  );
 
-  const seen = new Set<string>();
-  const recents: QuickItem[] = [];
-  for (const id of lib.recentIds) {
-    const t = lib.tracksById[id];
-    if (!t) continue;
-    if (t.albumId) {
-      const key = 'album:' + t.albumId;
-      if (seen.has(key)) continue;
-      const col = albumByKey.get(key);
-      if (col) {
-        seen.add(key);
-        recents.push({ type: 'collection', collection: col });
-      }
-    } else {
-      if (seen.has(t.id)) continue;
-      seen.add(t.id);
-      recents.push({ type: 'track', track: t });
-    }
-    if (recents.length >= 4) break;
-  }
+  const mostPlayed: QuickItem[] = Object.entries(lib.playCounts)
+    .filter(([id]) => lib.tracksById[id])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([id]) => ({ type: 'track' as const, track: lib.tracksById[id] }));
   const youtube = collections.find(c => c.kind === 'youtube');
   const localCol = collections.find(c => c.kind === 'local');
   const quick: QuickItem[] = [
     { type: 'collection', collection: liked },
-    ...recents,
+    ...mostPlayed,
     ...(youtube ? [{ type: 'collection' as const, collection: youtube }] : []),
   ];
 
