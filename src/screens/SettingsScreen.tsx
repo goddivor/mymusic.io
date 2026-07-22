@@ -1,22 +1,33 @@
 import {
   ArrowLeft01Icon,
+  GithubIcon,
   InformationCircleIcon,
   Moon02Icon,
   MusicNote01Icon,
+  RefreshIcon,
   Search01Icon,
   TranslateIcon,
 } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
 import {
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useActionSheet } from '../components/ActionSheet';
 import Ic from '../components/Ic';
+import UpdateSheet from '../components/UpdateSheet';
+import {
+  checkForUpdate,
+  getCurrentVersion,
+  GITHUB_URL,
+  UpdateInfo,
+} from '../lib/updater';
 import { I18nKey, setLang, useI18n } from '../i18n';
 import {
   effectiveLanguage,
@@ -52,6 +63,8 @@ export default function SettingsScreen({ onClose }: Props) {
   const { show } = useActionSheet();
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const pickLanguage = () =>
     show({
@@ -75,6 +88,18 @@ export default function SettingsScreen({ onClose }: Props) {
     });
 
   const settings = getSettings();
+
+  const doCheckUpdates = async () => {
+    if (checking) return;
+    setChecking(true);
+    try {
+      const res = await checkForUpdate();
+      if (res.available) setUpdateInfo(res);
+      else ToastAndroid.show(t('upToDate', { v: res.current }), ToastAndroid.SHORT);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const items = [
     {
@@ -105,9 +130,27 @@ export default function SettingsScreen({ onClose }: Props) {
       key: 'about',
       icon: InformationCircleIcon,
       title: t('aboutTitle'),
-      sub: t('aboutSub'),
+      sub: t('aboutSub', { v: getCurrentVersion() }),
       keywords: 'à propos about version app',
       onPress: undefined as undefined | (() => void),
+    },
+    {
+      key: 'checkUpdates',
+      icon: RefreshIcon,
+      title: t('checkUpdates'),
+      sub: 'v' + getCurrentVersion(),
+      keywords: 'mise à jour update upgrade version release',
+      onPress: doCheckUpdates as undefined | (() => void),
+    },
+    {
+      key: 'github',
+      icon: GithubIcon,
+      title: t('githubRepo'),
+      sub: t('githubRepoSub'),
+      keywords: 'github source code repo',
+      onPress: (() => Linking.openURL(GITHUB_URL).catch(() => {})) as
+        | undefined
+        | (() => void),
     },
   ];
 
@@ -216,9 +259,13 @@ export default function SettingsScreen({ onClose }: Props) {
 
         <Text style={styles.sectionLabel}>{t('sectionAbout')}</Text>
         <View style={styles.card}>
-          {renderItemRow(items.find(it => it.key === 'about')!, true)}
+          {renderItemRow(items.find(it => it.key === 'about')!, false)}
+          {renderItemRow(items.find(it => it.key === 'checkUpdates')!, false)}
+          {renderItemRow(items.find(it => it.key === 'github')!, true)}
         </View>
       </ScrollView>
+
+      <UpdateSheet info={updateInfo} onClose={() => setUpdateInfo(null)} />
     </View>
   );
 }

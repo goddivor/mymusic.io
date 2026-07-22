@@ -32,11 +32,13 @@ import HomeScreen from './src/screens/HomeScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
 import NowPlayingScreen from './src/screens/NowPlayingScreen';
 import QueueScreen from './src/screens/QueueScreen';
+import UpdateSheet from './src/components/UpdateSheet';
 import RecentsScreen from './src/screens/RecentsScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import YoutubeScreen from './src/screens/YoutubeScreen';
 import { useI18n } from './src/i18n';
+import { getStartupUpdate, UpdateInfo } from './src/lib/updater';
 import { LibraryProvider } from './src/store/library';
 import { ThemeProvider, useScheme, useTheme, useThemedStyles } from './src/store/theme';
 import { Palette } from './src/theme';
@@ -65,6 +67,7 @@ function AppInner(): React.JSX.Element {
   const [showSearch, setShowSearch] = useState(false);
   const [showRecents, setShowRecents] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
   const onDrawerSelect = (key: DrawerItemKey) => {
     setShowDrawer(false);
@@ -89,6 +92,9 @@ function AppInner(): React.JSX.Element {
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       ).catch(() => {});
     }
+    getStartupUpdate().then(info => {
+      if (info) setUpdateInfo(info);
+    });
   }, []);
 
   const openCollection = (c: Collection) => setDetailKey(c.key);
@@ -172,6 +178,7 @@ function AppInner(): React.JSX.Element {
         <AddToPlaylistSheet track={addTarget} onClose={() => setAddTarget(null)} />
 
         <SearchScreen visible={showSearch} onClose={() => setShowSearch(false)} />
+        <UpdateSheet info={updateInfo} onClose={() => setUpdateInfo(null)} />
         <RecentsScreen visible={showRecents} onClose={() => setShowRecents(false)} />
         <Modal
           visible={showSettings}
