@@ -17,7 +17,6 @@ import Slider from '@react-native-community/slider';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   Image,
   Modal,
   PanResponder,
@@ -53,8 +52,6 @@ import { useLibrary } from '../store/library';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 import { AppTrack } from '../types';
-
-const { height: SCREEN_H } = Dimensions.get('window');
 
 type Props = {
   visible: boolean;
@@ -100,14 +97,7 @@ export default function NowPlayingScreen({
   }, [visible, translateY]);
 
   const dismiss = () => {
-    Animated.timing(translateY, {
-      toValue: SCREEN_H,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      onClose();
-      translateY.setValue(0);
-    });
+    onClose();
   };
 
   // Pan-to-dismiss responder: hijacks the gesture only when the inner list is
@@ -123,14 +113,7 @@ export default function NowPlayingScreen({
       },
       onPanResponderRelease: (_, g) => {
         if (g.dy > 120 || g.vy > 1.1) {
-          Animated.timing(translateY, {
-            toValue: SCREEN_H,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(() => {
-            onClose();
-            translateY.setValue(0);
-          });
+          onClose();
         } else {
           Animated.spring(translateY, {
             toValue: 0,

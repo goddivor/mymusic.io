@@ -57,6 +57,7 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
   const [searching, setSearching] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [webOpen, setWebOpen] = useState(false);
+  const [webUrl, setWebUrl] = useState<string | undefined>(undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
   const loadedRef = useRef(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -190,7 +191,10 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
               <Ic icon={Search01Icon} size={23} color={theme.text} strokeWidth={2} />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setWebOpen(true)}
+              onPress={() => {
+                setWebUrl(undefined);
+                setWebOpen(true);
+              }}
               hitSlop={10}
               style={styles.iconBtn}>
               <Ic icon={GlobalIcon} size={22} color={theme.textDim} strokeWidth={1.9} />
@@ -287,8 +291,16 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
         url={videoUrl}
         onClose={() => setVideoUrl(null)}
         onOpenVideo={u => setVideoUrl(u)}
+        onOpenWeb={u => {
+          setWebUrl(u);
+          setWebOpen(true);
+        }}
       />
-      <YoutubeWebScreen visible={webOpen} onClose={() => setWebOpen(false)} />
+      <YoutubeWebScreen
+        visible={webOpen}
+        initialUrl={webUrl}
+        onClose={() => setWebOpen(false)}
+      />
       <DownloadsSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
     </View>
   );

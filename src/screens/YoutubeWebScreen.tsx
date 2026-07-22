@@ -1,7 +1,8 @@
 import {
   AlbumIcon,
   ArrowLeft01Icon,
-  DownloadCircle01Icon,
+  Download04Icon,
+  MusicNoteSquare01Icon,
   NoInternetIcon,
   Playlist03Icon,
   RefreshIcon,
@@ -17,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
+import DownloadsSheet from '../components/DownloadsSheet';
 import Ic from '../components/Ic';
 import { t as tr, useI18n } from '../i18n';
 import {
@@ -30,15 +32,17 @@ import { Palette } from '../theme';
 
 type Props = {
   visible: boolean;
+  initialUrl?: string;
   onClose: () => void;
 };
 
 /** Legacy in-app YouTube browser, kept as a fallback to the native tab. */
-export default function YoutubeWebScreen({ visible, onClose }: Props) {
+export default function YoutubeWebScreen({ visible, initialUrl, onClose }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
-  const { startDownload, downloadCollection } = useLibrary();
+  const { startDownload, downloadCollection, activeDownloadCount, downloads } = useLibrary();
+  const [sheetOpen, setSheetOpen] = useState(false);
   const webRef = useRef<WebView>(null);
   const [currentUrl, setCurrentUrl] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
@@ -90,8 +94,9 @@ export default function YoutubeWebScreen({ visible, onClose }: Props) {
         </View>
 
         <WebView
+          key={initialUrl ?? 'home'}
           ref={webRef}
-          source={{ uri: 'https://m.youtube.com' }}
+          source={{ uri: initialUrl ?? 'https://m.youtube.com' }}
           style={styles.web}
           onNavigationStateChange={nav => {
             setCurrentUrl(nav.url);
@@ -119,38 +124,47 @@ export default function YoutubeWebScreen({ visible, onClose }: Props) {
           </View>
         )}
 
-        <View style={styles.pills}>
+        <View style={styles.fabs}>
           {playlistId && (
             <TouchableOpacity
-              style={[styles.pill, styles.pillAlt]}
+              style={styles.smallFab}
               activeOpacity={0.85}
               onPress={downloadList}
               disabled={collecting}>
               <Ic
                 icon={isAlbum ? AlbumIcon : Playlist03Icon}
-                size={20}
-                color={theme.text}
-                strokeWidth={2.2}
+                size={22}
+                color={collecting ? theme.textFaint : theme.accent}
+                strokeWidth={2.1}
               />
-              <Text style={styles.pillAltText}>
-                {collecting
-                  ? t('preparing')
-                  : isAlbum
-                  ? t('downloadAlbum')
-                  : t('downloadPlaylist')}
-              </Text>
             </TouchableOpacity>
           )}
           {videoId && (
             <TouchableOpacity
-              style={styles.pill}
+              style={[styles.smallFab, styles.audioFab]}
               activeOpacity={0.85}
-              onPress={() => startDownload(currentUrl)}>
-              <Ic icon={DownloadCircle01Icon} size={22} color="#1a1020" strokeWidth={2.2} />
-              <Text style={styles.pillText}>{t('downloadAudio')}</Text>
+              onPress={() => {
+                startDownload(currentUrl);
+                ToastAndroid.show(t('preparing'), ToastAndroid.SHORT);
+              }}>
+              <Ic icon={MusicNoteSquare01Icon} size={22} color="#1a1020" strokeWidth={2.1} />
             </TouchableOpacity>
           )}
+          <TouchableOpacity
+            style={styles.smallFab}
+            activeOpacity={0.85}
+            onPress={() => setSheetOpen(true)}>
+            <Ic icon={Download04Icon} size={22} color={theme.text} strokeWidth={2.1} />
+            {activeDownloadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{activeDownloadCount}</Text>
+              </View>
+            )}
+            {activeDownloadCount === 0 && downloads.length > 0 && <View style={styles.dot} />}
+          </TouchableOpacity>
         </View>
+
+        <DownloadsSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
       </SafeAreaView>
     </Modal>
   );
@@ -203,26 +217,45 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     marginTop: 22,
   },
   retryText: { color: '#1a1020', fontSize: 15, fontWeight: '800' },
-  pills: { position: 'absolute', left: 16, right: 16, bottom: 20, gap: 10 },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: theme.accent,
-    borderRadius: 28,
-    paddingVertical: 14,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  pillText: { color: '#1a1020', fontSize: 15, fontWeight: '800' },
-  pillAlt: {
+  fabs: { position: 'absolute', right: 14, bottom: 18, gap: 12, alignItems: 'center' },
+  smallFab: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: theme.surfaceHi,
     borderWidth: 1,
     borderColor: theme.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
   },
-  pillAltText: { color: theme.text, fontSize: 15, fontWeight: '700' },
+  audioFab: { backgroundColor: theme.accent, borderColor: theme.accent },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: theme.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: theme.bg,
+  },
+  badgeText: { color: '#1a1020', fontSize: 11, fontWeight: '800' },
+  dot: {
+    position: 'absolute',
+    top: 1,
+    right: 1,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: theme.accent,
+  },
 });

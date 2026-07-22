@@ -4,6 +4,7 @@ import {
   FavouriteIcon,
   PlayIcon,
   RefreshIcon,
+  Video01Icon,
 } from '@hugeicons/core-free-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -21,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ic from '../components/Ic';
 import YtVideoRow, { fmtCount } from '../components/YtVideoRow';
 import { useI18n } from '../i18n';
+import { parseHtmlText } from '../lib/htmlText';
 import { playTracks } from '../lib/player';
 import {
   extractYoutubeId,
@@ -37,13 +39,14 @@ type Props = {
   url: string | null;
   onClose: () => void;
   onOpenVideo: (url: string) => void;
+  onOpenWeb: (url: string) => void;
 };
 
 /**
  * Native video page: metadata + instant audio streaming (extracted stream URL
  * fed straight to the player), download, related videos and comments.
  */
-export default function YoutubeVideoScreen({ url, onClose, onOpenVideo }: Props) {
+export default function YoutubeVideoScreen({ url, onClose, onOpenVideo, onOpenWeb }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
@@ -51,11 +54,13 @@ export default function YoutubeVideoScreen({ url, onClose, onOpenVideo }: Props)
   const [info, setInfo] = useState<YtVideoInfo | null>(null);
   const [comments, setComments] = useState<YtComment[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [tab, setTab] = useState<'comments' | 'related'>('comments');
 
   const load = useCallback(async (videoUrl: string) => {
     setInfo(null);
     setComments(null);
     setFailed(false);
+    setTab('comments');
     try {
       const i = await getVideoInfo(videoUrl);
       setInfo(i);
@@ -148,8 +153,15 @@ export default function YoutubeVideoScreen({ url, onClose, onOpenVideo }: Props)
               </Text>
 
               <View style={styles.actions}>
+                <TouchableOpacity
+                  style={styles.dlBtn}
+                  activeOpacity={0.85}
+                  onPress={() => url && onOpenWeb(url)}>
+                  <Ic icon={Video01Icon} size={19} color={theme.text} strokeWidth={2.1} />
+                  <Text style={styles.dlText}>{t('video')}</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.playBtn} activeOpacity={0.85} onPress={playNow}>
-                  <Ic icon={PlayIcon} size={20} color="#1a1020" strokeWidth={2.4} />
+                  <Ic icon={PlayIcon} size={19} color="#1a1020" strokeWidth={2.4} />
                   <Text style={styles.playText}>{t('listen')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -159,29 +171,38 @@ export default function YoutubeVideoScreen({ url, onClose, onOpenVideo }: Props)
                     if (url) lib.startDownload(url);
                     ToastAndroid.show(t('preparing'), ToastAndroid.SHORT);
                   }}>
-                  <Ic icon={DownloadCircle01Icon} size={20} color={theme.text} strokeWidth={2.1} />
+                  <Ic icon={DownloadCircle01Icon} size={19} color={theme.text} strokeWidth={2.1} />
                   <Text style={styles.dlText}>{t('download')}</Text>
                 </TouchableOpacity>
               </View>
 
-              {info.related.length > 0 && (
-                <>
-                  <Text style={styles.sectionTitle}>{t('relatedVideos')}</Text>
-                  <View style={styles.related}>
-                    {info.related.slice(0, 12).map(v => (
-                      <YtVideoRow
-                        key={v.url}
-                        item={v}
-                        onPress={() => onOpenVideo(v.url)}
-                        onDownload={() => lib.startDownload(v.url)}
-                      />
-                    ))}
-                  </View>
-                </>
-              )}
+              <View style={styles.tabs}>
+                {(['comments', 'related'] as const).map(k => (
+                  <TouchableOpacity
+                    key={k}
+                    style={styles.tabBtn}
+                    activeOpacity={0.7}
+                    onPress={() => setTab(k)}>
+                    <Text style={[styles.tabLabel, tab === k && styles.tabLabelOn]}>
+                      {k === 'comments' ? t('comments') : t('relatedVideos')}
+                    </Text>
+                    {tab === k && <View style={styles.tabUnderline} />}
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-              <Text style={styles.sectionTitle}>{t('comments')}</Text>
-              {comments === null ? (
+              {tab === 'related' ? (
+                <View style={styles.related}>
+                  {info.related.slice(0, 12).map(v => (
+                    <YtVideoRow
+                      key={v.url}
+                      item={v}
+                      onPress={() => onOpenVideo(v.url)}
+                      onDownload={() => lib.startDownload(v.url)}
+                    />
+                  ))}
+                </View>
+              ) : comments === null ? (
                 <ActivityIndicator color={theme.accent} style={styles.commentsLoading} />
               ) : comments.length === 0 ? (
                 <Text style={styles.noComments}>{t('noComments')}</Text>
@@ -198,7 +219,13 @@ export default function YoutubeVideoScreen({ url, onClose, onOpenVideo }: Props)
                         {c.author}
                         {c.date ? ` · ${c.date}` : ''}
                       </Text>
-                      <Text style={styles.commentText}>{c.text}</Text>
+                      <Text style={styles.commentText}>
+                        {parseHtmlText(c.text).map((seg, j) => (
+                          <Text key={j} style={seg.link ? styles.commentLink : undefined}>
+                            {seg.text}
+                          </Text>
+                        ))}
+                      </Text>
                       {c.likes > 0 && (
                         <View style={styles.commentLikes}>
                           <Ic icon={FavouriteIcon} size={12} color={theme.textFaint} />
@@ -241,7 +268,7 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.surfaceHi },
   uploader: { color: theme.text, fontSize: 14, fontWeight: '700', flex: 1 },
   stats: { color: theme.textDim, fontSize: 12.5, marginTop: 8 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 16 },
+  actions: { flexDirection: 'row', gap: 8, marginTop: 16 },
   playBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -252,7 +279,7 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     borderRadius: 26,
     paddingVertical: 13,
   },
-  playText: { color: '#1a1020', fontSize: 15, fontWeight: '800' },
+  playText: { color: '#1a1020', fontSize: 13.5, fontWeight: '800' },
   dlBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -261,12 +288,30 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     gap: 8,
     backgroundColor: theme.surfaceHi,
     borderRadius: 26,
-    paddingVertical: 13,
+    paddingVertical: 11,
     borderWidth: 1,
     borderColor: theme.border,
   },
-  dlText: { color: theme.text, fontSize: 15, fontWeight: '700' },
-  sectionTitle: { color: theme.text, fontSize: 17, fontWeight: '800', marginTop: 24 },
+  dlText: { color: theme.text, fontSize: 13.5, fontWeight: '700' },
+  tabs: {
+    flexDirection: 'row',
+    marginTop: 22,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  tabBtn: { paddingVertical: 10, marginRight: 22, alignItems: 'center' },
+  tabLabel: { color: theme.textDim, fontSize: 14.5, fontWeight: '700' },
+  tabLabelOn: { color: theme.text },
+  tabUnderline: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 2.5,
+    borderRadius: 2,
+    backgroundColor: theme.accent,
+  },
+  commentLink: { color: theme.accent, fontWeight: '700' },
   related: { marginHorizontal: -14, marginTop: 6 },
   commentsLoading: { marginTop: 16 },
   noComments: { color: theme.textFaint, fontSize: 13, marginTop: 10 },
