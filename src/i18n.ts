@@ -81,6 +81,15 @@ const fr = {
   newPlaylist: 'Nouvelle playlist',
   playlistName: 'Nom de la playlist',
   create: 'Créer',
+  newFolder: 'Nouveau dossier',
+  folderName: 'Nom du dossier',
+  folder: 'Dossier',
+  moveToFolder: 'Déplacer vers un dossier',
+  removeFromFolder: 'Retirer du dossier',
+  deleteFolder: 'Supprimer le dossier',
+  deleteFolderQ: 'Supprimer le dossier ?',
+  deleteFolderMsg: '« {name} » sera supprimé, ses playlists seront conservées.',
+  folderEmpty: 'Dossier vide. Déplace des playlists ici via ⋯.',
 
   likedTracks: 'Titres likés',
   autoPlaylist: 'Playlist auto',
@@ -219,6 +228,15 @@ const en: Record<keyof typeof fr, string> = {
   newPlaylist: 'New playlist',
   playlistName: 'Playlist name',
   create: 'Create',
+  newFolder: 'New folder',
+  folderName: 'Folder name',
+  folder: 'Folder',
+  moveToFolder: 'Move to a folder',
+  removeFromFolder: 'Remove from folder',
+  deleteFolder: 'Delete folder',
+  deleteFolderQ: 'Delete this folder?',
+  deleteFolderMsg: '“{name}” will be deleted; its playlists will be kept.',
+  folderEmpty: 'Empty folder. Move playlists here via ⋯.',
 
   likedTracks: 'Liked tracks',
   autoPlaylist: 'Auto playlist',
@@ -315,11 +333,21 @@ export function tracksCount(n: number): string {
   return currentLang === 'fr' ? `${n} titre${s}` : `${n} track${s}`;
 }
 
+export function playlistsCount(n: number): string {
+  const s = n > 1 ? 's' : '';
+  return `${n} playlist${s}`;
+}
+
 /**
  * Subscribes the component to language changes: any component that renders
  * text must call this hook so it re-renders when the language changes.
  */
-export function useI18n(): { t: typeof t; lang: Lang; tracksCount: typeof tracksCount } {
+export function useI18n(): {
+  t: typeof t;
+  lang: Lang;
+  tracksCount: typeof tracksCount;
+  playlistsCount: typeof playlistsCount;
+} {
   useSyncExternalStore(subscribe, getLang);
-  return { t, lang: currentLang, tracksCount };
+  return { t, lang: currentLang, tracksCount, playlistsCount };
 }

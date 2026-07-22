@@ -21,6 +21,7 @@ import { AppTrack } from '../types';
 const KEY_YT = 'youtube_playlist';
 const KEY_LIKES = 'liked_ids';
 const KEY_PLAYLISTS = 'user_playlists';
+const KEY_FOLDERS = 'user_folders';
 const KEY_RECENT = 'recent_ids';
 const RECENT_MAX = 12;
 
@@ -28,6 +29,12 @@ export type Playlist = {
   id: string;
   name: string;
   trackIds: string[];
+};
+
+export type Folder = {
+  id: string;
+  name: string;
+  playlistIds: string[];
 };
 
 export type DownloadStatus = 'extracting' | 'downloading' | 'done' | 'error';
@@ -62,6 +69,7 @@ type LibraryState = {
   youtubeTracks: AppTrack[];
   likedIds: string[];
   playlists: Playlist[];
+  folders: Folder[];
   scanning: boolean;
   permissionDenied: boolean;
 
@@ -85,6 +93,10 @@ type LibraryState = {
   removeYoutube: (id: string) => void;
   createPlaylist: (name: string) => string;
   deletePlaylist: (id: string) => void;
+  createFolder: (name: string) => string;
+  deleteFolder: (id: string) => void;
+  addPlaylistToFolder: (folderId: string, playlistId: string) => void;
+  removePlaylistFromFolder: (playlistId: string) => void;
   addToPlaylist: (playlistId: string, trackId: string) => void;
   removeFromPlaylist: (playlistId: string, trackId: string) => void;
   playlistTracks: (playlist: Playlist) => AppTrack[];
@@ -103,6 +115,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [youtubeTracks, setYoutubeTracks] = useState<AppTrack[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [scanning, setScanning] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [downloads, setDownloads] = useState<Download[]>([]);
@@ -110,16 +123,18 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const [yt, likes, pls, recent] = await Promise.all([
+      const [yt, likes, pls, recent, flds] = await Promise.all([
         AsyncStorage.getItem(KEY_YT),
         AsyncStorage.getItem(KEY_LIKES),
         AsyncStorage.getItem(KEY_PLAYLISTS),
         AsyncStorage.getItem(KEY_RECENT),
+        AsyncStorage.getItem(KEY_FOLDERS),
       ]);
       if (yt) setYoutubeTracks(safeParse(yt, []));
       if (likes) setLikedIds(safeParse(likes, []));
       if (pls) setPlaylists(safeParse(pls, []));
       if (recent) setRecentIds(safeParse(recent, []));
+      if (flds) setFolders(safeParse(flds, []));
     })();
   }, []);
 
@@ -349,6 +364,57 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
       return next;
     });
+    setFolders(prev => {
+      const next = prev.map(f =>
+        f.playlistIds.includes(id)
+          ? { ...f, playlistIds: f.playlistIds.filter(p => p !== id) }
+          : f,
+      );
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const createFolder = useCallback((name: string) => {
+    const id = makeId();
+    setFolders(prev => {
+      const next = [...prev, { id, name: name.trim() || 'Folder', playlistIds: [] }];
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
+    return id;
+  }, []);
+
+  const deleteFolder = useCallback((id: string) => {
+    setFolders(prev => {
+      const next = prev.filter(f => f.id !== id);
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const addPlaylistToFolder = useCallback((folderId: string, playlistId: string) => {
+    setFolders(prev => {
+      const next = prev.map(f => {
+        const cleaned = f.playlistIds.filter(p => p !== playlistId);
+        return f.id === folderId
+          ? { ...f, playlistIds: [...cleaned, playlistId] }
+          : { ...f, playlistIds: cleaned };
+      });
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const removePlaylistFromFolder = useCallback((playlistId: string) => {
+    setFolders(prev => {
+      const next = prev.map(f => ({
+        ...f,
+        playlistIds: f.playlistIds.filter(p => p !== playlistId),
+      }));
+      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
   const addToPlaylist = useCallback((playlistId: string, trackId: string) => {
@@ -391,6 +457,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     youtubeTracks,
     likedIds,
     playlists,
+    folders,
     scanning,
     permissionDenied,
     downloads,
@@ -410,6 +477,10 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     removeYoutube,
     createPlaylist,
     deletePlaylist,
+    createFolder,
+    deleteFolder,
+    addPlaylistToFolder,
+    removePlaylistFromFolder,
     addToPlaylist,
     removeFromPlaylist,
     playlistTracks,

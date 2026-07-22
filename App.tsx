@@ -124,6 +124,7 @@ function AppInner(): React.JSX.Element {
             <LibraryScreen
               onOpen={openCollection}
               onOpenProfile={() => setShowDrawer(true)}
+              onOpenSearch={() => setShowSearch(true)}
             />
           </View>
           <View style={[styles.screen, tab !== 'youtube' && styles.hidden]}>
