@@ -79,3 +79,5 @@ android/app/src/main/assets/webapp/
 
 # Claude Code project memory (local only)
 CLAUDE.md
+# Release signing (local only)
+android/keystore.properties
