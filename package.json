@@ -18,6 +18,7 @@
     "@fortawesome/react-native-fontawesome": "^1.0.0",
     "@hugeicons/core-free-icons": "^4.2.0",
     "@hugeicons/react-native": "^1.0.13",
+    "@op-engineering/op-sqlite": "^17.1.2",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@react-native-community/slider": "^5.2.0",
     "@react-native/new-app-screen": "0.85.3",
