@@ -3,6 +3,9 @@ import { t } from '../i18n';
 import RNFS from 'react-native-fs';
 import { AppTrack } from '../types';
 
+const MediaSaver: { publishAudio(src: string, name: string): Promise<string>; deleteByPath(path: string): Promise<boolean> } | undefined =
+  NativeModules.MediaSaver;
+
 const { YtExtractor } = NativeModules as {
   YtExtractor: {
     getAudioStream(url: string): Promise<YtStreamInfo>;
@@ -103,6 +106,43 @@ export function getComments(url: string): Promise<{ items: YtComment[] }> {
   return YtExtractor.getComments(url);
 }
 
+export function deleteDownloadedFile(url: string): void {
+  MediaSaver?.deleteByPath(url).catch(() => {});
+}
+
+const LEGACY_DIR = '/files/youtube/';
+
+/**
+ * Moves a download left in the app's private folder by an older version into
+ * the public Music/MusicApp collection. Returns the new file url, or null when
+ * nothing had to be moved.
+ */
+export async function migrateLegacyDownload(
+  url: string,
+  title: string,
+): Promise<string | null> {
+  if (!MediaSaver || !url.includes(LEGACY_DIR)) return null;
+  const path = url.startsWith('file://') ? url.slice(7) : url;
+  try {
+    if (!(await RNFS.exists(path))) return null;
+    const ext = (path.split('.').pop() || 'm4a').toLowerCase();
+    const idMatch = path.match(/([A-Za-z0-9_-]{11})\.[^.]+$/);
+    const safeTitle = (title || 'audio')
+      .replace(/[\\/:*?"<>|]+/g, ' ')
+      .replace(/\.(mp4|m4a|webm|opus|mp3)$/i, '')
+      .trim()
+      .slice(0, 120);
+    const name = idMatch
+      ? `${safeTitle} [${idMatch[1]}].${ext}`
+      : `${safeTitle}.${ext}`;
+    const published = await MediaSaver.publishAudio(path, name);
+    await RNFS.unlink(path).catch(() => {});
+    return 'file://' + published;
+  } catch {
+    return null;
+  }
+}
+
 export function getPlaylist(url: string): Promise<YtPlaylist> {
   return YtExtractor.getPlaylist(url);
 }
@@ -137,9 +177,9 @@ export function getAudioStream(url: string): Promise<YtStreamInfo> {
 
 /**
  * Extracts the best audio stream for a YouTube URL and downloads it to the
- * app's private storage, returning a playable AppTrack. Skips the download
- * if the file already exists. A clean canonical watch URL is rebuilt from the
- * video id because NewPipeExtractor rejects URLs cluttered with
+ * public Music/MusicApp storage (survives uninstall, re-indexed by the device),
+ * returning a playable AppTrack. A clean canonical watch URL is rebuilt from
+ * the video id because NewPipeExtractor rejects URLs cluttered with
  * list/start_radio/pp params.
  */
 export async function downloadYoutubeAudio(
@@ -156,32 +196,44 @@ export async function downloadYoutubeAudio(
     onInfo({ title: info.title, uploader: info.uploader, thumbnail: info.thumbnail });
   }
 
-  const dir = `${RNFS.DocumentDirectoryPath}/youtube`;
-  await RNFS.mkdir(dir);
-  const ext = info.ext || 'm4a';
-  const dest = `${dir}/${id}.${ext}`;
+  const rawExt = (info.ext || 'm4a').toLowerCase();
+  const ext = rawExt === 'mp4' || rawExt === 'mpeg4' ? 'm4a' : rawExt;
+  const tmp = `${RNFS.CachesDirectoryPath}/${id}.${ext}`;
 
-  const alreadyDownloaded = await RNFS.exists(dest);
-  if (!alreadyDownloaded) {
-    const task = RNFS.downloadFile({
-      fromUrl: info.audioUrl,
-      toFile: dest,
-      progressInterval: 300,
-      progress: res => {
-        if (onProgress && res.contentLength > 0) {
-          onProgress(res.bytesWritten / res.contentLength);
-        }
-      },
-    });
-    const result = await task.promise;
-    if (result.statusCode >= 400) {
-      throw new Error(t('downloadHttpError', { code: result.statusCode }));
+  const task = RNFS.downloadFile({
+    fromUrl: info.audioUrl,
+    toFile: tmp,
+    progressInterval: 300,
+    progress: res => {
+      if (onProgress && res.contentLength > 0) {
+        onProgress(res.bytesWritten / res.contentLength);
+      }
+    },
+  });
+  const result = await task.promise;
+  if (result.statusCode >= 400) {
+    throw new Error(t('downloadHttpError', { code: result.statusCode }));
+  }
+
+  const safeTitle = (info.title || id)
+    .replace(/[\\/:*?"<>|]+/g, ' ')
+    .replace(/\.(mp4|m4a|webm|opus|mp3)$/i, '')
+    .trim()
+    .slice(0, 120);
+  const fileName = `${safeTitle} [${id}].${ext}`;
+  let finalPath = tmp;
+  if (MediaSaver) {
+    try {
+      finalPath = await MediaSaver.publishAudio(tmp, fileName);
+      await RNFS.unlink(tmp).catch(() => {});
+    } catch {
+      finalPath = tmp;
     }
   }
 
   return {
     id: 'youtube:' + id,
-    url: 'file://' + dest,
+    url: 'file://' + finalPath,
     title: info.title || 'YouTube',
     artist: info.uploader || 'YouTube',
     artwork: info.thumbnail || undefined,

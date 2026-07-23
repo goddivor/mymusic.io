@@ -33,7 +33,7 @@ export async function requestAudioPermission(): Promise<boolean> {
 }
 
 // Voice memos, call recordings, notifications, etc. are not songs.
-const EXCLUDED_PATH = /voice ?notes?|recordings?|\/call ?rec|\/notifications?\/|\/ringtones?\//i;
+const EXCLUDED_PATH = /voice ?notes?|recordings?|\/call ?rec|\/notifications?\/|\/ringtones?\/|\/music\/musicapp\//i;
 
 function fileTitle(path: string): string {
   const name = path.split('/').pop() ?? path;
@@ -124,4 +124,39 @@ export async function scanLocalMusic(): Promise<AppTrack[]> {
   const map = new Map<string, AppTrack>();
   for (const t of tracks) map.set(t.id, t);
   return Array.from(map.values()).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+const MUSICAPP_DIR = /\/music\/musicapp\//i;
+const YT_ID_IN_NAME = /\[([A-Za-z0-9_-]{11})\]\.[^.]+$/;
+
+/**
+ * Lists audio files published under Music/MusicApp as youtube tracks. Lets the
+ * app re-adopt its downloads after a reinstall even without a backup: the
+ * youtube id is recovered from the "[id]" suffix in the file name.
+ */
+export async function scanDownloadedYoutube(): Promise<AppTrack[]> {
+  if (!MediaScanner) return [];
+  let rows: MediaStoreTrack[];
+  try {
+    rows = await MediaScanner.queryAudio();
+  } catch {
+    return [];
+  }
+  const tracks: AppTrack[] = [];
+  for (const r of rows) {
+    if (!MUSICAPP_DIR.test(r.path)) continue;
+    const m = r.path.match(YT_ID_IN_NAME);
+    const id = m ? 'youtube:' + m[1] : 'local:' + r.path;
+    const artwork = r.artwork || undefined;
+    tracks.push({
+      id,
+      url: 'file://' + r.path,
+      title: r.title || fileTitle(r.path).replace(/\s*\[[A-Za-z0-9_-]{11}\]$/, ''),
+      artist: r.artist || 'YouTube',
+      artwork,
+      duration: r.duration || undefined,
+      source: 'youtube',
+    });
+  }
+  return tracks;
 }
