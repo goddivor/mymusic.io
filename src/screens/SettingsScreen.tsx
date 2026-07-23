@@ -1,5 +1,6 @@
 import {
   ArrowLeft01Icon,
+  Download01Icon,
   GithubIcon,
   InformationCircleIcon,
   Moon02Icon,
@@ -7,6 +8,7 @@ import {
   RefreshIcon,
   Search01Icon,
   TranslateIcon,
+  Upload01Icon,
 } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
 import {
@@ -22,12 +24,14 @@ import {
 import { useActionSheet } from '../components/ActionSheet';
 import Ic from '../components/Ic';
 import UpdateSheet from '../components/UpdateSheet';
+import { exportBackup, importBackup } from '../lib/backup';
 import {
   checkForUpdate,
   getCurrentVersion,
   GITHUB_URL,
   UpdateInfo,
 } from '../lib/updater';
+import { useLibrary } from '../store/library';
 import { I18nKey, setLang, useI18n } from '../i18n';
 import {
   effectiveLanguage,
@@ -60,6 +64,7 @@ export default function SettingsScreen({ onClose }: Props) {
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
   const { pref: themePref, setPref: setThemePref } = useThemeControls();
+  const { reloadLibrary } = useLibrary();
   const { show } = useActionSheet();
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
@@ -88,6 +93,17 @@ export default function SettingsScreen({ onClose }: Props) {
     });
 
   const settings = getSettings();
+
+  const doExport = async () => {
+    const path = await exportBackup();
+    ToastAndroid.show(path ? t('backupExported') : t('backupFailed'), ToastAndroid.SHORT);
+  };
+
+  const doImport = async () => {
+    const ok = await importBackup();
+    if (ok) reloadLibrary();
+    ToastAndroid.show(ok ? t('backupImported') : t('noBackupFound'), ToastAndroid.SHORT);
+  };
 
   const doCheckUpdates = async () => {
     if (checking) return;
@@ -151,6 +167,22 @@ export default function SettingsScreen({ onClose }: Props) {
       onPress: (() => Linking.openURL(GITHUB_URL).catch(() => {})) as
         | undefined
         | (() => void),
+    },
+    {
+      key: 'export',
+      icon: Upload01Icon,
+      title: t('exportBackup'),
+      sub: t('exportBackupSub'),
+      keywords: 'sauvegarde backup export data données',
+      onPress: doExport as undefined | (() => void),
+    },
+    {
+      key: 'import',
+      icon: Download01Icon,
+      title: t('importBackup'),
+      sub: t('importBackupSub'),
+      keywords: 'sauvegarde backup import restore restaurer data données',
+      onPress: doImport as undefined | (() => void),
     },
   ];
 
@@ -255,6 +287,12 @@ export default function SettingsScreen({ onClose }: Props) {
         <Text style={styles.sectionLabel}>{t('sectionPlayback')}</Text>
         <View style={styles.card}>
           {renderItemRow(items.find(it => it.key === 'audioQuality')!, true)}
+        </View>
+
+        <Text style={styles.sectionLabel}>{t('sectionData')}</Text>
+        <View style={styles.card}>
+          {renderItemRow(items.find(it => it.key === 'export')!, false)}
+          {renderItemRow(items.find(it => it.key === 'import')!, true)}
         </View>
 
         <Text style={styles.sectionLabel}>{t('sectionAbout')}</Text>

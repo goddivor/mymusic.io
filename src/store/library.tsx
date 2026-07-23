@@ -1,16 +1,34 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
-  useMemo,
+  useRef,
   useState,
 } from 'react';
-import { t } from '../i18n';
-import { requestAudioPermission, scanLocalMusic } from '../lib/scanMusic';
+import { AppState } from 'react-native';
 import {
+  Folder,
+  initDatabase,
+  loadSnapshot,
+  Playlist,
+  saveFolders,
+  saveLikes,
+  savePlayCounts,
+  savePlaylists,
+  saveRecents,
+  saveYoutubeTracks,
+} from '../db/database';
+import { t } from '../i18n';
+import {
+  requestAudioPermission,
+  scanDownloadedYoutube,
+  scanLocalMusic,
+} from '../lib/scanMusic';
+import {
+  deleteDownloadedFile,
   downloadYoutubeAudio,
+  migrateLegacyDownload,
   extractPlaylistId,
   extractYoutubeId,
   getPlaylist,
@@ -18,25 +36,12 @@ import {
 } from '../lib/ytExtractor';
 import { AppTrack } from '../types';
 
-const KEY_YT = 'youtube_playlist';
-const KEY_LIKES = 'liked_ids';
-const KEY_PLAYLISTS = 'user_playlists';
-const KEY_FOLDERS = 'user_folders';
-const KEY_RECENT = 'recent_ids';
-const KEY_PLAYCOUNTS = 'play_counts';
+export type { Folder, Playlist } from '../db/database';
+
 const RECENT_MAX = 12;
-
-export type Playlist = {
-  id: string;
-  name: string;
-  trackIds: string[];
-};
-
-export type Folder = {
-  id: string;
-  name: string;
-  playlistIds: string[];
-};
+const MAX_PARALLEL_DOWNLOADS = 2;
+const MAX_DOWNLOAD_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2500;
 
 export type DownloadStatus = 'extracting' | 'downloading' | 'done' | 'error';
 
@@ -103,6 +108,7 @@ type LibraryState = {
   addToPlaylist: (playlistId: string, trackId: string) => void;
   removeFromPlaylist: (playlistId: string, trackId: string) => void;
   playlistTracks: (playlist: Playlist) => AppTrack[];
+  reloadLibrary: () => void;
 };
 
 const LibraryContext = createContext<LibraryState | null>(null);
@@ -111,6 +117,23 @@ let idCounter = 0;
 function makeId(): string {
   idCounter += 1;
   return 'pl_' + Date.now().toString(36) + '_' + idCounter;
+}
+
+
+/** Moves downloads left in private storage by older versions to public storage. */
+async function migrateLegacyTracks(tracks: AppTrack[]): Promise<AppTrack[] | null> {
+  const updated: AppTrack[] = [];
+  let changed = false;
+  for (const track of tracks) {
+    const moved = await migrateLegacyDownload(track.url, track.title);
+    if (moved) {
+      changed = true;
+      updated.push({ ...track, url: moved });
+    } else {
+      updated.push(track);
+    }
+  }
+  return changed ? updated : null;
 }
 
 export function LibraryProvider({ children }: { children: React.ReactNode }) {
@@ -124,24 +147,39 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [downloads, setDownloads] = useState<Download[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [playCounts, setPlayCounts] = useState<Record<string, number>>({});
+  const ytRef = useRef<AppTrack[]>([]);
+  ytRef.current = youtubeTracks;
+  const queueRef = useRef<{ url: string; meta?: DownloadMeta; attempts: number }[]>([]);
+  const activeRef = useRef(0);
 
   useEffect(() => {
     (async () => {
-      const [yt, likes, pls, recent, flds, counts] = await Promise.all([
-        AsyncStorage.getItem(KEY_YT),
-        AsyncStorage.getItem(KEY_LIKES),
-        AsyncStorage.getItem(KEY_PLAYLISTS),
-        AsyncStorage.getItem(KEY_RECENT),
-        AsyncStorage.getItem(KEY_FOLDERS),
-        AsyncStorage.getItem(KEY_PLAYCOUNTS),
-      ]);
-      if (yt) setYoutubeTracks(safeParse(yt, []));
-      if (likes) setLikedIds(safeParse(likes, []));
-      if (pls) setPlaylists(safeParse(pls, []));
-      if (recent) setRecentIds(safeParse(recent, []));
-      if (flds) setFolders(safeParse(flds, []));
-      if (counts) setPlayCounts(safeParse(counts, {}));
+      const snap = await initDatabase();
+      setYoutubeTracks(snap.youtubeTracks);
+      setLikedIds(snap.likedIds);
+      setPlaylists(snap.playlists);
+      setFolders(snap.folders);
+      setRecentIds(snap.recentIds);
+      setPlayCounts(snap.playCounts);
+      const moved = await migrateLegacyTracks(snap.youtubeTracks);
+      if (moved) {
+        setYoutubeTracks(moved);
+        saveYoutubeTracks(moved);
+      }
     })();
+  }, []);
+
+  const reconcileDownloads = useCallback(async () => {
+    const onDisk = await scanDownloadedYoutube();
+    if (onDisk.length === 0) return;
+    setYoutubeTracks(prev => {
+      const known = new Set(prev.map(t => t.id));
+      const fresh = onDisk.filter(t => !known.has(t.id));
+      if (fresh.length === 0) return prev;
+      const next = [...fresh, ...prev];
+      saveYoutubeTracks(next);
+      return next;
+    });
   }, []);
 
   const rescanLocal = useCallback(async () => {
@@ -155,54 +193,55 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     setPermissionDenied(false);
     try {
       setLocalTracks(await scanLocalMusic());
+      await reconcileDownloads();
     } finally {
       setScanning(false);
     }
-  }, []);
+  }, [reconcileDownloads]);
 
   useEffect(() => {
     rescanLocal();
   }, [rescanLocal]);
 
-  const addYoutube = useCallback(
-    (track: AppTrack) => {
-      setYoutubeTracks(prev => {
-        if (prev.some(t => t.id === track.id)) return prev;
-        const next = [track, ...prev];
-        AsyncStorage.setItem(KEY_YT, JSON.stringify(next));
-        return next;
-      });
-    },
-    [],
-  );
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', s => {
+      if (s === 'active' && permissionDenied) rescanLocal();
+    });
+    return () => sub.remove();
+  }, [permissionDenied, rescanLocal]);
 
-  const removeYoutube = useCallback(
-    (id: string) => {
-      setYoutubeTracks(prev => {
-        const next = prev.filter(t => t.id !== id);
-        AsyncStorage.setItem(KEY_YT, JSON.stringify(next));
-        return next;
-      });
-    },
-    [],
-  );
+  const addYoutube = useCallback((track: AppTrack) => {
+    setYoutubeTracks(prev => {
+      if (prev.some(t => t.id === track.id)) return prev;
+      const next = [track, ...prev];
+      saveYoutubeTracks(next);
+      return next;
+    });
+  }, []);
+
+  const removeYoutube = useCallback((id: string) => {
+    const target = ytRef.current.find(t => t.id === id);
+    if (target?.url) deleteDownloadedFile(target.url);
+    setYoutubeTracks(prev => {
+      const next = prev.filter(t => t.id !== id);
+      saveYoutubeTracks(next);
+      return next;
+    });
+  }, []);
 
   const patchDownload = useCallback((id: string, patch: Partial<Download>) => {
     setDownloads(prev => prev.map(d => (d.id === id ? { ...d, ...patch } : d)));
   }, []);
 
-  const createPlaylist = useCallback(
-    (name: string) => {
-      const id = makeId();
-      setPlaylists(prev => {
-        const next = [...prev, { id, name: name.trim() || 'Playlist', trackIds: [] }];
-        AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
-        return next;
-      });
-      return id;
-    },
-    [],
-  );
+  const createPlaylist = useCallback((name: string) => {
+    const id = makeId();
+    setPlaylists(prev => {
+      const next = [...prev, { id, name: name.trim() || 'Playlist', trackIds: [] }];
+      savePlaylists(next);
+      return next;
+    });
+    return id;
+  }, []);
 
   const addToPlaylist = useCallback((playlistId: string, trackId: string) => {
     setPlaylists(prev => {
@@ -211,11 +250,80 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
           ? { ...p, trackIds: [...p.trackIds, trackId] }
           : p,
       );
-      AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
+      savePlaylists(next);
       return next;
     });
   }, []);
 
+  const runDownload = useCallback(
+    (job: { url: string; meta?: DownloadMeta; attempts: number }) => {
+      const id = extractYoutubeId(job.url);
+      if (!id) return;
+      activeRef.current += 1;
+
+      downloadYoutubeAudio(
+        job.url,
+        pct => patchDownload(id, { status: 'downloading', progress: pct }),
+        info =>
+          patchDownload(id, {
+            title: job.meta?.title ?? info.title,
+            artwork: job.meta?.albumCover ?? info.thumbnail,
+          }),
+      )
+        .then(track => {
+          const merged: AppTrack = {
+            ...track,
+            albumId: job.meta?.albumId,
+            album: job.meta?.album,
+            albumArtist: job.meta?.albumArtist,
+            albumCover: job.meta?.albumCover,
+            trackNumber: job.meta?.trackNumber,
+            artwork: track.artwork ?? job.meta?.albumCover,
+          };
+          addYoutube(merged);
+          if (job.meta?.playlistId) addToPlaylist(job.meta.playlistId, merged.id);
+          patchDownload(id, {
+            status: 'done',
+            progress: 1,
+            title: merged.title,
+            artwork: merged.artwork,
+          });
+        })
+        .catch(e => {
+          if (job.attempts + 1 < MAX_DOWNLOAD_ATTEMPTS) {
+            patchDownload(id, { status: 'extracting', progress: 0 });
+            setTimeout(() => {
+              queueRef.current.push({ ...job, attempts: job.attempts + 1 });
+              pumpRef.current();
+            }, RETRY_DELAY_MS * (job.attempts + 1));
+          } else {
+            patchDownload(id, {
+              status: 'error',
+              error: e?.message ?? t('downloadFailed'),
+            });
+          }
+        })
+        .finally(() => {
+          activeRef.current -= 1;
+          pumpRef.current();
+        });
+    },
+    [addYoutube, addToPlaylist, patchDownload],
+  );
+
+  const pumpRef = useRef<() => void>(() => {});
+  pumpRef.current = () => {
+    while (activeRef.current < MAX_PARALLEL_DOWNLOADS && queueRef.current.length > 0) {
+      const job = queueRef.current.shift()!;
+      runDownload(job);
+    }
+  };
+
+  /**
+   * Queues a download instead of firing every request at once: YouTube aborts
+   * connections when a whole playlist is fetched in parallel, so only a couple
+   * run at a time and failures are retried with a growing delay.
+   */
   const startDownload = useCallback(
     (url: string, meta?: DownloadMeta) => {
       const id = extractYoutubeId(url);
@@ -239,47 +347,15 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       });
       if (skip) return;
 
-      downloadYoutubeAudio(
-        url,
-        pct => patchDownload(id, { status: 'downloading', progress: pct }),
-        info =>
-          patchDownload(id, {
-            title: meta?.title ?? info.title,
-            artwork: meta?.albumCover ?? info.thumbnail,
-          }),
-      )
-        .then(track => {
-          const merged: AppTrack = {
-            ...track,
-            albumId: meta?.albumId,
-            album: meta?.album,
-            albumArtist: meta?.albumArtist,
-            albumCover: meta?.albumCover,
-            trackNumber: meta?.trackNumber,
-            artwork: track.artwork ?? meta?.albumCover,
-          };
-          addYoutube(merged);
-          if (meta?.playlistId) addToPlaylist(meta.playlistId, merged.id);
-          patchDownload(id, {
-            status: 'done',
-            progress: 1,
-            title: merged.title,
-            artwork: merged.artwork,
-          });
-        })
-        .catch(e => {
-          patchDownload(id, {
-            status: 'error',
-            error: e?.message ?? t('downloadFailed'),
-          });
-        });
+      queueRef.current.push({ url, meta, attempts: 0 });
+      pumpRef.current();
     },
-    [addYoutube, addToPlaylist, patchDownload],
+    [],
   );
 
   const MAX_COLLECTION = 50;
 
-  const playlistsRef = React.useRef(playlists);
+  const playlistsRef = useRef(playlists);
   playlistsRef.current = playlists;
 
   const getOrCreatePlaylist = useCallback(
@@ -324,7 +400,9 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   );
 
   const clearFinishedDownloads = useCallback(() => {
-    setDownloads(prev => prev.filter(d => d.status === 'extracting' || d.status === 'downloading'));
+    setDownloads(prev =>
+      prev.filter(d => d.status === 'extracting' || d.status === 'downloading'),
+    );
   }, []);
 
   const activeDownloadCount = downloads.filter(
@@ -335,28 +413,29 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     setRecentIds(prev => {
       if (prev[0] === id) return prev;
       const next = [id, ...prev.filter(x => x !== id)].slice(0, RECENT_MAX);
-      AsyncStorage.setItem(KEY_RECENT, JSON.stringify(next));
+      saveRecents(next);
       return next;
     });
     setPlayCounts(prev => {
       const next = { ...prev, [id]: (prev[id] ?? 0) + 1 };
-      AsyncStorage.setItem(KEY_PLAYCOUNTS, JSON.stringify(next));
+      savePlayCounts(next);
       return next;
     });
   }, []);
 
   const removeAlbum = useCallback((albumId: string) => {
     setYoutubeTracks(prev => {
+      prev.filter(t => t.albumId === albumId).forEach(t => deleteDownloadedFile(t.url));
       const next = prev.filter(t => t.albumId !== albumId);
-      AsyncStorage.setItem(KEY_YT, JSON.stringify(next));
+      saveYoutubeTracks(next);
       return next;
     });
   }, []);
 
-  const tracksById = useMemo(() => {
+  const tracksById = React.useMemo(() => {
     const map: Record<string, AppTrack> = {};
-    for (const t of localTracks) map[t.id] = t;
-    for (const t of youtubeTracks) map[t.id] = t;
+    for (const track of localTracks) map[track.id] = track;
+    for (const track of youtubeTracks) map[track.id] = track;
     return map;
   }, [localTracks, youtubeTracks]);
 
@@ -374,7 +453,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     if (changed) setLikedSnapshots(next);
   }, [likedIds, tracksById, likedSnapshots]);
 
-  const likedTracks = useMemo(
+  const likedTracks = React.useMemo(
     () =>
       likedIds
         .map(id => tracksById[id] || likedSnapshots[id])
@@ -384,24 +463,21 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   const isLiked = useCallback((id: string) => likedIds.includes(id), [likedIds]);
 
-  const toggleLike = useCallback(
-    (track: AppTrack) => {
-      setLikedSnapshots(prev => ({ ...prev, [track.id]: track }));
-      setLikedIds(prev => {
-        const next = prev.includes(track.id)
-          ? prev.filter(x => x !== track.id)
-          : [track.id, ...prev];
-        AsyncStorage.setItem(KEY_LIKES, JSON.stringify(next));
-        return next;
-      });
-    },
-    [],
-  );
+  const toggleLike = useCallback((track: AppTrack) => {
+    setLikedSnapshots(prev => ({ ...prev, [track.id]: track }));
+    setLikedIds(prev => {
+      const next = prev.includes(track.id)
+        ? prev.filter(x => x !== track.id)
+        : [track.id, ...prev];
+      saveLikes(next);
+      return next;
+    });
+  }, []);
 
   const deletePlaylist = useCallback((id: string) => {
     setPlaylists(prev => {
       const next = prev.filter(p => p.id !== id);
-      AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
+      savePlaylists(next);
       return next;
     });
     setFolders(prev => {
@@ -410,7 +486,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
           ? { ...f, playlistIds: f.playlistIds.filter(p => p !== id) }
           : f,
       );
-      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      saveFolders(next);
       return next;
     });
   }, []);
@@ -419,7 +495,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     const id = makeId();
     setFolders(prev => {
       const next = [...prev, { id, name: name.trim() || 'Folder', playlistIds: [] }];
-      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      saveFolders(next);
       return next;
     });
     return id;
@@ -428,7 +504,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const deleteFolder = useCallback((id: string) => {
     setFolders(prev => {
       const next = prev.filter(f => f.id !== id);
-      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      saveFolders(next);
       return next;
     });
   }, []);
@@ -441,7 +517,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
           ? { ...f, playlistIds: [...cleaned, playlistId] }
           : { ...f, playlistIds: cleaned };
       });
-      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      saveFolders(next);
       return next;
     });
   }, []);
@@ -452,25 +528,22 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         ...f,
         playlistIds: f.playlistIds.filter(p => p !== playlistId),
       }));
-      AsyncStorage.setItem(KEY_FOLDERS, JSON.stringify(next));
+      saveFolders(next);
       return next;
     });
   }, []);
 
-  const removeFromPlaylist = useCallback(
-    (playlistId: string, trackId: string) => {
-      setPlaylists(prev => {
-        const next = prev.map(p =>
-          p.id === playlistId
-            ? { ...p, trackIds: p.trackIds.filter(t => t !== trackId) }
-            : p,
-        );
-        AsyncStorage.setItem(KEY_PLAYLISTS, JSON.stringify(next));
-        return next;
-      });
-    },
-    [],
-  );
+  const removeFromPlaylist = useCallback((playlistId: string, trackId: string) => {
+    setPlaylists(prev => {
+      const next = prev.map(p =>
+        p.id === playlistId
+          ? { ...p, trackIds: p.trackIds.filter(x => x !== trackId) }
+          : p,
+      );
+      savePlaylists(next);
+      return next;
+    });
+  }, []);
 
   const playlistTracks = useCallback(
     (playlist: Playlist) =>
@@ -479,6 +552,16 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         .filter(Boolean) as AppTrack[],
     [tracksById, likedSnapshots],
   );
+
+  const reloadLibrary = useCallback(() => {
+    const snap = loadSnapshot();
+    setYoutubeTracks(snap.youtubeTracks);
+    setLikedIds(snap.likedIds);
+    setPlaylists(snap.playlists);
+    setFolders(snap.folders);
+    setRecentIds(snap.recentIds);
+    setPlayCounts(snap.playCounts);
+  }, []);
 
   const value: LibraryState = {
     localTracks,
@@ -513,6 +596,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     addToPlaylist,
     removeFromPlaylist,
     playlistTracks,
+    reloadLibrary,
   };
 
   return <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>;
@@ -522,12 +606,4 @@ export function useLibrary(): LibraryState {
   const ctx = useContext(LibraryContext);
   if (!ctx) throw new Error('useLibrary must be used within LibraryProvider');
   return ctx;
-}
-
-function safeParse<T>(raw: string, fallback: T): T {
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
 }
