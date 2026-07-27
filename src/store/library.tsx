@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import { AppState } from 'react-native';
+import RNFS from 'react-native-fs';
 import {
   Folder,
   initDatabase,
@@ -203,6 +204,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     rescanLocal();
   }, [rescanLocal]);
 
+
   useEffect(() => {
     const sub = AppState.addEventListener('change', s => {
       if (s === 'active' && permissionDenied) rescanLocal();
@@ -212,8 +214,14 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   const addYoutube = useCallback((track: AppTrack) => {
     setYoutubeTracks(prev => {
-      if (prev.some(t => t.id === track.id)) return prev;
-      const next = [track, ...prev];
+      const idx = prev.findIndex(t => t.id === track.id);
+      let next: AppTrack[];
+      if (idx >= 0) {
+        next = prev.slice();
+        next[idx] = { ...prev[idx], ...track };
+      } else {
+        next = [track, ...prev];
+      }
       saveYoutubeTracks(next);
       return next;
     });
@@ -562,6 +570,26 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     setRecentIds(snap.recentIds);
     setPlayCounts(snap.playCounts);
   }, []);
+
+  const repairedRef = useRef(false);
+  useEffect(() => {
+    if (repairedRef.current || youtubeTracks.length === 0) return;
+    repairedRef.current = true;
+    (async () => {
+      for (const track of youtubeTracks) {
+        if (!track.id.startsWith('youtube:')) continue;
+        const path = track.url.startsWith('file://') ? track.url.slice(7) : track.url;
+        const exists = await RNFS.exists(path).catch(() => false);
+        if (!exists) {
+          const ytId = track.id.slice('youtube:'.length);
+          startDownload('https://www.youtube.com/watch?v=' + ytId, {
+            title: track.title,
+            albumCover: track.artwork,
+          });
+        }
+      }
+    })();
+  }, [youtubeTracks, startDownload]);
 
   const value: LibraryState = {
     localTracks,
