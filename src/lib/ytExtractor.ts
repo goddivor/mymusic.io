@@ -198,7 +198,9 @@ export async function downloadYoutubeAudio(
 
   const rawExt = (info.ext || 'm4a').toLowerCase();
   const ext = rawExt === 'mp4' || rawExt === 'mpeg4' ? 'm4a' : rawExt;
-  const tmp = `${RNFS.CachesDirectoryPath}/${id}.${ext}`;
+  const dlDir = `${RNFS.DocumentDirectoryPath}/downloads`;
+  await RNFS.mkdir(dlDir).catch(() => {});
+  const tmp = `${dlDir}/${id}.${ext}`;
 
   const task = RNFS.downloadFile({
     fromUrl: info.audioUrl,

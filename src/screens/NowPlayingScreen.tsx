@@ -125,6 +125,20 @@ export default function NowPlayingScreen({
     }),
   ).current;
 
+  const artPan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        Math.abs(g.dx) > 16 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx <= -60) {
+          TrackPlayer.skipToPrevious().catch(() => {});
+        } else if (g.dx >= 60) {
+          TrackPlayer.skipToNext().catch(() => {});
+        }
+      },
+    }),
+  ).current;
+
   const cycleRepeat = async () => {
     const next =
       repeat === RepeatMode.Queue
@@ -233,7 +247,7 @@ export default function NowPlayingScreen({
             onScroll={e => (scrollY.current = e.nativeEvent.contentOffset.y)}
             scrollEventThrottle={16}
             contentContainerStyle={{ paddingBottom: 28 }}>
-            <View style={styles.artArea}>
+            <View style={styles.artArea} {...artPan.panHandlers}>
               <View style={styles.artWrap}>
                 {track.artwork ? (
                   <Image source={{ uri: String(track.artwork) }} style={styles.art} />

@@ -101,6 +101,11 @@ public class MediaSaverModule extends ReactContextBaseJavaModule {
                 path = cursor.getString(0);
             }
         }
+        if (path == null || path.isEmpty()) {
+            File dir = new File(
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), SUBDIR);
+            path = new File(dir, displayName).getAbsolutePath();
+        }
         return path;
     }
 

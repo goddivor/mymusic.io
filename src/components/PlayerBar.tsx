@@ -4,8 +4,15 @@ import {
   PauseIcon,
   PlayIcon,
 } from '@hugeicons/core-free-icons';
-import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useRef } from 'react';
+import {
+  Image,
+  PanResponder,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import TrackPlayer, {
   useActiveTrack,
   useIsPlaying,
@@ -15,12 +22,28 @@ import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 import Ic from './Ic';
 
+const SWIPE_THRESHOLD = 55;
+
 export default function PlayerBar({ onPress }: { onPress?: () => void }) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const track = useActiveTrack();
   const { playing } = useIsPlaying();
   const { position, duration } = useProgress();
+
+  const pan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_e, g) =>
+        Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+      onPanResponderRelease: (_e, g) => {
+        if (g.dx <= -SWIPE_THRESHOLD) {
+          TrackPlayer.skipToPrevious().catch(() => {});
+        } else if (g.dx >= SWIPE_THRESHOLD) {
+          TrackPlayer.skipToNext().catch(() => {});
+        }
+      },
+    }),
+  ).current;
 
   if (!track) return null;
 
@@ -29,6 +52,7 @@ export default function PlayerBar({ onPress }: { onPress?: () => void }) {
   return (
     <View style={styles.wrap}>
       <View style={styles.bar}>
+        <View style={styles.tapArea} {...pan.panHandlers}>
         <TouchableOpacity style={styles.tapArea} activeOpacity={0.7} onPress={onPress}>
           {track.artwork ? (
             <Image source={{ uri: String(track.artwork) }} style={styles.art} />
@@ -46,6 +70,7 @@ export default function PlayerBar({ onPress }: { onPress?: () => void }) {
             </Text>
           </View>
         </TouchableOpacity>
+        </View>
         <TouchableOpacity
           hitSlop={8}
           style={styles.ctrlBtn}
