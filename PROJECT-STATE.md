@@ -2,11 +2,12 @@
 
 > Live state, not history. **Max 80 lines.** Rewrite in place — never append.
 > History: `git log`. Decisions: `docs/DECISIONS.md`. Spec: `docs/BRIEF.md`.
-> Last updated: 2026-07-27
+> Last updated: 2026-08-01
 
 ## Now
 
-Stabilisation — v1.4.0 released (download persistence + auto-repair + player swipe) — awaiting the user's on-device validation.
+v1.5.0 releasing — LAN web player fixes (local covers, redesign, shuffle/repeat, play history) + SAF library
+backup (auto, survives uninstall) + debug/release coexistence. Pushed to master to trigger the signed release.
 
 ## Shape
 
@@ -29,7 +30,10 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] library graph — albums, playlists, playlist folders, likes, play counts, recents — in SQLite (migrated from AsyncStorage).
 - [x] player — background audio, queue drag-reorder, shuffle/repeat, swipe prev/next on mini-bar and now-playing.
 - [x] UI system — live theme + i18n, push drawer, searchable settings, official YouTube logo.
-- [x] platform — LAN web player (+ Vite webapp), backup export/import, in-app GitHub updater, signed release CI (psycho→master).
+- [x] platform — LAN web player (+ Vite webapp), in-app GitHub updater, signed release CI (psycho→master).
+- [x] web player — serves local album art (/art), music-note fallback, redesign, shuffle/repeat + play history.
+- [x] backup — SAF user-picked folder, auto on every change, restore prompt on empty library; survives uninstall.
+- [x] dev — debug build (com.musicapp.debug) coexists with the signed release; never uninstall the release.
 
 ## Next
 

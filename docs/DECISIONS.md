@@ -20,3 +20,6 @@ there.
 - 2026-07-27 — Never store downloads in the cache dir — MIUI wipes it, playback died after days
 - 2026-07-27 — Context system installed via project-forge — sessions must survive /clear
 - 2026-07-27 — CLAUDE.md stays gitignored (local only), rest of the context system is versioned — user choice
+- 2026-08-01 — LAN web player serves local covers via a token-gated /art/<id> endpoint — content:// URIs are unreachable from a browser
+- 2026-08-01 — Debug build coexists with the signed release via applicationIdSuffix .debug + ${applicationId}.fileprovider authority — never uninstall the release to test
+- 2026-08-01 — Library backup uses SAF (user-picked folder) via a native Backup module, auto on every change — survives uninstall on MIUI, no runtime permission; Music/MusicApp path failed under scoped storage and MIUI wipe
