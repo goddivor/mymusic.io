@@ -21,8 +21,6 @@ import java.util.Map;
  * content:// URI (browserless update, Aniyomi style).
  */
 public class AppUpdaterModule extends ReactContextBaseJavaModule {
-    private static final String AUTHORITY = "com.musicapp.fileprovider";
-
     public AppUpdaterModule(ReactApplicationContext reactContext) {
         super(reactContext);
     }
@@ -56,7 +54,8 @@ public class AppUpdaterModule extends ReactContextBaseJavaModule {
                 promise.reject("NOT_FOUND", "APK file not found: " + path);
                 return;
             }
-            Uri uri = FileProvider.getUriForFile(getReactApplicationContext(), AUTHORITY, file);
+            String authority = getReactApplicationContext().getPackageName() + ".fileprovider";
+            Uri uri = FileProvider.getUriForFile(getReactApplicationContext(), authority, file);
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(uri, "application/vnd.android.package-archive");
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
