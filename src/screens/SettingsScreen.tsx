@@ -1,6 +1,7 @@
 import {
   ArrowLeft01Icon,
   Download01Icon,
+  Folder01Icon,
   GithubIcon,
   InformationCircleIcon,
   Moon02Icon,
@@ -24,7 +25,12 @@ import {
 import { useActionSheet } from '../components/ActionSheet';
 import Ic from '../components/Ic';
 import UpdateSheet from '../components/UpdateSheet';
-import { exportBackup, importBackup } from '../lib/backup';
+import {
+  chooseBackupFolder,
+  exportBackup,
+  hasBackupFolder,
+  restoreFromFile,
+} from '../lib/backup';
 import {
   checkForUpdate,
   getCurrentVersion,
@@ -70,6 +76,8 @@ export default function SettingsScreen({ onClose }: Props) {
   const [query, setQuery] = useState('');
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [checking, setChecking] = useState(false);
+  const [autoBackupOn, setAutoBackupOn] = useState(getSettings().autoBackup);
+  const [folderSet, setFolderSet] = useState(hasBackupFolder());
 
   const pickLanguage = () =>
     show({
@@ -94,15 +102,29 @@ export default function SettingsScreen({ onClose }: Props) {
 
   const settings = getSettings();
 
-  const doExport = async () => {
-    const path = await exportBackup();
-    ToastAndroid.show(path ? t('backupExported') : t('backupFailed'), ToastAndroid.SHORT);
+  const doChooseFolder = async () => {
+    const uri = await chooseBackupFolder();
+    setFolderSet(!!uri || hasBackupFolder());
+    if (uri) ToastAndroid.show(t('backupFolderSet'), ToastAndroid.SHORT);
   };
 
-  const doImport = async () => {
-    const ok = await importBackup();
+  const doExport = async () => {
+    const ok = await exportBackup();
+    setFolderSet(hasBackupFolder());
+    ToastAndroid.show(ok ? t('backupExported') : t('backupFailed'), ToastAndroid.SHORT);
+  };
+
+  const doRestore = async () => {
+    const ok = await restoreFromFile();
     if (ok) reloadLibrary();
     ToastAndroid.show(ok ? t('backupImported') : t('noBackupFound'), ToastAndroid.SHORT);
+  };
+
+  const toggleAutoBackup = async () => {
+    const nextOn = !autoBackupOn;
+    setAutoBackupOn(nextOn);
+    await saveSettings({ autoBackup: nextOn });
+    if (nextOn && !hasBackupFolder()) doChooseFolder();
   };
 
   const doCheckUpdates = async () => {
@@ -169,6 +191,22 @@ export default function SettingsScreen({ onClose }: Props) {
         | (() => void),
     },
     {
+      key: 'backupFolder',
+      icon: Folder01Icon,
+      title: t('backupFolder'),
+      sub: folderSet ? t('backupFolderOn') : t('backupFolderOff'),
+      keywords: 'sauvegarde backup dossier folder saf data données',
+      onPress: doChooseFolder as undefined | (() => void),
+    },
+    {
+      key: 'autoBackup',
+      icon: RefreshIcon,
+      title: t('autoBackup'),
+      sub: autoBackupOn ? t('enabled') : t('disabled'),
+      keywords: 'sauvegarde backup auto automatique data données',
+      onPress: toggleAutoBackup as undefined | (() => void),
+    },
+    {
       key: 'export',
       icon: Upload01Icon,
       title: t('exportBackup'),
@@ -177,12 +215,12 @@ export default function SettingsScreen({ onClose }: Props) {
       onPress: doExport as undefined | (() => void),
     },
     {
-      key: 'import',
+      key: 'restore',
       icon: Download01Icon,
       title: t('importBackup'),
       sub: t('importBackupSub'),
       keywords: 'sauvegarde backup import restore restaurer data données',
-      onPress: doImport as undefined | (() => void),
+      onPress: doRestore as undefined | (() => void),
     },
   ];
 
@@ -291,8 +329,10 @@ export default function SettingsScreen({ onClose }: Props) {
 
         <Text style={styles.sectionLabel}>{t('sectionData')}</Text>
         <View style={styles.card}>
+          {renderItemRow(items.find(it => it.key === 'backupFolder')!, false)}
+          {renderItemRow(items.find(it => it.key === 'autoBackup')!, false)}
           {renderItemRow(items.find(it => it.key === 'export')!, false)}
-          {renderItemRow(items.find(it => it.key === 'import')!, true)}
+          {renderItemRow(items.find(it => it.key === 'restore')!, true)}
         </View>
 
         <Text style={styles.sectionLabel}>{t('sectionAbout')}</Text>

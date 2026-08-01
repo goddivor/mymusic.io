@@ -1,6 +1,8 @@
 package com.musicapp.webserver;
 
+import android.content.ContentResolver;
 import android.content.res.AssetManager;
+import android.net.Uri;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,17 +29,20 @@ import fi.iki.elonen.NanoHTTPD;
  */
 public class MusicHttpServer extends NanoHTTPD {
     private final AssetManager assets;
+    private final ContentResolver resolver;
     private final String pin;
     private final Set<String> tokens;
     private final Runnable onTokenIssued;
 
     private volatile String libraryJson = "{\"tracks\":[],\"playlists\":[],\"likedIds\":[]}";
     private final Map<String, String> trackPaths = new ConcurrentHashMap<>();
+    private final Map<String, String> trackArt = new ConcurrentHashMap<>();
 
-    public MusicHttpServer(int port, AssetManager assets, String pin,
+    public MusicHttpServer(int port, AssetManager assets, ContentResolver resolver, String pin,
                            Set<String> tokens, Runnable onTokenIssued) {
         super(port);
         this.assets = assets;
+        this.resolver = resolver;
         this.pin = pin;
         this.tokens = tokens;
         this.onTokenIssued = onTokenIssued;
@@ -46,6 +51,7 @@ public class MusicHttpServer extends NanoHTTPD {
     public void updateLibrary(String json) {
         libraryJson = json;
         Map<String, String> paths = new HashMap<>();
+        Map<String, String> art = new HashMap<>();
         try {
             JSONObject obj = new JSONObject(json);
             JSONArray tracks = obj.optJSONArray("tracks");
@@ -58,12 +64,19 @@ public class MusicHttpServer extends NanoHTTPD {
                         if (path.startsWith("file://")) path = path.substring(7);
                         paths.put(id, path);
                     }
+                    String cover = t.optString("artwork", "");
+                    if (cover.isEmpty()) cover = t.optString("albumCover", "");
+                    if (id != null && (cover.startsWith("content://") || cover.startsWith("file://"))) {
+                        art.put(id, cover);
+                    }
                 }
             }
         } catch (Exception ignored) {
         }
         trackPaths.clear();
         trackPaths.putAll(paths);
+        trackArt.clear();
+        trackArt.putAll(art);
     }
 
     @Override
@@ -96,6 +109,12 @@ public class MusicHttpServer extends NanoHTTPD {
                 return serveFile(new File(path), session.getHeaders().get("range"));
             }
 
+            if (uri.startsWith("/art/")) {
+                if (!authed(parms)) return status(Response.Status.FORBIDDEN, "token");
+                String id = java.net.URLDecoder.decode(uri.substring("/art/".length()), "UTF-8");
+                return serveArt(trackArt.get(id));
+            }
+
             return serveAsset(uri);
         } catch (Exception e) {
             return status(Response.Status.INTERNAL_ERROR, String.valueOf(e.getMessage()));
@@ -120,6 +139,28 @@ public class MusicHttpServer extends NanoHTTPD {
         Response res = newChunkedResponse(Response.Status.OK, mimeFor(path), in);
         res.addHeader("Cache-Control", "no-cache");
         return res;
+    }
+
+    /** Streams a track's album art, resolving a MediaStore content:// URI or a file path. */
+    private Response serveArt(String art) {
+        if (art == null) return status(Response.Status.NOT_FOUND, "sans pochette");
+        try {
+            InputStream in;
+            if (art.startsWith("content://")) {
+                in = resolver.openInputStream(Uri.parse(art));
+            } else {
+                String p = art.startsWith("file://") ? art.substring(7) : art;
+                File f = new File(p);
+                if (!f.exists()) return status(Response.Status.NOT_FOUND, "sans pochette");
+                in = new FileInputStream(f);
+            }
+            if (in == null) return status(Response.Status.NOT_FOUND, "sans pochette");
+            Response res = newChunkedResponse(Response.Status.OK, "image/jpeg", in);
+            res.addHeader("Cache-Control", "max-age=86400");
+            return res;
+        } catch (Exception e) {
+            return status(Response.Status.NOT_FOUND, "sans pochette");
+        }
     }
 
     private static String mimeFor(String path) {

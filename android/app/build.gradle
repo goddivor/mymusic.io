@@ -88,8 +88,9 @@ android {
         applicationId "com.musicapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.4.0"
+        versionCode 6
+        versionName "1.5.0"
+        manifestPlaceholders.put("appLabel", "MusicApp")
     }
     signingConfigs {
         debug {
@@ -114,6 +115,9 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+            manifestPlaceholders.put("appLabel", "MusicApp Dev")
         }
         release {
             signingConfig signingConfigs.release.storeFile != null ? signingConfigs.release : signingConfigs.debug
@@ -137,6 +141,9 @@ dependencies {
     // Embedded HTTP server (WebServer native module)
     implementation("org.nanohttpd:nanohttpd:2.3.1")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    // SAF document access for user-chosen backup folder (Backup native module)
+    implementation("androidx.documentfile:documentfile:1.0.1")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

@@ -9,11 +9,20 @@ export type ThemePref = 'system' | 'dark' | 'light';
 export type AppSettings = {
   language: LanguagePref;
   theme: ThemePref;
+  backupFolderUri: string | null;
+  autoBackup: boolean;
+  restoreOffered: boolean;
 };
 
 const KEY = 'app_settings';
 
-let current: AppSettings = { language: 'system', theme: 'system' };
+let current: AppSettings = {
+  language: 'system',
+  theme: 'system',
+  backupFolderUri: null,
+  autoBackup: true,
+  restoreOffered: false,
+};
 
 /**
  * Loads the preferences and applies the palette. Must be awaited BEFORE the
