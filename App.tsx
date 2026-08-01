@@ -25,6 +25,7 @@ import BrandYoutubeIcon from './src/components/BrandYoutubeIcon';
 import PlayerBar from './src/components/PlayerBar';
 import ProfileDrawer, { DrawerItemKey } from './src/components/ProfileDrawer';
 import RecentTracker from './src/components/RecentTracker';
+import RestorePrompt from './src/components/RestorePrompt';
 import WebServerSync from './src/components/WebServerSync';
 import { Collection } from './src/lib/collections';
 import CollectionDetailScreen from './src/screens/CollectionDetailScreen';
@@ -105,6 +106,7 @@ function AppInner(): React.JSX.Element {
        <ActionSheetProvider>
         <ConfirmProvider>
         <RecentTracker />
+        <RestorePrompt />
         <WebServerSync />
         <StatusBar
           barStyle={scheme === 'light' ? 'dark-content' : 'light-content'}

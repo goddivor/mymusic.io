@@ -35,6 +35,7 @@ import {
   getPlaylist,
   isAlbumPlaylistId,
 } from '../lib/ytExtractor';
+import { autoBackup } from '../lib/backup';
 import { AppTrack } from '../types';
 
 export type { Folder, Playlist } from '../db/database';
@@ -152,6 +153,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   ytRef.current = youtubeTracks;
   const queueRef = useRef<{ url: string; meta?: DownloadMeta; attempts: number }[]>([]);
   const activeRef = useRef(0);
+  const hydratedRef = useRef(false);
+  const backupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -167,8 +170,20 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         setYoutubeTracks(moved);
         saveYoutubeTracks(moved);
       }
+      hydratedRef.current = true;
     })();
   }, []);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    if (backupTimer.current) clearTimeout(backupTimer.current);
+    backupTimer.current = setTimeout(() => {
+      autoBackup();
+    }, 4000);
+    return () => {
+      if (backupTimer.current) clearTimeout(backupTimer.current);
+    };
+  }, [youtubeTracks, likedIds, playlists, folders]);
 
   const reconcileDownloads = useCallback(async () => {
     const onDisk = await scanDownloadedYoutube();
