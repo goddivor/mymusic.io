@@ -66,7 +66,8 @@ public class WebServerModule extends ReactContextBaseJavaModule {
                 for (int p = BASE_PORT; p < BASE_PORT + 10; p++) {
                     try {
                         MusicHttpServer candidate = new MusicHttpServer(
-                                p, getReactApplicationContext().getAssets(), pin,
+                                p, getReactApplicationContext().getAssets(),
+                                getReactApplicationContext().getContentResolver(), pin,
                                 tokens, this::persistTokens);
                         candidate.start(MusicHttpServer.SOCKET_READ_TIMEOUT, false);
                         created = candidate;

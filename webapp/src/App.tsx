@@ -9,7 +9,10 @@ import {
   PauseIcon,
   PlayIcon,
   PreviousIcon,
+  RepeatIcon,
+  RepeatOneIcon,
   Search01Icon,
+  ShuffleIcon,
   VolumeHighIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -26,6 +29,23 @@ const Icon = ({
   color?: string;
   sw?: number;
 }) => <HugeiconsIcon icon={icon} size={size} color={color} strokeWidth={sw} />;
+
+const Bars = () => (
+  <span className="eq" aria-hidden="true">
+    <i />
+    <i />
+    <i />
+    <i />
+  </span>
+);
+
+/** Album art with a music-note fallback when the src is missing or 404s (no real cover). */
+const Art = ({ src, size }: { src?: string; size: number }) => {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (!src || failed) return <Icon icon={MusicNote01Icon} size={size} color="#8a7fa0" />;
+  return <img src={src} alt="" onError={() => setFailed(true)} />;
+};
 
 const API = window.location.origin;
 const TOKEN_KEY = 'mp_token';
@@ -45,9 +65,17 @@ type Track = {
 type Playlist = { id: string; name: string; trackIds: string[] };
 type Lib = { tracks: Track[]; playlists: Playlist[]; likedIds: string[] };
 type Collection = { key: string; name: string; sub: string; tracks: Track[] };
+type RepeatMode = 'off' | 'all' | 'one';
 
 const trackUrl = (id: string, token: string) =>
   `${API}/track/${encodeURIComponent(id)}?t=${encodeURIComponent(token)}`;
+
+const artUrl = (raw: string | undefined, id: string, token: string) => {
+  if (!raw) return undefined;
+  if (raw.startsWith('content://') || raw.startsWith('file://'))
+    return `${API}/art/${encodeURIComponent(id)}?t=${encodeURIComponent(token)}`;
+  return raw;
+};
 
 const cover = (t?: Track) => t?.artwork || t?.albumCover || '';
 const colCover = (c?: Collection) => {
@@ -77,6 +105,68 @@ function fmt(s: number) {
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
 
+function TrackRow({
+  t,
+  isCur,
+  playing,
+  liked,
+  onPlay,
+}: {
+  t: Track;
+  isCur: boolean;
+  playing: boolean;
+  liked: boolean;
+  onPlay: () => void;
+}) {
+  return (
+    <div className={'qrow' + (isCur ? ' cur' : '')} onClick={onPlay}>
+      <div className="qthumb">
+        <Art src={cover(t)} size={20} />
+        <div className="qov">
+          {isCur && playing ? (
+            <Bars />
+          ) : (
+            <Icon icon={isCur ? PauseIcon : PlayIcon} size={16} color="#fff" sw={2} />
+          )}
+        </div>
+      </div>
+      <div className="qmeta">
+        <div className="qtitle">
+          {t.title}{' '}
+          {liked && (
+            <span className="heart">
+              <Icon icon={FavouriteIcon} size={12} color="#ff6fb5" sw={2.4} />
+            </span>
+          )}
+        </div>
+        <div className="qsub">{t.artist}</div>
+      </div>
+      <div className="qdur">{fmt(t.duration ?? 0)}</div>
+    </div>
+  );
+}
+
+function BigCard({ c, onOpen, onPlay }: { c: Collection; onOpen: () => void; onPlay: () => void }) {
+  const cc = colCover(c);
+  return (
+    <div className="bcard" onClick={onOpen}>
+      <div className="bcover" style={cc ? undefined : { background: grad(c.name) }}>
+        <Art src={cc} size={46} />
+        <button
+          className="bplay"
+          onClick={e => {
+            e.stopPropagation();
+            onPlay();
+          }}>
+          <Icon icon={PlayIcon} size={16} color="#1a1020" sw={2.2} />
+        </button>
+      </div>
+      <div className="bname">{c.name}</div>
+      <div className="bsub">{c.sub} · {c.tracks.length} titres</div>
+    </div>
+  );
+}
+
 export default function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [lib, setLib] = useState<Lib | null>(null);
@@ -85,12 +175,15 @@ export default function App() {
   const [search, setSearch] = useState('');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const historyRef = useRef<number[]>([]);
   const [queue, setQueue] = useState<Track[]>([]);
   const [queueName, setQueueName] = useState('File d\'attente');
   const [index, setIndex] = useState(-1);
   const [playing, setPlaying] = useState(false);
   const [pos, setPos] = useState(0);
   const [dur, setDur] = useState(0);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState<RepeatMode>('off');
   const [npOpen, setNpOpen] = useState(false);
   const [npTab, setNpTab] = useState<'next' | 'lyrics' | 'related'>('next');
 
@@ -107,7 +200,12 @@ export default function App() {
       const res = await fetch(`${API}/library?t=${encodeURIComponent(tk)}`);
       if (res.status === 403) return setAuthNeeded(true);
       const data: Lib = await res.json();
-      setLib(data);
+      const tracks = data.tracks.map(t => ({
+        ...t,
+        artwork: artUrl(t.artwork, t.id, tk),
+        albumCover: artUrl(t.albumCover, t.id, tk),
+      }));
+      setLib({ ...data, tracks });
       setAuthNeeded(false);
     } catch {
       setAuthNeeded(true);
@@ -163,10 +261,16 @@ export default function App() {
   const allTracks = lib?.tracks ?? [];
 
   function playFrom(list: Track[], i: number, ctx = 'File d\'attente') {
+    historyRef.current = [];
     setQueue(list);
     setQueueName(ctx);
     setIndex(i);
   }
+
+  const goTo = (i: number) => {
+    if (index >= 0) historyRef.current.push(index);
+    setIndex(i);
+  };
 
   useEffect(() => {
     const a = audioRef.current;
@@ -183,17 +287,49 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, current?.id, token]);
 
-  const next = () => index < queue.length - 1 && setIndex(index + 1);
+  function pickNext(): number {
+    if (queue.length === 0) return -1;
+    if (shuffle && queue.length > 1) {
+      let r = index;
+      while (r === index) r = Math.floor(Math.random() * queue.length);
+      return r;
+    }
+    if (index < queue.length - 1) return index + 1;
+    if (repeat === 'all') return 0;
+    return -1;
+  }
+
+  const next = () => {
+    const n = pickNext();
+    if (n >= 0) goTo(n);
+  };
   const prev = () => {
     const a = audioRef.current;
     if (a && a.currentTime > 3) return void (a.currentTime = 0);
+    const h = historyRef.current;
+    if (h.length > 0) return setIndex(h.pop() as number);
     if (index > 0) setIndex(index - 1);
+  };
+  const onEnded = () => {
+    if (repeat === 'one') {
+      const a = audioRef.current;
+      if (a) {
+        a.currentTime = 0;
+        a.play().catch(() => {});
+      }
+      return;
+    }
+    const n = pickNext();
+    if (n >= 0) goTo(n);
+    else setPlaying(false);
   };
   const togglePlay = () => {
     const a = audioRef.current;
     if (!a) return;
     playing ? a.pause() : a.play();
   };
+  const cycleRepeat = () =>
+    setRepeat(r => (r === 'off' ? 'all' : r === 'all' ? 'one' : 'off'));
   const isLiked = (id: string) => lib?.likedIds.includes(id);
 
   if (authNeeded) return <Pairing onPair={pair} />;
@@ -206,53 +342,17 @@ export default function App() {
       )
     : [];
 
-  const TrackRow = ({ list, i, ctx }: { list: Track[]; i: number; ctx?: string }) => {
-    const t = list[i];
-    const isCur = current?.id === t.id;
-    return (
-      <div className={'qrow' + (isCur ? ' cur' : '')} onClick={() => playFrom(list, i, ctx)}>
-        <div className="qthumb">
-          {cover(t) ? <img src={cover(t)} alt="" /> : <Icon icon={MusicNote01Icon} size={20} color="#717171" />}
-          <div className="qov">
-            <Icon icon={isCur && playing ? PauseIcon : PlayIcon} size={16} color="#fff" sw={2} />
-          </div>
-        </div>
-        <div className="qmeta">
-          <div className="qtitle">
-            {t.title}{' '}
-            {isLiked(t.id) && (
-              <span className="heart">
-                <Icon icon={FavouriteIcon} size={12} color="#ff6fb5" sw={2.4} />
-              </span>
-            )}
-          </div>
-          <div className="qsub">{t.artist}</div>
-        </div>
-        <div className="qdur">{fmt(t.duration ?? 0)}</div>
-      </div>
-    );
-  };
-
-  const BigCard = ({ c }: { c: Collection }) => {
-    const cc = colCover(c);
-    return (
-      <div className="bcard" onClick={() => setView(c.key)}>
-        <div className="bcover" style={cc ? undefined : { background: grad(c.name) }}>
-          {cc ? <img src={cc} alt="" /> : <span>{c.name[0]}</span>}
-          <button
-            className="bplay"
-            onClick={e => {
-              e.stopPropagation();
-              if (c.tracks.length) playFrom(c.tracks, 0, c.name);
-            }}>
-            <Icon icon={PlayIcon} size={16} color="#fff" sw={2.2} />
-          </button>
-        </div>
-        <div className="bname">{c.name}</div>
-        <div className="bsub">{c.sub} · {c.tracks.length} titres</div>
-      </div>
-    );
-  };
+  const renderRows = (list: Track[], ctx: string) =>
+    list.map((t, i) => (
+      <TrackRow
+        key={t.id + i}
+        t={t}
+        isCur={current?.id === t.id}
+        playing={playing}
+        liked={!!isLiked(t.id)}
+        onPlay={() => playFrom(list, i, ctx)}
+      />
+    ));
 
   return (
     <div className="layout">
@@ -287,7 +387,7 @@ export default function App() {
                   className={'side-pl' + (view === c.key ? ' on' : '')}
                   onClick={() => setView(c.key)}>
                   <div className="spl-cover" style={cc ? undefined : { background: grad(c.name) }}>
-                    {cc ? <img src={cc} alt="" /> : <span>{c.name[0]}</span>}
+                    <Art src={cc} size={18} />
                   </div>
                   <div className="spl-meta">
                     <div className="spl-name">{c.name}</div>
@@ -317,9 +417,7 @@ export default function App() {
             <section className="block">
               <h2 className="bh">Résultats</h2>
               <div className="qgrid">
-                {searchResults.map((t, i) => (
-                  <TrackRow key={t.id + i} list={searchResults} i={i} ctx="Résultats" />
-                ))}
+                {renderRows(searchResults, 'Résultats')}
                 {searchResults.length === 0 && <div className="muted">Aucun résultat.</div>}
               </div>
             </section>
@@ -331,18 +429,19 @@ export default function App() {
                 </div>
                 <div className="brow">
                   {collections.filter(c => c.tracks.length).map(c => (
-                    <BigCard key={c.key} c={c} />
+                    <BigCard
+                      key={c.key}
+                      c={c}
+                      onOpen={() => setView(c.key)}
+                      onPlay={() => c.tracks.length && playFrom(c.tracks, 0, c.name)}
+                    />
                   ))}
                 </div>
               </section>
 
               <section className="block">
                 <h2 className="bh">Sélection rapide</h2>
-                <div className="qgrid">
-                  {allTracks.slice(0, 24).map((t, i) => (
-                    <TrackRow key={t.id + i} list={allTracks} i={i} ctx="Sélection rapide" />
-                  ))}
-                </div>
+                <div className="qgrid">{renderRows(allTracks.slice(0, 24), 'Sélection rapide')}</div>
               </section>
             </>
           ) : (
@@ -353,7 +452,7 @@ export default function App() {
                 <>
                   <section className="hero">
                     <div className="hero-cover" style={hc ? undefined : { background: grad(c.name) }}>
-                      {hc ? <img src={hc} alt="" /> : <Icon icon={MusicNote01Icon} size={56} color="#fff" />}
+                      <Art src={hc} size={56} />
                     </div>
                     <div className="hero-info">
                       <div className="hero-kind">{c.sub}</div>
@@ -369,9 +468,7 @@ export default function App() {
                   </section>
                   <section className="block">
                     <div className="qgrid one">
-                      {c.tracks.map((t, i) => (
-                        <TrackRow key={t.id + i} list={c.tracks} i={i} ctx={c.name} />
-                      ))}
+                      {renderRows(c.tracks, c.name)}
                       {!c.tracks.length && <div className="muted">Collection vide.</div>}
                     </div>
                   </section>
@@ -387,11 +484,7 @@ export default function App() {
         <div className="np">
           <div className="np-main">
             <div className="np-art" style={cover(current) ? undefined : { background: grad(current.title) }}>
-              {cover(current) ? (
-                <img src={cover(current)} alt="" />
-              ) : (
-                <Icon icon={MusicNote01Icon} size={96} color="#fff" />
-              )}
+              <Art src={cover(current)} size={96} />
             </div>
             <div className="np-meta">
               <h2>{current.title}</h2>
@@ -425,16 +518,12 @@ export default function App() {
                       <div
                         key={t.id + '_' + i}
                         className={'nprow' + (isCur ? ' cur' : '')}
-                        onClick={() => setIndex(i)}>
+                        onClick={() => i !== index && goTo(i)}>
                         <div className="npq-thumb">
-                          {cover(t) ? (
-                            <img src={cover(t)} alt="" />
-                          ) : (
-                            <Icon icon={MusicNote01Icon} size={18} color="#717171" />
-                          )}
+                          <Art src={cover(t)} size={18} />
                           {isCur && (
                             <div className="npq-ov">
-                              <Icon icon={VolumeHighIcon} size={16} color="#fff" />
+                              {playing ? <Bars /> : <Icon icon={VolumeHighIcon} size={16} color="#fff" />}
                             </div>
                           )}
                         </div>
@@ -459,7 +548,7 @@ export default function App() {
         ref={audioRef}
         onTimeUpdate={e => setPos((e.target as HTMLAudioElement).currentTime)}
         onLoadedMetadata={e => setDur((e.target as HTMLAudioElement).duration)}
-        onEnded={next}
+        onEnded={onEnded}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
       />
@@ -481,7 +570,7 @@ export default function App() {
           <div className="pbar">
             <div className="pleft">
               <div className="pthumb">
-                {cover(current) ? <img src={cover(current)} alt="" /> : <Icon icon={MusicNote01Icon} size={20} color="#717171" />}
+                <Art src={cover(current)} size={20} />
               </div>
               <div className="pmeta">
                 <div className="qtitle">{current.title}</div>
@@ -489,6 +578,12 @@ export default function App() {
               </div>
             </div>
             <div className="pcenter">
+              <button
+                className={'ctrl' + (shuffle ? ' act' : '')}
+                onClick={() => setShuffle(s => !s)}
+                aria-label="Lecture aléatoire">
+                <Icon icon={ShuffleIcon} size={19} sw={2} />
+              </button>
               <button onClick={prev} aria-label="Précédent">
                 <Icon icon={PreviousIcon} size={22} sw={2} />
               </button>
@@ -497,6 +592,12 @@ export default function App() {
               </button>
               <button onClick={next} aria-label="Suivant">
                 <Icon icon={NextIcon} size={22} sw={2} />
+              </button>
+              <button
+                className={'ctrl' + (repeat !== 'off' ? ' act' : '')}
+                onClick={cycleRepeat}
+                aria-label="Répéter">
+                <Icon icon={repeat === 'one' ? RepeatOneIcon : RepeatIcon} size={19} sw={2} />
               </button>
             </div>
             <div className="pright">
