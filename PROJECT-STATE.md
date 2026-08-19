@@ -2,12 +2,13 @@
 
 > Live state, not history. **Max 80 lines.** Rewrite in place — never append.
 > History: `git log`. Decisions: `docs/DECISIONS.md`. Spec: `docs/BRIEF.md`.
-> Last updated: 2026-08-01
+> Last updated: 2026-08-19
 
 ## Now
 
-v1.5.0 releasing — LAN web player fixes (local covers, redesign, shuffle/repeat, play history) + SAF library
-backup (auto, survives uninstall) + debug/release coexistence. Pushed to master to trigger the signed release.
+v1.6.0 releasing — download queue upgrades (configurable parallelism + per-playlist limit, queued status,
+retry-failed button) + playlist multiselect (play/queue/add/remove/delete) + delete-playlist choice
+(playlist only vs also downloaded tracks). Merging psycho→master to trigger the signed release.
 
 ## Shape
 
@@ -26,7 +27,7 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] native modules — YtExtractor, WebServer, MediaScanner, MediaSaver, AppUpdater. Android only; New-Arch only.
 - [x] local library — MediaStore scan with metadata + art; excludes Music/MusicApp (those are YouTube tracks).
 - [x] youtube — native tab (trending/search/suggest/comments/related), streaming, downloads. Web view kept as fallback.
-- [x] downloads — go to public Music/MusicApp via MediaSaver, queued 2-at-a-time with retries; auto-repair re-fetches missing files at startup.
+- [x] downloads — public Music/MusicApp via MediaSaver; queue with configurable parallelism + per-playlist limit (settings), queued/extracting states, retry-failed, auto-repair at startup.
 - [x] library graph — albums, playlists, playlist folders, likes, play counts, recents — in SQLite (migrated from AsyncStorage).
 - [x] player — background audio, queue drag-reorder, shuffle/repeat, swipe prev/next on mini-bar and now-playing.
 - [x] UI system — live theme + i18n, push drawer, searchable settings, official YouTube logo.
@@ -34,6 +35,7 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] web player — serves local album art (/art), music-note fallback, redesign, shuffle/repeat + play history.
 - [x] backup — SAF user-picked folder, auto on every change, restore prompt on empty library; survives uninstall.
 - [x] dev — debug build (com.musicapp.debug) coexists with the signed release; never uninstall the release.
+- [x] collections — playlist multiselect (play/queue next/add/remove/delete downloads) + delete-playlist choice keeps or erases downloaded tracks.
 
 ## Next
 

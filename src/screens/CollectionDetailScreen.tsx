@@ -2,6 +2,7 @@ import {
   Add01Icon,
   ArrowLeft01Icon,
   Cancel01Icon,
+  CheckmarkCircle02Icon,
   Delete02Icon,
   FavouriteIcon,
   PlayIcon,
@@ -23,8 +24,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useActiveTrack } from 'react-native-track-player';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useActionSheet } from '../components/ActionSheet';
+import AddToPlaylistSheet from '../components/AddToPlaylistSheet';
 import { useConfirm } from '../components/ConfirmSheet';
 import GradientTile from '../components/GradientTile';
 import Ic from '../components/Ic';
@@ -57,11 +60,21 @@ export default function CollectionDetailScreen({
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
   const lib = useLibrary();
-  const { isLiked, toggleLike, removeYoutube, removeFromPlaylist } = lib;
+  const {
+    isLiked,
+    toggleLike,
+    removeYoutube,
+    removeFromPlaylist,
+    removeManyYoutube,
+    removeManyFromPlaylist,
+  } = lib;
   const { show } = useActionSheet();
   const confirm = useConfirm();
+  const active = useActiveTrack();
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
+  const [addTracks, setAddTracks] = useState<AppTrack[] | null>(null);
 
   const visible = collectionKey !== null;
 
@@ -69,15 +82,24 @@ export default function CollectionDetailScreen({
     if (!visible) {
       setSearching(false);
       setQuery('');
+      setSelectedIds(null);
+      setAddTracks(null);
     }
   }, [visible, collectionKey]);
   const collection = collectionKey
     ? buildCollections(lib).find(c => c.key === collectionKey) ?? null
     : null;
 
+  const inSelectRef = React.useRef(false);
+  inSelectRef.current = selectedIds !== null;
+
   useEffect(() => {
     if (!visible) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (inSelectRef.current) {
+        setSelectedIds(null);
+        return true;
+      }
       onBack();
       return true;
     });
@@ -111,9 +133,87 @@ export default function CollectionDetailScreen({
     if (tracks.length) playTracks(tracks, 0, { shuffle: true });
   };
 
+  const selectMode = selectedIds !== null;
+  const selTracks = selectMode
+    ? tracks.filter(tk => selectedIds!.has(tk.id))
+    : [];
+  const downloadedIds = new Set(lib.youtubeTracks.map(tk => tk.id));
+
+  const enterSelect = (item: AppTrack) => setSelectedIds(new Set([item.id]));
+  const exitSelect = () => setSelectedIds(null);
+  const toggleSelect = (item: AppTrack) =>
+    setSelectedIds(prev => {
+      if (!prev) return prev;
+      const next = new Set(prev);
+      if (next.has(item.id)) next.delete(item.id);
+      else next.add(item.id);
+      return next;
+    });
+  const selectAll = () =>
+    setSelectedIds(new Set(displayTracks.map(tk => tk.id)));
+
+  const playSelection = () => {
+    if (selTracks.length) playTracks(selTracks, 0);
+    exitSelect();
+  };
+
+  /**
+   * Inserts the selection right after the active track; iterating reversed
+   * keeps the selection order since each insert lands at activeIndex + 1.
+   */
+  const queueSelection = async () => {
+    if (!selTracks.length) return;
+    if (!active) {
+      playTracks(selTracks, 0);
+    } else {
+      for (const tk of [...selTracks].reverse()) {
+        await playNext(tk);
+      }
+    }
+    exitSelect();
+  };
+
+  const deleteSelection = () => {
+    const dl = selTracks.filter(tk => downloadedIds.has(tk.id));
+    if (!dl.length) return;
+    confirm({
+      title: t('deleteSelectedQ'),
+      message: t('deleteSelectedMsg', { n: String(dl.length) }),
+      confirmLabel: t('delete'),
+      destructive: true,
+      onConfirm: () => {
+        removeManyYoutube(dl.map(tk => tk.id));
+        exitSelect();
+      },
+    });
+  };
+
+  const removeSelectionFromPlaylist = () => {
+    const pid = collection.playlistId;
+    if (!pid || !selTracks.length) return;
+    confirm({
+      title: t('removeFromPlaylistQ'),
+      message: t('removeSelectedMsg', {
+        n: String(selTracks.length),
+        collection: collection.title,
+      }),
+      confirmLabel: t('remove'),
+      destructive: true,
+      onConfirm: () => {
+        removeManyFromPlaylist(pid, selTracks.map(tk => tk.id));
+        exitSelect();
+      },
+    });
+  };
+
   const openMenu = (item: AppTrack) => {
     const liked = isLiked(item.id);
     const actions = [
+      {
+        label: t('select'),
+        icon: CheckmarkCircle02Icon,
+        onPress: () => enterSelect(item),
+      },
       {
         label: liked ? t('unlike') : t('like'),
         icon: FavouriteIcon,
@@ -180,9 +280,70 @@ export default function CollectionDetailScreen({
 
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
           <View style={styles.topBar}>
-            <TouchableOpacity onPress={onBack} hitSlop={12}>
-              <Ic icon={ArrowLeft01Icon} size={26} color={theme.text} />
-            </TouchableOpacity>
+            {selectMode ? (
+              <View style={styles.selBar}>
+                <TouchableOpacity onPress={exitSelect} hitSlop={12}>
+                  <Ic icon={Cancel01Icon} size={22} color={theme.text} />
+                </TouchableOpacity>
+                <Text style={styles.selCount} numberOfLines={1}>
+                  {t('selectedCount', { n: String(selTracks.length) })}
+                </Text>
+                <TouchableOpacity onPress={selectAll} hitSlop={8}>
+                  <Text style={styles.selAll}>{t('selectAll')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={playSelection}
+                  hitSlop={8}
+                  disabled={!selTracks.length}>
+                  <Ic
+                    icon={PlayIcon}
+                    size={22}
+                    color={selTracks.length ? theme.text : theme.textFaint}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={queueSelection}
+                  hitSlop={8}
+                  disabled={!selTracks.length}>
+                  <Ic
+                    icon={Queue01Icon}
+                    size={22}
+                    color={selTracks.length ? theme.text : theme.textFaint}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => selTracks.length && setAddTracks(selTracks)}
+                  hitSlop={8}
+                  disabled={!selTracks.length}>
+                  <Ic
+                    icon={Add01Icon}
+                    size={22}
+                    color={selTracks.length ? theme.text : theme.textFaint}
+                  />
+                </TouchableOpacity>
+                {collection.kind === 'playlist' && collection.playlistId && (
+                  <TouchableOpacity
+                    onPress={removeSelectionFromPlaylist}
+                    hitSlop={8}
+                    disabled={!selTracks.length}>
+                    <Ic
+                      icon={RemoveCircleIcon}
+                      size={22}
+                      color={selTracks.length ? '#ff6b6b' : theme.textFaint}
+                    />
+                  </TouchableOpacity>
+                )}
+                {selTracks.some(tk => downloadedIds.has(tk.id)) && (
+                  <TouchableOpacity onPress={deleteSelection} hitSlop={8}>
+                    <Ic icon={Delete02Icon} size={22} color="#ff6b6b" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <TouchableOpacity onPress={onBack} hitSlop={12}>
+                <Ic icon={ArrowLeft01Icon} size={26} color={theme.text} />
+              </TouchableOpacity>
+            )}
           </View>
 
           <FlatList
@@ -260,17 +421,27 @@ export default function CollectionDetailScreen({
                 </View>
               )
             }
+            extraData={selectedIds}
             renderItem={({ item, index }) => (
               <TrackRow
                 track={item}
                 number={
                   collection.numbered ? item.trackNumber ?? index + 1 : undefined
                 }
+                selectMode={selectMode}
+                selected={selectMode && selectedIds!.has(item.id)}
                 onPress={() => {
+                  if (selectMode) {
+                    toggleSelect(item);
+                    return;
+                  }
                   const idx = tracks.findIndex(t => t.id === item.id);
                   playTracks(tracks, Math.max(idx, 0));
                 }}
-                onMore={() => openMenu(item)}
+                onLongPress={() =>
+                  selectMode ? toggleSelect(item) : enterSelect(item)
+                }
+                onMore={selectMode ? undefined : () => openMenu(item)}
               />
             )}
             ListEmptyComponent={
@@ -288,6 +459,15 @@ export default function CollectionDetailScreen({
           />
           <PlayerBar onPress={() => onOpenNowPlaying?.()} />
         </SafeAreaView>
+
+        <AddToPlaylistSheet
+          track={null}
+          tracks={addTracks}
+          onClose={() => {
+            setAddTracks(null);
+            exitSelect();
+          }}
+        />
       </View>
     </Modal>
   );
@@ -298,6 +478,9 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   fallback: { flex: 1, backgroundColor: theme.bg },
   backFloating: { position: 'absolute', top: 50, left: 16 },
   topBar: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 2 },
+  selBar: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  selCount: { flex: 1, color: theme.text, fontSize: 15, fontWeight: '700' },
+  selAll: { color: theme.accent, fontSize: 13, fontWeight: '700' },
   headerContent: { alignItems: 'center', paddingTop: 8, paddingBottom: 10 },
   cover: { width: 170, height: 170, borderRadius: 12, backgroundColor: theme.surfaceHi },
   title: { color: theme.text, fontSize: 26, fontWeight: '900', marginTop: 18, textAlign: 'center', paddingHorizontal: 24 },

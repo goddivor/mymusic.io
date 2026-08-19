@@ -27,6 +27,8 @@ type Props = {
 
 function statusLabel(d: Download): string {
   switch (d.status) {
+    case 'queued':
+      return tr('queued');
     case 'extracting':
       return tr('extracting');
     case 'downloading':
@@ -42,7 +44,8 @@ export default function DownloadsSheet({ visible, onClose }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
-  const { downloads, clearFinishedDownloads } = useLibrary();
+  const { downloads, clearFinishedDownloads, retryFailedDownloads } = useLibrary();
+  const hasFailed = downloads.some(d => d.status === 'error');
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -53,11 +56,18 @@ export default function DownloadsSheet({ visible, onClose }: Props) {
         <View style={styles.handle} />
         <View style={styles.headerRow}>
           <Text style={styles.title}>{t('downloads')}</Text>
-          {downloads.some(d => d.status === 'done' || d.status === 'error') && (
-            <TouchableOpacity onPress={clearFinishedDownloads} hitSlop={8}>
-              <Text style={styles.clear}>{t('clearFinished')}</Text>
-            </TouchableOpacity>
-          )}
+          <View style={styles.headerActions}>
+            {hasFailed && (
+              <TouchableOpacity onPress={retryFailedDownloads} hitSlop={8}>
+                <Text style={styles.retry}>{t('retryFailed')}</Text>
+              </TouchableOpacity>
+            )}
+            {downloads.some(d => d.status === 'done' || d.status === 'error') && (
+              <TouchableOpacity onPress={clearFinishedDownloads} hitSlop={8}>
+                <Text style={styles.clear}>{t('clearFinished')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <FlatList
@@ -144,6 +154,8 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     marginBottom: 12,
   },
   title: { color: theme.text, fontSize: 18, fontWeight: '800' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  retry: { color: theme.accent, fontSize: 13, fontWeight: '700' },
   clear: { color: theme.textDim, fontSize: 13 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9 },
   art: { width: 46, height: 46, borderRadius: 8, backgroundColor: theme.surfaceHi },
