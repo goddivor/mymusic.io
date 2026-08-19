@@ -36,16 +36,16 @@ import {
   isAlbumPlaylistId,
 } from '../lib/ytExtractor';
 import { autoBackup } from '../lib/backup';
+import { getSettings } from './settings';
 import { AppTrack } from '../types';
 
 export type { Folder, Playlist } from '../db/database';
 
 const RECENT_MAX = 12;
-const MAX_PARALLEL_DOWNLOADS = 2;
 const MAX_DOWNLOAD_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 2500;
 
-export type DownloadStatus = 'extracting' | 'downloading' | 'done' | 'error';
+export type DownloadStatus = 'queued' | 'extracting' | 'downloading' | 'done' | 'error';
 
 export type Download = {
   id: string;
@@ -54,6 +54,8 @@ export type Download = {
   status: DownloadStatus;
   progress: number;
   error?: string;
+  url?: string;
+  meta?: DownloadMeta;
 };
 
 export type DownloadMeta = {
@@ -90,6 +92,7 @@ type LibraryState = {
   startDownload: (url: string, meta?: DownloadMeta) => void;
   downloadCollection: (url: string) => Promise<CollectionDownloadResult>;
   clearFinishedDownloads: () => void;
+  retryFailedDownloads: () => void;
 
   recentIds: string[];
   playCounts: Record<string, number>;
@@ -101,14 +104,16 @@ type LibraryState = {
   toggleLike: (track: AppTrack) => void;
   addYoutube: (track: AppTrack) => void;
   removeYoutube: (id: string) => void;
+  removeManyYoutube: (ids: string[]) => void;
   createPlaylist: (name: string) => string;
-  deletePlaylist: (id: string) => void;
+  deletePlaylist: (id: string, opts?: { deleteTracks?: boolean }) => void;
   createFolder: (name: string) => string;
   deleteFolder: (id: string) => void;
   addPlaylistToFolder: (folderId: string, playlistId: string) => void;
   removePlaylistFromFolder: (playlistId: string) => void;
   addToPlaylist: (playlistId: string, trackId: string) => void;
   removeFromPlaylist: (playlistId: string, trackId: string) => void;
+  removeManyFromPlaylist: (playlistId: string, trackIds: string[]) => void;
   playlistTracks: (playlist: Playlist) => AppTrack[];
   reloadLibrary: () => void;
 };
@@ -252,6 +257,18 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const removeManyYoutube = useCallback((ids: string[]) => {
+    const idSet = new Set(ids);
+    ytRef.current.forEach(track => {
+      if (idSet.has(track.id) && track.url) deleteDownloadedFile(track.url);
+    });
+    setYoutubeTracks(prev => {
+      const next = prev.filter(track => !idSet.has(track.id));
+      saveYoutubeTracks(next);
+      return next;
+    });
+  }, []);
+
   const patchDownload = useCallback((id: string, patch: Partial<Download>) => {
     setDownloads(prev => prev.map(d => (d.id === id ? { ...d, ...patch } : d)));
   }, []);
@@ -283,6 +300,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       const id = extractYoutubeId(job.url);
       if (!id) return;
       activeRef.current += 1;
+      patchDownload(id, { status: 'extracting' });
 
       downloadYoutubeAudio(
         job.url,
@@ -314,7 +332,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         })
         .catch(e => {
           if (job.attempts + 1 < MAX_DOWNLOAD_ATTEMPTS) {
-            patchDownload(id, { status: 'extracting', progress: 0 });
+            patchDownload(id, { status: 'queued', progress: 0 });
             setTimeout(() => {
               queueRef.current.push({ ...job, attempts: job.attempts + 1 });
               pumpRef.current();
@@ -336,7 +354,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   const pumpRef = useRef<() => void>(() => {});
   pumpRef.current = () => {
-    while (activeRef.current < MAX_PARALLEL_DOWNLOADS && queueRef.current.length > 0) {
+    const max = Math.max(1, getSettings().maxParallelDownloads);
+    while (activeRef.current < max && queueRef.current.length > 0) {
       const job = queueRef.current.shift()!;
       runDownload(job);
     }
@@ -363,8 +382,10 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
           id,
           title: meta?.title ?? t('preparing'),
           artwork: meta?.albumCover,
-          status: 'extracting',
+          status: 'queued',
           progress: 0,
+          url,
+          meta,
         };
         return [entry, ...prev.filter(d => d.id !== id)];
       });
@@ -375,8 +396,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
-
-  const MAX_COLLECTION = 50;
 
   const playlistsRef = useRef(playlists);
   playlistsRef.current = playlists;
@@ -397,7 +416,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       const pl = await getPlaylist(url);
       const listId = extractPlaylistId(url);
       const isAlbum = !!listId && isAlbumPlaylistId(listId);
-      const items = pl.items.slice(0, MAX_COLLECTION);
+      const limit = getSettings().maxCollectionDownloads;
+      const items = limit > 0 ? pl.items.slice(0, limit) : pl.items;
       const playlistId = isAlbum ? undefined : getOrCreatePlaylist(pl.title);
 
       items.forEach((it, i) => {
@@ -424,12 +444,26 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
 
   const clearFinishedDownloads = useCallback(() => {
     setDownloads(prev =>
-      prev.filter(d => d.status === 'extracting' || d.status === 'downloading'),
+      prev.filter(d => d.status !== 'done' && d.status !== 'error'),
     );
   }, []);
 
+  const downloadsRef = useRef<Download[]>([]);
+  downloadsRef.current = downloads;
+
+  const retryFailedDownloads = useCallback(() => {
+    downloadsRef.current
+      .filter(d => d.status === 'error')
+      .forEach(d =>
+        startDownload(
+          d.url ?? 'https://www.youtube.com/watch?v=' + d.id,
+          d.meta,
+        ),
+      );
+  }, [startDownload]);
+
   const activeDownloadCount = downloads.filter(
-    d => d.status === 'extracting' || d.status === 'downloading',
+    d => d.status !== 'done' && d.status !== 'error',
   ).length;
 
   const markPlayed = useCallback((id: string) => {
@@ -497,22 +531,38 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const deletePlaylist = useCallback((id: string) => {
-    setPlaylists(prev => {
-      const next = prev.filter(p => p.id !== id);
-      savePlaylists(next);
-      return next;
-    });
-    setFolders(prev => {
-      const next = prev.map(f =>
-        f.playlistIds.includes(id)
-          ? { ...f, playlistIds: f.playlistIds.filter(p => p !== id) }
-          : f,
-      );
-      saveFolders(next);
-      return next;
-    });
-  }, []);
+  /**
+   * Removes a playlist; with deleteTracks it also erases the downloaded tracks
+   * it contains (file + library entry). Local device tracks are never deleted.
+   */
+  const deletePlaylist = useCallback(
+    (id: string, opts?: { deleteTracks?: boolean }) => {
+      if (opts?.deleteTracks) {
+        const pl = playlistsRef.current.find(p => p.id === id);
+        if (pl) {
+          const downloaded = pl.trackIds.filter(tid =>
+            ytRef.current.some(track => track.id === tid),
+          );
+          if (downloaded.length) removeManyYoutube(downloaded);
+        }
+      }
+      setPlaylists(prev => {
+        const next = prev.filter(p => p.id !== id);
+        savePlaylists(next);
+        return next;
+      });
+      setFolders(prev => {
+        const next = prev.map(f =>
+          f.playlistIds.includes(id)
+            ? { ...f, playlistIds: f.playlistIds.filter(p => p !== id) }
+            : f,
+        );
+        saveFolders(next);
+        return next;
+      });
+    },
+    [removeManyYoutube],
+  );
 
   const createFolder = useCallback((name: string) => {
     const id = makeId();
@@ -568,6 +618,22 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const removeManyFromPlaylist = useCallback(
+    (playlistId: string, trackIds: string[]) => {
+      const idSet = new Set(trackIds);
+      setPlaylists(prev => {
+        const next = prev.map(p =>
+          p.id === playlistId
+            ? { ...p, trackIds: p.trackIds.filter(x => !idSet.has(x)) }
+            : p,
+        );
+        savePlaylists(next);
+        return next;
+      });
+    },
+    [],
+  );
+
   const playlistTracks = useCallback(
     (playlist: Playlist) =>
       playlist.trackIds
@@ -619,6 +685,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     startDownload,
     downloadCollection,
     clearFinishedDownloads,
+    retryFailedDownloads,
     recentIds,
     playCounts,
     markPlayed,
@@ -630,6 +697,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     toggleLike,
     addYoutube,
     removeYoutube,
+    removeManyYoutube,
     createPlaylist,
     deletePlaylist,
     createFolder,
@@ -638,6 +706,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     removePlaylistFromFolder,
     addToPlaylist,
     removeFromPlaylist,
+    removeManyFromPlaylist,
     playlistTracks,
     reloadLibrary,
   };

@@ -12,6 +12,8 @@ export type AppSettings = {
   backupFolderUri: string | null;
   autoBackup: boolean;
   restoreOffered: boolean;
+  maxParallelDownloads: number;
+  maxCollectionDownloads: number;
 };
 
 const KEY = 'app_settings';
@@ -22,6 +24,8 @@ let current: AppSettings = {
   backupFolderUri: null,
   autoBackup: true,
   restoreOffered: false,
+  maxParallelDownloads: 2,
+  maxCollectionDownloads: 50,
 };
 
 /**

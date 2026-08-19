@@ -6,6 +6,7 @@ import {
   InformationCircleIcon,
   Moon02Icon,
   MusicNote01Icon,
+  Playlist03Icon,
   RefreshIcon,
   Search01Icon,
   TranslateIcon,
@@ -78,6 +79,8 @@ export default function SettingsScreen({ onClose }: Props) {
   const [checking, setChecking] = useState(false);
   const [autoBackupOn, setAutoBackupOn] = useState(getSettings().autoBackup);
   const [folderSet, setFolderSet] = useState(hasBackupFolder());
+  const [maxParallel, setMaxParallel] = useState(getSettings().maxParallelDownloads);
+  const [maxCollection, setMaxCollection] = useState(getSettings().maxCollectionDownloads);
 
   const pickLanguage = () =>
     show({
@@ -126,6 +129,30 @@ export default function SettingsScreen({ onClose }: Props) {
     await saveSettings({ autoBackup: nextOn });
     if (nextOn && !hasBackupFolder()) doChooseFolder();
   };
+
+  const pickMaxParallel = () =>
+    show({
+      title: t('maxParallelDownloads'),
+      actions: [1, 2, 3, 4].map(n => ({
+        label: String(n),
+        onPress: async () => {
+          setMaxParallel(n);
+          await saveSettings({ maxParallelDownloads: n });
+        },
+      })),
+    });
+
+  const pickMaxCollection = () =>
+    show({
+      title: t('maxCollectionDownloads'),
+      actions: [50, 100, 200, 0].map(n => ({
+        label: n === 0 ? t('unlimited') : String(n),
+        onPress: async () => {
+          setMaxCollection(n);
+          await saveSettings({ maxCollectionDownloads: n });
+        },
+      })),
+    });
 
   const doCheckUpdates = async () => {
     if (checking) return;
@@ -189,6 +216,22 @@ export default function SettingsScreen({ onClose }: Props) {
       onPress: (() => Linking.openURL(GITHUB_URL).catch(() => {})) as
         | undefined
         | (() => void),
+    },
+    {
+      key: 'maxParallel',
+      icon: Download01Icon,
+      title: t('maxParallelDownloads'),
+      sub: String(maxParallel),
+      keywords: 'téléchargement download simultané parallel simultaneous queue file',
+      onPress: pickMaxParallel as undefined | (() => void),
+    },
+    {
+      key: 'maxCollection',
+      icon: Playlist03Icon,
+      title: t('maxCollectionDownloads'),
+      sub: maxCollection === 0 ? t('unlimited') : String(maxCollection),
+      keywords: 'playlist limite limit collection téléchargement download max',
+      onPress: pickMaxCollection as undefined | (() => void),
     },
     {
       key: 'backupFolder',
@@ -325,6 +368,12 @@ export default function SettingsScreen({ onClose }: Props) {
         <Text style={styles.sectionLabel}>{t('sectionPlayback')}</Text>
         <View style={styles.card}>
           {renderItemRow(items.find(it => it.key === 'audioQuality')!, true)}
+        </View>
+
+        <Text style={styles.sectionLabel}>{t('sectionDownloads')}</Text>
+        <View style={styles.card}>
+          {renderItemRow(items.find(it => it.key === 'maxParallel')!, false)}
+          {renderItemRow(items.find(it => it.key === 'maxCollection')!, true)}
         </View>
 
         <Text style={styles.sectionLabel}>{t('sectionData')}</Text>
