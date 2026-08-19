@@ -1,4 +1,10 @@
-import { FavouriteIcon, MoreHorizontalIcon, MusicNote01Icon, VolumeHighIcon } from '@hugeicons/core-free-icons';
+import {
+  CheckmarkCircle02Icon,
+  FavouriteIcon,
+  MoreHorizontalIcon,
+  MusicNote01Icon,
+  VolumeHighIcon,
+} from '@hugeicons/core-free-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useActiveTrack } from 'react-native-track-player';
@@ -12,10 +18,21 @@ type Props = {
   track: AppTrack;
   onPress: () => void;
   onMore?: () => void;
+  onLongPress?: () => void;
   number?: number;
+  selectMode?: boolean;
+  selected?: boolean;
 };
 
-export default function TrackRow({ track, onPress, onMore, number }: Props) {
+export default function TrackRow({
+  track,
+  onPress,
+  onMore,
+  onLongPress,
+  number,
+  selectMode,
+  selected,
+}: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const active = useActiveTrack();
@@ -27,7 +44,7 @@ export default function TrackRow({ track, onPress, onMore, number }: Props) {
     <TouchableOpacity
       style={styles.row}
       onPress={onPress}
-      onLongPress={onMore}
+      onLongPress={onLongPress ?? onMore}
       activeOpacity={0.6}>
       {number !== undefined ? (
         <View style={styles.numberCell}>
@@ -57,15 +74,25 @@ export default function TrackRow({ track, onPress, onMore, number }: Props) {
           </Text>
         </View>
       </View>
-      {isActive && (
+      {isActive && !selectMode && (
         <View style={styles.eq}>
           <Ic icon={VolumeHighIcon} size={16} color={theme.accent} />
         </View>
       )}
-      {onMore && (
-        <TouchableOpacity onPress={onMore} hitSlop={12} style={styles.more}>
-          <Ic icon={MoreHorizontalIcon} size={20} color={theme.textDim} />
-        </TouchableOpacity>
+      {selectMode ? (
+        <View style={styles.check}>
+          {selected ? (
+            <Ic icon={CheckmarkCircle02Icon} size={22} color={theme.accent} strokeWidth={2.2} />
+          ) : (
+            <View style={styles.checkEmpty} />
+          )}
+        </View>
+      ) : (
+        onMore && (
+          <TouchableOpacity onPress={onMore} hitSlop={12} style={styles.more}>
+            <Ic icon={MoreHorizontalIcon} size={20} color={theme.textDim} />
+          </TouchableOpacity>
+        )
       )}
     </TouchableOpacity>
   );
@@ -85,4 +112,12 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   artist: { color: theme.textDim, fontSize: 12.5, flexShrink: 1 },
   eq: { marginLeft: 8 },
   more: { paddingLeft: 8, paddingVertical: 4 },
+  check: { paddingLeft: 8, width: 32, alignItems: 'center' },
+  checkEmpty: {
+    width: 21,
+    height: 21,
+    borderRadius: 11,
+    borderWidth: 1.6,
+    borderColor: theme.textFaint,
+  },
 });

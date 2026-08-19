@@ -19,10 +19,11 @@ import SwipeableSheet from './SwipeableSheet';
 
 type Props = {
   track: AppTrack | null;
+  tracks?: AppTrack[] | null;
   onClose: () => void;
 };
 
-export default function AddToPlaylistSheet({ track, onClose }: Props) {
+export default function AddToPlaylistSheet({ track, tracks, onClose }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t, tracksCount } = useI18n();
@@ -30,8 +31,10 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
 
-  const visible = track !== null;
-  const liked = track ? isLiked(track.id) : false;
+  const targets = tracks?.length ? tracks : track ? [track] : [];
+  const visible = targets.length > 0;
+  const single = targets.length === 1 ? targets[0] : null;
+  const liked = single ? isLiked(single.id) : false;
 
   const close = () => {
     setCreating(false);
@@ -40,19 +43,20 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
   };
 
   const handlePick = (playlistId: string) => {
-    if (track) addToPlaylist(playlistId, track.id);
+    targets.forEach(tk => addToPlaylist(playlistId, tk.id));
     close();
   };
 
   const handleToggleLiked = () => {
-    if (track) toggleLike(track);
+    if (single) toggleLike(single);
+    else targets.forEach(tk => !isLiked(tk.id) && toggleLike(tk));
     close();
   };
 
   const handleCreate = () => {
-    if (!name.trim() || !track) return;
+    if (!name.trim() || targets.length === 0) return;
     const id = createPlaylist(name);
-    addToPlaylist(id, track.id);
+    targets.forEach(tk => addToPlaylist(id, tk.id));
     close();
   };
 
@@ -60,7 +64,9 @@ export default function AddToPlaylistSheet({ track, onClose }: Props) {
     <SwipeableSheet visible={visible} onClose={close}>
       <View style={styles.body}>
         <Text style={styles.title} numberOfLines={1}>
-          {t('addTrackTitle', { title: track?.title ?? '' })}
+          {single
+            ? t('addTrackTitle', { title: single.title })
+            : t('addTracksTitle', { n: String(targets.length) })}
         </Text>
 
         <TouchableOpacity style={styles.row} onPress={handleToggleLiked}>

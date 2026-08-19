@@ -162,12 +162,29 @@ export default function LibraryScreen({ onOpen, onOpenProfile, onOpenSearch }: P
       icon: Delete02Icon,
       destructive: true,
       onPress: () =>
-        confirm({
+        show({
           title: t('deletePlaylistQ'),
-          message: t('deletePlaylistMsg', { name: c.title }),
-          confirmLabel: t('delete'),
-          destructive: true,
-          onConfirm: () => deletePlaylist(pid),
+          message: t('deletePlaylistChoiceMsg', { name: c.title }),
+          actions: [
+            {
+              label: t('deletePlaylistOnly'),
+              icon: Delete02Icon,
+              onPress: () => deletePlaylist(pid),
+            },
+            {
+              label: t('deletePlaylistWithTracks'),
+              icon: Delete02Icon,
+              destructive: true,
+              onPress: () =>
+                confirm({
+                  title: t('deletePlaylistWithTracksQ'),
+                  message: t('deletePlaylistWithTracksMsg', { name: c.title }),
+                  confirmLabel: t('delete'),
+                  destructive: true,
+                  onConfirm: () => deletePlaylist(pid, { deleteTracks: true }),
+                }),
+            },
+          ],
         }),
     });
     show({ title: c.title, actions });
