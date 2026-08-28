@@ -1,0 +1,13 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="cut">
+      <rect x="0" y="0" width="1024" height="1024" fill="white"/>
+      <rect x="470" y="397" width="30" height="230" rx="15" fill="black"/>
+      <rect x="534" y="418" width="30" height="188" rx="15" fill="black"/>
+      <rect x="598" y="452" width="30" height="120" rx="15" fill="black"/>
+    </mask>
+  </defs>
+  <polygon points="356,300 356,724 742,512"
+    fill="#ffffff" stroke="#ffffff" stroke-width="58"
+    stroke-linejoin="round" mask="url(#cut)"/>
+</svg>
