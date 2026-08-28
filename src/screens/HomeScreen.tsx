@@ -1,7 +1,6 @@
 import {
   Add01Icon,
   FavouriteIcon,
-  MusicNote01Icon,
   PlayIcon,
   Queue01Icon,
   Search01Icon,
@@ -19,6 +18,7 @@ import {
 import { useActionSheet } from '../components/ActionSheet';
 import GradientTile from '../components/GradientTile';
 import Ic from '../components/Ic';
+import TrackArt from '../components/TrackArt';
 import { buildCollections, Collection } from '../lib/collections';
 import { useI18n } from '../i18n';
 import { playNext, playTracks } from '../lib/player';
@@ -93,10 +93,7 @@ export default function HomeScreen({
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 24 }}
-      showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.avatar}
@@ -114,56 +111,58 @@ export default function HomeScreen({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.grid}>
-        {quick.map((item, i) => {
-          const cover =
-            item.type === 'collection' ? item.collection.cover : item.track.artwork;
-          const title =
-            item.type === 'collection' ? item.collection.title : item.track.title;
-          return (
-            <TouchableOpacity
-              key={item.type === 'collection' ? item.collection.key : item.track.id + i}
-              style={styles.quickTile}
-              activeOpacity={0.7}
-              onPress={() => onQuickPress(item)}
-              onLongPress={
-                item.type === 'track' ? () => openTrackMenu(item.track) : undefined
-              }
-              delayLongPress={300}>
-              {cover ? (
-                <Image source={{ uri: cover }} style={styles.quickThumb} />
-              ) : item.type === 'collection' ? (
-                <GradientTile colors={item.collection.gradient} size={48} radius={8}>
-                  <Ic icon={item.collection.icon} size={22} color="#fff" strokeWidth={2.2} />
-                </GradientTile>
-              ) : (
-                <View style={[styles.quickThumb, styles.quickPlaceholder]}>
-                  <Ic icon={MusicNote01Icon} size={20} color={theme.textFaint} />
-                </View>
-              )}
-              <Text style={styles.quickLabel} numberOfLines={2}>
-                {title}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
+        <View style={styles.grid}>
+          {quick.map((item, i) => {
+            const cover =
+              item.type === 'collection' ? item.collection.cover : item.track.artwork;
+            const title =
+              item.type === 'collection' ? item.collection.title : item.track.title;
+            return (
+              <TouchableOpacity
+                key={item.type === 'collection' ? item.collection.key : item.track.id + i}
+                style={styles.quickTile}
+                activeOpacity={0.7}
+                onPress={() => onQuickPress(item)}
+                onLongPress={
+                  item.type === 'track' ? () => openTrackMenu(item.track) : undefined
+                }
+                delayLongPress={300}>
+                {cover ? (
+                  <Image source={{ uri: cover }} style={styles.quickThumb} />
+                ) : item.type === 'collection' ? (
+                  <GradientTile colors={item.collection.gradient} size={48} radius={8}>
+                    <Ic icon={item.collection.icon} size={22} color="#fff" strokeWidth={2.2} />
+                  </GradientTile>
+                ) : (
+                  <TrackArt uri={undefined} style={styles.quickThumb} iconSize={20} />
+                )}
+                <Text style={styles.quickLabel} numberOfLines={2}>
+                  {title}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-      <Carousel
-        title={t('recentlyAdded')}
-        tracks={lib.youtubeTracks}
-        emptyHint={t('downloadFromYoutubeHint')}
-        onLongPressTrack={openTrackMenu}
-        onShowAll={youtube ? () => onOpen(youtube) : undefined}
-      />
-      <Carousel
-        title={t('yourLocalLibrary')}
-        tracks={lib.localTracks}
-        emptyHint={t('noAudioFound')}
-        onLongPressTrack={openTrackMenu}
-        onShowAll={localCol ? () => onOpen(localCol) : undefined}
-      />
-    </ScrollView>
+        <Carousel
+          title={t('recentlyAdded')}
+          tracks={lib.youtubeTracks}
+          emptyHint={t('downloadFromYoutubeHint')}
+          onLongPressTrack={openTrackMenu}
+          onShowAll={youtube ? () => onOpen(youtube) : undefined}
+        />
+        <Carousel
+          title={t('yourLocalLibrary')}
+          tracks={lib.localTracks}
+          emptyHint={t('noAudioFound')}
+          onLongPressTrack={openTrackMenu}
+          onShowAll={localCol ? () => onOpen(localCol) : undefined}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
@@ -180,7 +179,6 @@ function Carousel({
   onLongPressTrack?: (t: AppTrack) => void;
   onShowAll?: () => void;
 }) {
-  const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
   return (
@@ -209,13 +207,7 @@ function Carousel({
               onLongPress={onLongPressTrack ? () => onLongPressTrack(t) : undefined}
               delayLongPress={300}>
               <View style={styles.cardArtWrap}>
-                {t.artwork ? (
-                  <Image source={{ uri: t.artwork }} style={styles.cardArt} />
-                ) : (
-                  <View style={[styles.cardArt, styles.cardPlaceholder]}>
-                    <Ic icon={MusicNote01Icon} size={34} color={theme.textFaint} />
-                  </View>
-                )}
+                <TrackArt uri={t.artwork} style={styles.cardArt} iconSize={34} />
               </View>
               <Text style={styles.cardTitle} numberOfLines={2}>
                 {t.title}
@@ -233,6 +225,7 @@ function Carousel({
 
 const makeStyles = (theme: Palette) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
+  scrollContent: { paddingBottom: 24 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

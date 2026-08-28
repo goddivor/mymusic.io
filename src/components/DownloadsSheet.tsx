@@ -6,7 +6,6 @@ import {
 import React from 'react';
 import {
   FlatList,
-  Image,
   Modal,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import { Download, useLibrary } from '../store/library';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 import Ic from './Ic';
+import TrackArt from './TrackArt';
 
 type Props = {
   visible: boolean;
@@ -48,7 +48,7 @@ export default function DownloadsSheet({ visible, onClose }: Props) {
   const hasFailed = downloads.some(d => d.status === 'error');
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
@@ -76,11 +76,7 @@ export default function DownloadsSheet({ visible, onClose }: Props) {
           style={{ maxHeight: 380 }}
           renderItem={({ item }) => (
             <View style={styles.row}>
-              {item.artwork ? (
-                <Image source={{ uri: item.artwork }} style={styles.art} />
-              ) : (
-                <View style={[styles.art, styles.placeholder]} />
-              )}
+              <TrackArt uri={item.artwork} style={styles.art} iconSize={20} />
               <View style={styles.meta}>
                 <Text style={styles.rowTitle} numberOfLines={1}>
                   {item.title}

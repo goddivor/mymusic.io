@@ -2,17 +2,17 @@ import {
   CheckmarkCircle02Icon,
   FavouriteIcon,
   MoreHorizontalIcon,
-  MusicNote01Icon,
   VolumeHighIcon,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useActiveTrack } from 'react-native-track-player';
 import { useLibrary } from '../store/library';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 import { AppTrack } from '../types';
 import Ic from './Ic';
+import TrackArt from './TrackArt';
 
 type Props = {
   track: AppTrack;
@@ -50,12 +50,8 @@ export default function TrackRow({
         <View style={styles.numberCell}>
           <Text style={[styles.number, isActive && styles.activeTitle]}>{number}</Text>
         </View>
-      ) : track.artwork ? (
-        <Image source={{ uri: track.artwork }} style={styles.art} />
       ) : (
-        <View style={[styles.art, styles.placeholder]}>
-          <Ic icon={MusicNote01Icon} size={20} color={theme.textFaint} />
-        </View>
+        <TrackArt uri={track.artwork} style={styles.art} iconSize={20} />
       )}
       <View style={styles.meta}>
         <Text
@@ -66,7 +62,7 @@ export default function TrackRow({
         <View style={styles.sub}>
           {liked && (
             <View style={styles.heart}>
-              <Ic icon={FavouriteIcon} size={11} color={theme.accent} strokeWidth={2.4} />
+              <Ic icon={FavouriteIcon} size={11} color={theme.accent} strokeWidth={2.4} filled />
             </View>
           )}
           <Text style={styles.artist} numberOfLines={1}>
