@@ -9,7 +9,6 @@ import {
 } from '@hugeicons/core-free-icons';
 import React, { useRef, useState } from 'react';
 import {
-  Modal,
   StyleSheet,
   Text,
   ToastAndroid,
@@ -20,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import DownloadsSheet from '../components/DownloadsSheet';
 import Ic from '../components/Ic';
+import SlideOverModal from '../components/SlideOverModal';
 import { t as tr, useI18n } from '../i18n';
 import {
   extractPlaylistId,
@@ -83,7 +83,7 @@ export default function YoutubeWebScreen({ visible, initialUrl, onClose }: Props
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onRequestClose}>
+    <SlideOverModal visible={visible} onRequestClose={onRequestClose}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={onClose} hitSlop={10} style={styles.topBtn}>
@@ -166,7 +166,7 @@ export default function YoutubeWebScreen({ visible, initialUrl, onClose }: Props
 
         <DownloadsSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
       </SafeAreaView>
-    </Modal>
+    </SlideOverModal>
   );
 }
 
