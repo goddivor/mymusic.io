@@ -1,0 +1,7 @@
+node_modules/
+android/app/build/
+android/build/
+android/app/src/main/assets/webapp/
+webapp/dist/
+webapp/node_modules/
+vendor/
