@@ -226,3 +226,16 @@ export function importSnapshot(json: string): boolean {
     return false;
   }
 }
+
+export function saveKv(key: string, value: string): void {
+  conn().executeSync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', [
+    key,
+    value,
+  ]);
+}
+
+export function loadKv(key: string): string | null {
+  const row = conn().executeSync('SELECT value FROM kv WHERE key = ?', [key])
+    .rows[0] as { value?: string } | undefined;
+  return row?.value ?? null;
+}
