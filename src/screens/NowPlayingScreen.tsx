@@ -1,7 +1,12 @@
 import {
   Add01Icon,
   ArrowDown01Icon,
+  CastIcon,
+  Delete02Icon,
+  Edit02Icon,
   FavouriteIcon,
+  Headphones,
+  MoreVerticalIcon,
   NextIcon,
   PauseIcon,
   PlayIcon,
@@ -11,13 +16,18 @@ import {
   RepeatOne01Icon,
   Share08Icon,
   ShuffleIcon,
+  SlidersHorizontalIcon,
+  SpeedTrain01Icon,
+  TShirtIcon,
 } from '@hugeicons/core-free-icons';
 import Slider from '@react-native-community/slider';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
-  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ToastAndroid,
   Modal,
   PanResponder,
   ScrollView,
@@ -38,6 +48,7 @@ import TrackPlayer, {
 } from 'react-native-track-player';
 import { useActionSheet } from '../components/ActionSheet';
 import { ArtColors, getArtColors } from '../lib/artColor';
+import ConnectSheet from '../components/ConnectSheet';
 import Ic from '../components/Ic';
 import TrackArt from '../components/TrackArt';
 import ShareCard from '../components/ShareCard';
@@ -94,6 +105,7 @@ export default function NowPlayingScreen({
   const [repeat, setRepeat] = useState<RepeatMode>(RepeatMode.Queue);
   const [shuffleOn, setShuffleOn] = useState(getShuffle());
   const [artColors, setArtColors] = useState<ArtColors | null>(null);
+  const [connectOpen, setConnectOpen] = useState(false);
   const translateY = useRef(new Animated.Value(0)).current;
   const scrollY = useRef(0);
   const cardRef = useRef<View>(null);
@@ -148,11 +160,9 @@ export default function NowPlayingScreen({
     }),
   ).current;
 
-  const dragX = useRef(new Animated.Value(0)).current;
-  const settleRef = useRef<(dx: number, vx: number) => void>(() => {});
   const [neighbours, setNeighbours] = useState<{
-    prev?: string;
-    next?: string;
+    prev?: { artwork?: string };
+    next?: { artwork?: string };
   }>({});
 
   useEffect(() => {
@@ -162,9 +172,14 @@ export default function NowPlayingScreen({
         const queue = await TrackPlayer.getQueue();
         const idx = await TrackPlayer.getActiveTrackIndex();
         if (!alive || idx === undefined || idx === null) return;
-        const art = (i: number) =>
-          queue[i]?.artwork ? String(queue[i].artwork) : undefined;
-        setNeighbours({ prev: art(idx - 1), next: art(idx + 1) });
+        // Presence must come from the track existing, not from it having a
+        // cover: a neighbour without artwork still has to be swipeable.
+        const at = (i: number) =>
+          queue[i]
+            ? { artwork: queue[i].artwork ? String(queue[i].artwork) : undefined }
+            : undefined;
+        console.log('[np] idx=', idx, 'queue=', queue.length, 'prev=', !!at(idx - 1), 'next=', !!at(idx + 1));
+        setNeighbours({ prev: at(idx - 1), next: at(idx + 1) });
       } catch {}
     })();
     return () => {
@@ -172,48 +187,43 @@ export default function NowPlayingScreen({
     };
   }, [track?.id]);
 
-  /**
-   * Ends a cover drag: past the threshold the neighbour slides fully in and the
-   * player skips, otherwise the cover springs back. dragX is reset only once the
-   * new track is active so the swap never flashes the old artwork.
-   */
-  settleRef.current = (dx, vx) => {
-    const width = Dimensions.get('window').width;
-    const passed = Math.abs(dx) > width * 0.22 || Math.abs(vx) > 0.5;
-    const goNext = dx < 0;
-    const target = goNext ? neighbours.next : neighbours.prev;
-    if (!passed || target === undefined) {
-      Animated.spring(dragX, {
-        toValue: 0,
-        useNativeDriver: true,
-        bounciness: 6,
-      }).start();
-      return;
-    }
-    Animated.timing(dragX, {
-      toValue: goNext ? -width : width,
-      duration: 190,
-      useNativeDriver: true,
-    }).start(() => {
-      const skip = goNext
-        ? TrackPlayer.skipToNext()
-        : TrackPlayer.skipToPrevious();
-      skip
-        .then(() => resumePlayback())
-        .catch(() => {})
-        .finally(() => dragX.setValue(0));
-    });
-  };
+  const artScroll = useRef<ScrollView>(null);
+  const [pageW, setPageW] = useState(SCREEN_W);
 
-  const artPan = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) =>
-        Math.abs(g.dx) > 16 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-      onPanResponderMove: (_, g) => dragX.setValue(g.dx),
-      onPanResponderRelease: (_, g) => settleRef.current(g.dx, g.vx),
-      onPanResponderTerminate: () => settleRef.current(0, 0),
-    }),
-  ).current;
+  // contentOffset is iOS-only, so on Android the strip has to be recentred
+  // once it has been laid out, and again whenever the track changes.
+  const recentreArt = () =>
+    artScroll.current?.scrollTo({ x: pageW, animated: false });
+
+  useEffect(() => {
+    recentreArt();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track?.id, pageW]);
+
+  /**
+   * A horizontal paging ScrollView replaces the PanResponder, which never
+   * received touches inside the vertical ScrollView. Both end-of-gesture events
+   * are handled — a slow release produces no momentum — and a guard stops the
+   * programmatic recentre from being read as a second swipe.
+   */
+  const settling = useRef(false);
+
+  const onArtSettle = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (settling.current) return;
+    const page = Math.round(e.nativeEvent.contentOffset.x / pageW);
+    if (page === 1) return;
+    settling.current = true;
+    const skip = page > 1 ? TrackPlayer.skipToNext() : TrackPlayer.skipToPrevious();
+    skip
+      .then(() => resumePlayback())
+      .catch(() => {})
+      .finally(() => {
+        recentreArt();
+        setTimeout(() => {
+          settling.current = false;
+        }, 350);
+      });
+  };
 
   const cycleRepeat = async () => {
     const next =
@@ -271,6 +281,26 @@ export default function NowPlayingScreen({
     }
   };
 
+  const comingSoon = () => ToastAndroid.show(t('comingSoon'), ToastAndroid.SHORT);
+
+  const openTrackMenu = () =>
+    show({
+      title: track.title ? String(track.title) : t('track'),
+      message: track.artist ? String(track.artist) : undefined,
+      actions: [
+        {
+          label: t('addToPlaylist'),
+          icon: Add01Icon,
+          onPress: () => onAddToPlaylist(appTrack),
+        },
+        { label: t('playbackSpeed'), icon: SpeedTrain01Icon, onPress: comingSoon },
+        { label: t('share'), icon: Share08Icon, onPress: onShare },
+        { label: t('earphones'), icon: Headphones, onPress: comingSoon },
+        { label: t('removeFromQueue'), icon: Delete02Icon, onPress: comingSoon },
+        { label: t('editSongInfo'), icon: Edit02Icon, onPress: comingSoon },
+      ],
+    });
+
   const openSimilarMenu = (item: AppTrack) => {
     const lk = isLiked(item.id);
     show({
@@ -320,9 +350,17 @@ export default function NowPlayingScreen({
               <Ic icon={ArrowDown01Icon} size={28} color={theme.text} />
             </TouchableOpacity>
             <Text style={styles.headerLabel}>{t('nowPlaying')}</Text>
-            <TouchableOpacity onPress={() => onAddToPlaylist(appTrack)} hitSlop={12}>
-              <Ic icon={Add01Icon} size={26} color={theme.text} />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity onPress={comingSoon} hitSlop={10}>
+                <Ic icon={TShirtIcon} size={24} color={theme.text} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={comingSoon} hitSlop={10}>
+                <Ic icon={SlidersHorizontalIcon} size={24} color={theme.text} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openTrackMenu} hitSlop={10}>
+                <Ic icon={MoreVerticalIcon} size={24} color={theme.text} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={{ flex: 1 }} {...pan.panHandlers}>
@@ -331,16 +369,27 @@ export default function NowPlayingScreen({
             onScroll={e => (scrollY.current = e.nativeEvent.contentOffset.y)}
             scrollEventThrottle={16}
             contentContainerStyle={{ paddingBottom: 28 }}>
-            <View style={styles.artArea} {...artPan.panHandlers}>
-              <Animated.View
-                style={[styles.artTrack, { transform: [{ translateX: dragX }] }]}>
-                <View style={[styles.artSlot, styles.artSlotPrev]}>
-                  {neighbours.prev && (
-                    <View style={styles.artWrap}>
-                      <Image source={{ uri: neighbours.prev }} style={styles.art} />
-                    </View>
-                  )}
-                </View>
+            <ScrollView
+              ref={artScroll}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={onArtSettle}
+              onScrollEndDrag={onArtSettle}
+              onLayout={e => {
+                const w = e.nativeEvent.layout.width;
+                setPageW(w);
+                artScroll.current?.scrollTo({ x: w, animated: false });
+              }}
+              style={styles.artArea}>
+              <View style={[styles.artPage, { width: pageW }]}>
+                {neighbours.prev && (
+                  <View style={styles.artWrap}>
+                    <TrackArt uri={neighbours.prev.artwork} style={styles.art} iconSize={84} />
+                  </View>
+                )}
+              </View>
+              <View style={[styles.artPage, { width: pageW }]}>
                 <View style={styles.artWrap}>
                   <TrackArt
                     uri={track.artwork ? String(track.artwork) : undefined}
@@ -348,15 +397,15 @@ export default function NowPlayingScreen({
                     iconSize={84}
                   />
                 </View>
-                <View style={[styles.artSlot, styles.artSlotNext]}>
-                  {neighbours.next && (
-                    <View style={styles.artWrap}>
-                      <Image source={{ uri: neighbours.next }} style={styles.art} />
-                    </View>
-                  )}
-                </View>
-              </Animated.View>
-            </View>
+              </View>
+              <View style={[styles.artPage, { width: pageW }]}>
+                {neighbours.next && (
+                  <View style={styles.artWrap}>
+                    <TrackArt uri={neighbours.next.artwork} style={styles.art} iconSize={84} />
+                  </View>
+                )}
+              </View>
+            </ScrollView>
 
             <View style={styles.metaRow}>
               <View style={{ flex: 1 }}>
@@ -437,14 +486,20 @@ export default function NowPlayingScreen({
             </View>
 
             <View style={styles.footer}>
-              <TouchableOpacity style={styles.footerBtn} onPress={onShare} hitSlop={10}>
-                <Ic icon={Share08Icon} size={22} color={theme.textDim} />
-                <Text style={styles.footerLabel}>{t('share')}</Text>
+              <TouchableOpacity
+                style={styles.footerBtn}
+                onPress={() => setConnectOpen(true)}
+                hitSlop={10}>
+                <Ic icon={CastIcon} size={23} color={theme.textDim} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.footerBtn} onPress={onOpenQueue} hitSlop={10}>
-                <Ic icon={Queue01Icon} size={22} color={theme.textDim} />
-                <Text style={styles.footerLabel}>{t('queue')}</Text>
-              </TouchableOpacity>
+              <View style={styles.footerRight}>
+                <TouchableOpacity style={styles.footerBtn} onPress={onOpenQueue} hitSlop={10}>
+                  <Ic icon={Queue01Icon} size={23} color={theme.textDim} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.footerBtn} onPress={onShare} hitSlop={10}>
+                  <Ic icon={Share08Icon} size={23} color={theme.textDim} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {similar.length > 0 && (
@@ -473,13 +528,15 @@ export default function NowPlayingScreen({
           />
         </View>
       </Animated.View>
-    </Modal>
+      <ConnectSheet visible={connectOpen} onClose={() => setConnectOpen(false)} />
+      </Modal>
   );
 }
 
 const makeStyles = (theme: Palette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.bg },
   safe: { flex: 1, paddingHorizontal: 24 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -488,10 +545,7 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   },
   headerLabel: { color: theme.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1.5 },
   artArea: { paddingTop: 14, paddingBottom: 8, overflow: 'visible' },
-  artTrack: { alignItems: 'center', justifyContent: 'center' },
-  artSlot: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center' },
-  artSlotPrev: { transform: [{ translateX: -SCREEN_W }] },
-  artSlotNext: { transform: [{ translateX: SCREEN_W }] },
+  artPage: { alignItems: 'center', justifyContent: 'center' },
   artWrap: {
     width: '74%',
     aspectRatio: 1,
@@ -531,8 +585,8 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     marginTop: 22,
     paddingHorizontal: 4,
   },
-  footerBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  footerLabel: { color: theme.textDim, fontSize: 13, fontWeight: '600' },
+  footerBtn: { flexDirection: 'row', alignItems: 'center', padding: 4 },
+  footerRight: { flexDirection: 'row', alignItems: 'center', gap: 22 },
   similar: { marginTop: 30, marginHorizontal: -16 },
   similarTitle: {
     color: theme.text,
