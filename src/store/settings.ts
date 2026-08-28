@@ -4,11 +4,13 @@ import { setLang } from '../i18n';
 import { applyTheme, ThemeScheme } from '../theme';
 
 export type LanguagePref = 'system' | 'fr' | 'en';
-export type ThemePref = 'system' | 'dark' | 'light';
+export type ThemePref = 'system' | 'dark' | 'light' | 'black';
+export type FontPref = 'system' | 'inter' | 'roboto';
 
 export type AppSettings = {
   language: LanguagePref;
   theme: ThemePref;
+  font: FontPref;
   backupFolderUri: string | null;
   autoBackup: boolean;
   restoreOffered: boolean;
@@ -21,6 +23,7 @@ const KEY = 'app_settings';
 let current: AppSettings = {
   language: 'system',
   theme: 'system',
+  font: 'system',
   backupFolderUri: null,
   autoBackup: true,
   restoreOffered: false,

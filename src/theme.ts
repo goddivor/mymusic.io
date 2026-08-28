@@ -1,5 +1,5 @@
 // Design tokens — "our style": deep near-black with a violet→pink signature.
-export type ThemeScheme = 'dark' | 'light';
+export type ThemeScheme = 'dark' | 'light' | 'black';
 
 const dark = {
   bg: '#0A0A0F',
@@ -12,6 +12,21 @@ const dark = {
   accent: '#B57BFF',
   accent2: '#FF6FB5',
   border: '#23232F',
+};
+
+// True black for OLED panels: pure #000 saves power and kills halo, with
+// surfaces lifted just enough to keep cards readable.
+const black = {
+  bg: '#000000',
+  bg2: '#000000',
+  surface: '#0C0C11',
+  surfaceHi: '#16161D',
+  text: '#F5F5F8',
+  textDim: '#9B9BAC',
+  textFaint: '#63636F',
+  accent: '#B57BFF',
+  accent2: '#FF6FB5',
+  border: '#1C1C24',
 };
 
 const light = {
@@ -29,7 +44,7 @@ const light = {
 
 export type Palette = typeof dark;
 
-export const palettes: Record<ThemeScheme, Palette> = { dark, light };
+export const palettes: Record<ThemeScheme, Palette> = { dark, light, black };
 
 /**
  * Mutable "legacy" palette, kept in sync with the active theme by the

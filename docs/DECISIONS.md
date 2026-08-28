@@ -27,3 +27,7 @@ there.
 - 2026-08-28 — Shuffle uses Fiedler's balanced spread, not a uniform shuffle — clustered artists read as "not random"
 - 2026-08-28 — The phone owns the playback session; Connect output only picks the audio device — two independent players never stayed in sync
 
+- 2026-08-28 — Fonts are applied by stripping fontWeight at the style funnel — each weight is its own family on Android
+- 2026-08-28 — Launcher icon keeps a gradient adaptive background, never transparent — MIUI fills a transparent mask with black
+- 2026-08-28 — Bundled fonts are committed under android/app/src/main/assets too — the release CI never runs react-native-asset
+- 2026-08-28 — Stay on react-native-track-player 4.1.2; the notification keeps six buttons — v5 is @rntp/player, commercially licensed, and still exposes the same seven commands

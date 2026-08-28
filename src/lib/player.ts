@@ -29,12 +29,12 @@ export function getShuffle(): boolean {
   return shuffleOn;
 }
 
-export async function setupPlayer(): Promise<void> {
-  if (isSetup) return;
-  try {
-    await TrackPlayer.setupPlayer();
-  } catch {}
-  await TrackPlayer.updateOptions({
+/**
+ * updateOptions replaces the whole configuration, so the notification setup
+ * lives in one place and is re-sent whenever the tint changes.
+ */
+function notificationOptions() {
+  return {
     android: {
       appKilledPlaybackBehavior:
         AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
@@ -45,7 +45,6 @@ export async function setupPlayer(): Promise<void> {
       Capability.SkipToNext,
       Capability.SkipToPrevious,
       Capability.SeekTo,
-      Capability.Stop,
     ],
     compactCapabilities: [
       Capability.Play,
@@ -53,7 +52,28 @@ export async function setupPlayer(): Promise<void> {
       Capability.SkipToNext,
       Capability.SkipToPrevious,
     ],
-  });
+    icon: require('../assets/notification-icon.png'),
+    color: notificationColor,
+  };
+}
+
+let notificationColor: number | undefined;
+
+/** Tints the media notification with the cover colour used by the player. */
+export async function setNotificationColor(hex?: string): Promise<void> {
+  const next = hex ? parseInt(hex.replace('#', ''), 16) : undefined;
+  if (next === notificationColor) return;
+  notificationColor = next;
+  if (!isSetup) return;
+  await TrackPlayer.updateOptions(notificationOptions()).catch(() => {});
+}
+
+export async function setupPlayer(): Promise<void> {
+  if (isSetup) return;
+  try {
+    await TrackPlayer.setupPlayer();
+  } catch {}
+  await TrackPlayer.updateOptions(notificationOptions());
   await TrackPlayer.setRepeatMode(RepeatMode.Queue);
   isSetup = true;
 }

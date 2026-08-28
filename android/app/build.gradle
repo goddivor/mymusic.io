@@ -88,8 +88,8 @@ android {
         applicationId "com.musicapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "1.7.0"
+        versionCode 9
+        versionName "1.8.0"
         manifestPlaceholders.put("appLabel", "MusicApp")
     }
     signingConfigs {
@@ -158,6 +158,9 @@ dependencies {
 
     // Cover colour extraction (ArtColor native module)
     implementation("androidx.palette:palette:1.0.0")
+
+    // Splash screen, backported below Android 12
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

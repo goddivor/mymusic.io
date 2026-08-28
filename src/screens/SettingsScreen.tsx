@@ -9,6 +9,7 @@ import {
   Playlist03Icon,
   RefreshIcon,
   Search01Icon,
+  TextFontIcon,
   TranslateIcon,
   Upload01Icon,
 } from '@hugeicons/core-free-icons';
@@ -42,12 +43,18 @@ import { useLibrary } from '../store/library';
 import { I18nKey, setLang, useI18n } from '../i18n';
 import {
   effectiveLanguage,
+  FontPref,
   getSettings,
   LanguagePref,
   saveSettings,
   ThemePref,
 } from '../store/settings';
-import { useTheme, useThemeControls, useThemedStyles } from '../store/theme';
+import {
+  useFontControls,
+  useTheme,
+  useThemeControls,
+  useThemedStyles,
+} from '../store/theme';
 import { Palette } from '../theme';
 
 const LANGUAGE_LABELS: Record<LanguagePref, I18nKey> = {
@@ -56,10 +63,17 @@ const LANGUAGE_LABELS: Record<LanguagePref, I18nKey> = {
   en: 'english',
 };
 
+const FONT_LABELS: Record<FontPref, I18nKey> = {
+  system: 'system',
+  inter: 'fontInter',
+  roboto: 'fontRoboto',
+};
+
 const THEME_LABELS: Record<ThemePref, I18nKey> = {
   system: 'system',
   dark: 'darkTheme',
   light: 'lightTheme',
+  black: 'blackTheme',
 };
 
 type Props = {
@@ -71,6 +85,7 @@ export default function SettingsScreen({ onClose }: Props) {
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
   const { pref: themePref, setPref: setThemePref } = useThemeControls();
+  const { font, setFont } = useFontControls();
   const { reloadLibrary } = useLibrary();
   const { show } = useActionSheet();
   const [searching, setSearching] = useState(false);
@@ -97,9 +112,18 @@ export default function SettingsScreen({ onClose }: Props) {
   const pickTheme = () =>
     show({
       title: t('themeLabel'),
-      actions: (['system', 'dark', 'light'] as ThemePref[]).map(p => ({
+      actions: (['system', 'dark', 'light', 'black'] as ThemePref[]).map(p => ({
         label: t(THEME_LABELS[p]),
         onPress: () => setThemePref(p),
+      })),
+    });
+
+  const pickFont = () =>
+    show({
+      title: t('fontLabel'),
+      actions: (['system', 'inter', 'roboto'] as FontPref[]).map(f => ({
+        label: t(FONT_LABELS[f]),
+        onPress: () => setFont(f),
       })),
     });
 
@@ -182,6 +206,14 @@ export default function SettingsScreen({ onClose }: Props) {
       sub: t(THEME_LABELS[themePref]),
       keywords: 'thème theme sombre clair dark light système system couleur color',
       onPress: pickTheme,
+    },
+    {
+      key: 'font',
+      icon: TextFontIcon,
+      title: t('fontLabel'),
+      sub: t(FONT_LABELS[font]),
+      keywords: 'police font typographie typography inter roboto écriture',
+      onPress: pickFont,
     },
     {
       key: 'audioQuality',
@@ -361,7 +393,7 @@ export default function SettingsScreen({ onClose }: Props) {
         <Text style={styles.sectionLabel}>{t('sectionGeneral')}</Text>
         <View style={styles.card}>
           {items
-            .filter(it => it.key === 'language' || it.key === 'theme')
+            .filter(it => ['language', 'theme', 'font'].includes(it.key))
             .map((it, i, arr) => renderItemRow(it, i === arr.length - 1))}
         </View>
 

@@ -24,6 +24,7 @@ import DrawerLayout from './src/components/DrawerLayout';
 import BrandYoutubeIcon from './src/components/BrandYoutubeIcon';
 import PlayerBar from './src/components/PlayerBar';
 import ProfileDrawer, { DrawerItemKey } from './src/components/ProfileDrawer';
+import NotificationSync from './src/components/NotificationSync';
 import PlaybackSession from './src/components/PlaybackSession';
 import RecentTracker from './src/components/RecentTracker';
 import RestorePrompt from './src/components/RestorePrompt';
@@ -109,6 +110,7 @@ function AppInner(): React.JSX.Element {
         <ConfirmProvider>
         <RecentTracker />
         <PlaybackSession />
+        <NotificationSync />
         <RestorePrompt />
         <WebServerSync />
         <WebRemoteSync />
