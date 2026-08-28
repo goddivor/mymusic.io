@@ -11,8 +11,10 @@ import {
   PreviousIcon,
   RepeatIcon,
   RepeatOneIcon,
+  ComputerIcon,
   Search01Icon,
   ShuffleIcon,
+  SmartPhone01Icon,
   VolumeHighIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -66,6 +68,16 @@ type Playlist = { id: string; name: string; trackIds: string[] };
 type Lib = { tracks: Track[]; playlists: Playlist[]; likedIds: string[] };
 type Collection = { key: string; name: string; sub: string; tracks: Track[] };
 type RepeatMode = 'off' | 'all' | 'one';
+type PhoneState = {
+  output: 'phone' | 'web';
+  playing: boolean;
+  position: number;
+  duration: number;
+  index: number;
+  seekNonce: number;
+  seekTo: number;
+  track: { id: string; title: string; artist: string; artwork?: string } | null;
+};
 
 const trackUrl = (id: string, token: string) =>
   `${API}/track/${encodeURIComponent(id)}?t=${encodeURIComponent(token)}`;
@@ -176,7 +188,7 @@ export default function App() {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const historyRef = useRef<number[]>([]);
-  const [queue, setQueue] = useState<Track[]>([]);
+  const [queue] = useState<Track[]>([]);
   const [queueName, setQueueName] = useState('File d\'attente');
   const [index, setIndex] = useState(-1);
   const [playing, setPlaying] = useState(false);
@@ -184,6 +196,7 @@ export default function App() {
   const [dur, setDur] = useState(0);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<RepeatMode>('off');
+  const [phone, setPhone] = useState<PhoneState | null>(null);
   const [npOpen, setNpOpen] = useState(false);
   const [npTab, setNpTab] = useState<'next' | 'lyrics' | 'related'>('next');
 
@@ -220,6 +233,35 @@ export default function App() {
     setToken(tk);
     await loadLib(tk);
   }
+
+  useEffect(() => {
+    if (!token) return;
+    let alive = true;
+    const tick = async () => {
+      try {
+        const res = await fetch(`${API}/state?t=${encodeURIComponent(token)}`);
+        if (!res.ok) return;
+        const data: PhoneState = await res.json();
+        if (alive && data && typeof data.output === 'string') setPhone(data);
+      } catch {}
+    };
+    const timer = setInterval(tick, 1000);
+    tick();
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [token]);
+
+  const sendCommand = (action: string, value?: string) => {
+    if (!token) return;
+    const q = new URLSearchParams({ t: token, action });
+    if (value !== undefined) q.set('value', value);
+    fetch(`${API}/command?${q.toString()}`, { method: 'POST' }).catch(() => {});
+  };
+
+  const onWeb = phone?.output === 'web';
+  const remote = !onWeb;
 
   const byId = useMemo(() => {
     const m = new Map<string, Track>();
@@ -261,31 +303,14 @@ export default function App() {
   const allTracks = lib?.tracks ?? [];
 
   function playFrom(list: Track[], i: number, ctx = 'File d\'attente') {
-    historyRef.current = [];
-    setQueue(list);
     setQueueName(ctx);
-    setIndex(i);
+    sendCommand('playId', list[i]?.id);
   }
 
   const goTo = (i: number) => {
     if (index >= 0) historyRef.current.push(index);
     setIndex(i);
   };
-
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a || !current || !token) return;
-    a.src = trackUrl(current.id, token);
-    a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: current.title,
-        artist: current.artist,
-        artwork: cover(current) ? [{ src: cover(current), sizes: '512x512' }] : [],
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, current?.id, token]);
 
   function pickNext(): number {
     if (queue.length === 0) return -1;
@@ -299,18 +324,11 @@ export default function App() {
     return -1;
   }
 
-  const next = () => {
-    const n = pickNext();
-    if (n >= 0) goTo(n);
-  };
-  const prev = () => {
-    const a = audioRef.current;
-    if (a && a.currentTime > 3) return void (a.currentTime = 0);
-    const h = historyRef.current;
-    if (h.length > 0) return setIndex(h.pop() as number);
-    if (index > 0) setIndex(index - 1);
-  };
   const onEnded = () => {
+    if (onWeb) {
+      sendCommand('next');
+      return;
+    }
     if (repeat === 'one') {
       const a = audioRef.current;
       if (a) {
@@ -323,14 +341,54 @@ export default function App() {
     if (n >= 0) goTo(n);
     else setPlaying(false);
   };
-  const togglePlay = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    playing ? a.pause() : a.play();
-  };
   const cycleRepeat = () =>
     setRepeat(r => (r === 'off' ? 'all' : r === 'all' ? 'one' : 'off'));
   const isLiked = (id: string) => lib?.likedIds.includes(id);
+
+  const phoneTrackId = phone?.track?.id;
+  const seekNonceRef = useRef(-1);
+  // The <audio> element only mounts once the library renders, so effects that
+  // touch it must re-run then — otherwise a state that arrived first is lost.
+  const audioMounted = !!lib && !authNeeded;
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !onWeb || !phoneTrackId || !token) return;
+    const src = trackUrl(phoneTrackId, token);
+    if (a.src !== src) {
+      a.src = src;
+      a.currentTime = phone?.position ?? 0;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onWeb, phoneTrackId, token, audioMounted]);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !onWeb) return;
+    if (phone?.playing) a.play().catch(() => {});
+    else a.pause();
+  }, [onWeb, phone?.playing, phoneTrackId, audioMounted]);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !onWeb || !phone) return;
+    if (phone.seekNonce !== undefined && phone.seekNonce !== seekNonceRef.current) {
+      seekNonceRef.current = phone.seekNonce;
+      if (phone.seekNonce >= 0) a.currentTime = phone.seekTo ?? 0;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onWeb, phone?.seekNonce]);
+
+  useEffect(() => {
+    if (!onWeb) return;
+    const timer = setInterval(() => {
+      const a = audioRef.current;
+      if (a && !a.paused) sendCommand('webpos', String(a.currentTime));
+    }, 1000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onWeb, token]);
+
 
   if (authNeeded) return <Pairing onPair={pair} />;
   if (!lib) return <div className="center muted">Chargement…</div>;
@@ -341,6 +399,23 @@ export default function App() {
         t => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q),
       )
     : [];
+
+  const rTrack = phone?.track;
+  const shown = rTrack
+    ? {
+        id: rTrack.id,
+        title: rTrack.title,
+        artist: rTrack.artist,
+        artwork: token ? artUrl(rTrack.artwork, rTrack.id, token) : undefined,
+      }
+    : current;
+  const shownPos = onWeb ? pos : phone?.position ?? 0;
+  const shownDur = onWeb ? dur || phone?.duration || 0 : phone?.duration ?? 0;
+  const shownPlaying = !!phone?.playing;
+
+  const doPlayPause = () => sendCommand(shownPlaying ? 'pause' : 'play');
+  const doNext = () => sendCommand('next');
+  const doPrev = () => sendCommand('prev');
 
   const renderRows = (list: Track[], ctx: string) =>
     list.map((t, i) => (
@@ -553,28 +628,30 @@ export default function App() {
         onPause={() => setPlaying(false)}
       />
 
-      {current && (
+      {shown && (
         <div className="player">
           <div
             className="seek"
             onClick={e => {
-              const a = audioRef.current;
-              if (!a || !dur) return;
+              if (!shownDur) return;
               const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-              a.currentTime = ((e.clientX - r.left) / r.width) * dur;
+              const to = ((e.clientX - r.left) / r.width) * shownDur;
+              sendCommand('seek', String(to));
             }}>
-            <div className="seekfill" style={{ width: `${dur ? (pos / dur) * 100 : 0}%` }}>
+            <div
+              className="seekfill"
+              style={{ width: `${shownDur ? (shownPos / shownDur) * 100 : 0}%` }}>
               <span className="seekdot" />
             </div>
           </div>
           <div className="pbar">
             <div className="pleft">
               <div className="pthumb">
-                <Art src={cover(current)} size={20} />
+                <Art src={shown.artwork || cover(current)} size={20} />
               </div>
               <div className="pmeta">
-                <div className="qtitle">{current.title}</div>
-                <div className="qsub">{current.artist}</div>
+                <div className="qtitle">{shown.title}</div>
+                <div className="qsub">{shown.artist}</div>
               </div>
             </div>
             <div className="pcenter">
@@ -584,13 +661,13 @@ export default function App() {
                 aria-label="Lecture aléatoire">
                 <Icon icon={ShuffleIcon} size={19} sw={2} />
               </button>
-              <button onClick={prev} aria-label="Précédent">
+              <button onClick={doPrev} aria-label="Précédent">
                 <Icon icon={PreviousIcon} size={22} sw={2} />
               </button>
-              <button className="play" onClick={togglePlay}>
-                <Icon icon={playing ? PauseIcon : PlayIcon} size={18} color="#111" sw={2.4} />
+              <button className="play" onClick={doPlayPause}>
+                <Icon icon={shownPlaying ? PauseIcon : PlayIcon} size={18} color="#111" sw={2.4} />
               </button>
-              <button onClick={next} aria-label="Suivant">
+              <button onClick={doNext} aria-label="Suivant">
                 <Icon icon={NextIcon} size={22} sw={2} />
               </button>
               <button
@@ -601,7 +678,14 @@ export default function App() {
               </button>
             </div>
             <div className="pright">
-              <span className="ptime">{fmt(pos)} / {fmt(dur)}</span>
+              <span className="ptime">{fmt(shownPos)} / {fmt(shownDur)}</span>
+              <button
+                className={'ctrl' + (remote ? ' act' : '')}
+                onClick={() => sendCommand('output', remote ? 'web' : 'phone')}
+                aria-label="Appareil de lecture"
+                title={remote ? 'Le son sort du téléphone' : 'Le son sort de ce navigateur'}>
+                <Icon icon={remote ? SmartPhone01Icon : ComputerIcon} size={20} sw={2} />
+              </button>
               <button
                 className="np-toggle"
                 aria-label="Lecture en cours"

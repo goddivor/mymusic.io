@@ -35,6 +35,9 @@ public class MusicHttpServer extends NanoHTTPD {
     private final Runnable onTokenIssued;
 
     private volatile String libraryJson = "{\"tracks\":[],\"playlists\":[],\"likedIds\":[]}";
+    private volatile String stateJson = "{}";
+    private final java.util.concurrent.ConcurrentLinkedQueue<String> commands =
+            new java.util.concurrent.ConcurrentLinkedQueue<>();
     private final Map<String, String> trackPaths = new ConcurrentHashMap<>();
     private final Map<String, String> trackArt = new ConcurrentHashMap<>();
 
@@ -46,6 +49,23 @@ public class MusicHttpServer extends NanoHTTPD {
         this.pin = pin;
         this.tokens = tokens;
         this.onTokenIssued = onTokenIssued;
+    }
+
+    public void updateState(String json) {
+        stateJson = json;
+    }
+
+    /** Drains the commands the browser has issued since the last call. */
+    public String drainCommands() {
+        StringBuilder sb = new StringBuilder("[");
+        String c;
+        boolean first = true;
+        while ((c = commands.poll()) != null) {
+            if (!first) sb.append(',');
+            sb.append(c);
+            first = false;
+        }
+        return sb.append(']').toString();
     }
 
     public void updateLibrary(String json) {
@@ -107,6 +127,21 @@ public class MusicHttpServer extends NanoHTTPD {
                 String path = trackPaths.get(id);
                 if (path == null) return status(Response.Status.NOT_FOUND, "piste inconnue");
                 return serveFile(new File(path), session.getHeaders().get("range"));
+            }
+
+            if ("/state".equals(uri)) {
+                if (!authed(parms)) return status(Response.Status.FORBIDDEN, "token");
+                return json(stateJson);
+            }
+
+            if ("/command".equals(uri)) {
+                if (!authed(parms)) return status(Response.Status.FORBIDDEN, "token");
+                JSONObject cmd = new JSONObject();
+                for (Map.Entry<String, String> e : parms.entrySet()) {
+                    if (!"t".equals(e.getKey())) cmd.put(e.getKey(), e.getValue());
+                }
+                commands.add(cmd.toString());
+                return json("{\"ok\":true}");
             }
 
             if (uri.startsWith("/art/")) {

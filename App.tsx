@@ -24,8 +24,10 @@ import DrawerLayout from './src/components/DrawerLayout';
 import BrandYoutubeIcon from './src/components/BrandYoutubeIcon';
 import PlayerBar from './src/components/PlayerBar';
 import ProfileDrawer, { DrawerItemKey } from './src/components/ProfileDrawer';
+import PlaybackSession from './src/components/PlaybackSession';
 import RecentTracker from './src/components/RecentTracker';
 import RestorePrompt from './src/components/RestorePrompt';
+import WebRemoteSync from './src/components/WebRemoteSync';
 import WebServerSync from './src/components/WebServerSync';
 import { Collection } from './src/lib/collections';
 import CollectionDetailScreen from './src/screens/CollectionDetailScreen';
@@ -106,8 +108,10 @@ function AppInner(): React.JSX.Element {
        <ActionSheetProvider>
         <ConfirmProvider>
         <RecentTracker />
+        <PlaybackSession />
         <RestorePrompt />
         <WebServerSync />
+        <WebRemoteSync />
         <StatusBar
           barStyle={scheme === 'light' ? 'dark-content' : 'light-content'}
           backgroundColor="transparent"
@@ -139,7 +143,7 @@ function AppInner(): React.JSX.Element {
             <YoutubeScreen active={tab === 'youtube'} />
           </View>
 
-          <PlayerBar onPress={() => setShowNowPlaying(true)} />
+          <PlayerBar onPress={() => setShowNowPlaying(true)} registerZone />
 
           <View style={styles.tabBar}>
             <TabButton
@@ -183,6 +187,7 @@ function AppInner(): React.JSX.Element {
         <UpdateSheet info={updateInfo} onClose={() => setUpdateInfo(null)} />
         <RecentsScreen visible={showRecents} onClose={() => setShowRecents(false)} />
         <Modal
+          statusBarTranslucent
           visible={showSettings}
           animationType="slide"
           onRequestClose={() => setShowSettings(false)}>
