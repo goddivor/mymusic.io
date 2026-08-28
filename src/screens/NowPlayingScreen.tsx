@@ -2,7 +2,6 @@ import {
   Add01Icon,
   ArrowDown01Icon,
   FavouriteIcon,
-  MusicNote01Icon,
   NextIcon,
   PauseIcon,
   PlayIcon,
@@ -17,6 +16,7 @@ import Slider from '@react-native-community/slider';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Dimensions,
   Image,
   Modal,
   PanResponder,
@@ -37,14 +37,19 @@ import TrackPlayer, {
   useProgress,
 } from 'react-native-track-player';
 import { useActionSheet } from '../components/ActionSheet';
+import { ArtColors, getArtColors } from '../lib/artColor';
 import Ic from '../components/Ic';
+import TrackArt from '../components/TrackArt';
 import ShareCard from '../components/ShareCard';
 import TrackRow from '../components/TrackRow';
 import {
   getShuffle,
   playNext,
   playTracks,
+  resumePlayback,
+  seekPlayback,
   subscribePlayer,
+  togglePlayback,
   toggleShuffle,
 } from '../lib/player';
 import { useI18n } from '../i18n';
@@ -52,6 +57,8 @@ import { useLibrary } from '../store/library';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 import { AppTrack } from '../types';
+
+const SCREEN_W = Dimensions.get('window').width;
 
 type Props = {
   visible: boolean;
@@ -86,11 +93,27 @@ export default function NowPlayingScreen({
   const [seeking, setSeeking] = useState<number | null>(null);
   const [repeat, setRepeat] = useState<RepeatMode>(RepeatMode.Queue);
   const [shuffleOn, setShuffleOn] = useState(getShuffle());
+  const [artColors, setArtColors] = useState<ArtColors | null>(null);
   const translateY = useRef(new Animated.Value(0)).current;
   const scrollY = useRef(0);
   const cardRef = useRef<View>(null);
 
   useEffect(() => subscribePlayer(() => setShuffleOn(getShuffle())), []);
+
+  const artUri = track?.artwork ? String(track.artwork) : undefined;
+  useEffect(() => {
+    let alive = true;
+    if (!artUri) {
+      setArtColors(null);
+      return;
+    }
+    getArtColors(artUri).then(c => {
+      if (alive) setArtColors(c);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [artUri]);
 
   useEffect(() => {
     if (visible) translateY.setValue(0);
@@ -125,17 +148,70 @@ export default function NowPlayingScreen({
     }),
   ).current;
 
+  const dragX = useRef(new Animated.Value(0)).current;
+  const settleRef = useRef<(dx: number, vx: number) => void>(() => {});
+  const [neighbours, setNeighbours] = useState<{
+    prev?: string;
+    next?: string;
+  }>({});
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const queue = await TrackPlayer.getQueue();
+        const idx = await TrackPlayer.getActiveTrackIndex();
+        if (!alive || idx === undefined || idx === null) return;
+        const art = (i: number) =>
+          queue[i]?.artwork ? String(queue[i].artwork) : undefined;
+        setNeighbours({ prev: art(idx - 1), next: art(idx + 1) });
+      } catch {}
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [track?.id]);
+
+  /**
+   * Ends a cover drag: past the threshold the neighbour slides fully in and the
+   * player skips, otherwise the cover springs back. dragX is reset only once the
+   * new track is active so the swap never flashes the old artwork.
+   */
+  settleRef.current = (dx, vx) => {
+    const width = Dimensions.get('window').width;
+    const passed = Math.abs(dx) > width * 0.22 || Math.abs(vx) > 0.5;
+    const goNext = dx < 0;
+    const target = goNext ? neighbours.next : neighbours.prev;
+    if (!passed || target === undefined) {
+      Animated.spring(dragX, {
+        toValue: 0,
+        useNativeDriver: true,
+        bounciness: 6,
+      }).start();
+      return;
+    }
+    Animated.timing(dragX, {
+      toValue: goNext ? -width : width,
+      duration: 190,
+      useNativeDriver: true,
+    }).start(() => {
+      const skip = goNext
+        ? TrackPlayer.skipToNext()
+        : TrackPlayer.skipToPrevious();
+      skip
+        .then(() => resumePlayback())
+        .catch(() => {})
+        .finally(() => dragX.setValue(0));
+    });
+  };
+
   const artPan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
         Math.abs(g.dx) > 16 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-      onPanResponderRelease: (_, g) => {
-        if (g.dx <= -60) {
-          TrackPlayer.skipToPrevious().catch(() => {});
-        } else if (g.dx >= 60) {
-          TrackPlayer.skipToNext().catch(() => {});
-        }
-      },
+      onPanResponderMove: (_, g) => dragX.setValue(g.dx),
+      onPanResponderRelease: (_, g) => settleRef.current(g.dx, g.vx),
+      onPanResponderTerminate: () => settleRef.current(0, 0),
     }),
   ).current;
 
@@ -217,13 +293,21 @@ export default function NowPlayingScreen({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={dismiss}>
+    <Modal visible={visible} animationType="slide" onRequestClose={dismiss} statusBarTranslucent>
       <Animated.View style={[styles.root, { transform: [{ translateY }] }]}>
         <Svg width="100%" height="58%" style={StyleSheet.absoluteFill}>
           <Defs>
             <LinearGradient id="np" x1="0" y1="0" x2="0.4" y2="1">
-              <Stop offset="0" stopColor={theme.accent} stopOpacity={0.42} />
-              <Stop offset="0.5" stopColor="#5B2A8C" stopOpacity={0.28} />
+              <Stop
+                offset="0"
+                stopColor={artColors?.primary ?? theme.accent}
+                stopOpacity={artColors ? 0.85 : 0.42}
+              />
+              <Stop
+                offset="0.5"
+                stopColor={artColors?.deep ?? '#5B2A8C'}
+                stopOpacity={artColors ? 0.5 : 0.28}
+              />
               <Stop offset="1" stopColor={theme.bg} stopOpacity={1} />
             </LinearGradient>
           </Defs>
@@ -248,15 +332,30 @@ export default function NowPlayingScreen({
             scrollEventThrottle={16}
             contentContainerStyle={{ paddingBottom: 28 }}>
             <View style={styles.artArea} {...artPan.panHandlers}>
-              <View style={styles.artWrap}>
-                {track.artwork ? (
-                  <Image source={{ uri: String(track.artwork) }} style={styles.art} />
-                ) : (
-                  <View style={[styles.art, styles.artPlaceholder]}>
-                    <Ic icon={MusicNote01Icon} size={84} color={theme.textFaint} />
-                  </View>
-                )}
-              </View>
+              <Animated.View
+                style={[styles.artTrack, { transform: [{ translateX: dragX }] }]}>
+                <View style={[styles.artSlot, styles.artSlotPrev]}>
+                  {neighbours.prev && (
+                    <View style={styles.artWrap}>
+                      <Image source={{ uri: neighbours.prev }} style={styles.art} />
+                    </View>
+                  )}
+                </View>
+                <View style={styles.artWrap}>
+                  <TrackArt
+                    uri={track.artwork ? String(track.artwork) : undefined}
+                    style={styles.art}
+                    iconSize={84}
+                  />
+                </View>
+                <View style={[styles.artSlot, styles.artSlotNext]}>
+                  {neighbours.next && (
+                    <View style={styles.artWrap}>
+                      <Image source={{ uri: neighbours.next }} style={styles.art} />
+                    </View>
+                  )}
+                </View>
+              </Animated.View>
             </View>
 
             <View style={styles.metaRow}>
@@ -274,6 +373,7 @@ export default function NowPlayingScreen({
                   size={28}
                   color={liked ? theme.accent : theme.textDim}
                   strokeWidth={liked ? 2.6 : 1.9}
+                  filled={liked}
                 />
               </TouchableOpacity>
             </View>
@@ -289,7 +389,7 @@ export default function NowPlayingScreen({
               onSlidingStart={() => setSeeking(position)}
               onValueChange={v => setSeeking(v)}
               onSlidingComplete={async v => {
-                await TrackPlayer.seekTo(v);
+                await seekPlayback(v);
                 setSeeking(null);
               }}
             />
@@ -299,11 +399,12 @@ export default function NowPlayingScreen({
             </View>
 
             <View style={styles.controls}>
-              <TouchableOpacity onPress={cycleRepeat} hitSlop={10}>
+              <TouchableOpacity hitSlop={10} onPress={() => toggleShuffle(similar)}>
                 <Ic
-                  icon={repeat === RepeatMode.Track ? RepeatOne01Icon : RepeatIcon}
+                  icon={ShuffleIcon}
                   size={22}
-                  color={repeat !== RepeatMode.Off ? theme.accent : theme.textDim}
+                  color={shuffleOn ? theme.accent : theme.textDim}
+                  strokeWidth={shuffleOn ? 2.6 : 1.9}
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -313,7 +414,7 @@ export default function NowPlayingScreen({
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.playBtn}
-                onPress={() => (playing ? TrackPlayer.pause() : TrackPlayer.play())}>
+                onPress={() => togglePlayback()}>
                 <Ic
                   icon={playing ? PauseIcon : PlayIcon}
                   size={34}
@@ -326,12 +427,11 @@ export default function NowPlayingScreen({
                 hitSlop={10}>
                 <Ic icon={NextIcon} size={34} color={theme.text} strokeWidth={2.2} />
               </TouchableOpacity>
-              <TouchableOpacity hitSlop={10} onPress={() => toggleShuffle(similar)}>
+              <TouchableOpacity onPress={cycleRepeat} hitSlop={10}>
                 <Ic
-                  icon={ShuffleIcon}
+                  icon={repeat === RepeatMode.Track ? RepeatOne01Icon : RepeatIcon}
                   size={22}
-                  color={shuffleOn ? theme.accent : theme.textDim}
-                  strokeWidth={shuffleOn ? 2.6 : 1.9}
+                  color={repeat !== RepeatMode.Off ? theme.accent : theme.textDim}
                 />
               </TouchableOpacity>
             </View>
@@ -387,7 +487,11 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     paddingVertical: 8,
   },
   headerLabel: { color: theme.textDim, fontSize: 11, fontWeight: '700', letterSpacing: 1.5 },
-  artArea: { alignItems: 'center', paddingTop: 14, paddingBottom: 8 },
+  artArea: { paddingTop: 14, paddingBottom: 8, overflow: 'visible' },
+  artTrack: { alignItems: 'center', justifyContent: 'center' },
+  artSlot: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center' },
+  artSlotPrev: { transform: [{ translateX: -SCREEN_W }] },
+  artSlotNext: { transform: [{ translateX: SCREEN_W }] },
   artWrap: {
     width: '74%',
     aspectRatio: 1,

@@ -15,8 +15,6 @@ import React, { useEffect, useState } from 'react';
 import {
   BackHandler,
   FlatList,
-  Image,
-  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -31,11 +29,13 @@ import AddToPlaylistSheet from '../components/AddToPlaylistSheet';
 import { useConfirm } from '../components/ConfirmSheet';
 import GradientTile from '../components/GradientTile';
 import Ic from '../components/Ic';
+import SlideOverModal from '../components/SlideOverModal';
+import TrackArt from '../components/TrackArt';
 import PlayerBar from '../components/PlayerBar';
 import TrackRow from '../components/TrackRow';
 import { buildCollections } from '../lib/collections';
 import { useI18n } from '../i18n';
-import { playNext, playTracks } from '../lib/player';
+import { getShuffle, playNext, playTracks, subscribePlayer } from '../lib/player';
 import { useLibrary } from '../store/library';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
@@ -74,6 +74,7 @@ export default function CollectionDetailScreen({
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
+  const [shuffleOn, setShuffleOn] = useState(getShuffle());
   const [addTracks, setAddTracks] = useState<AppTrack[] | null>(null);
 
   const visible = collectionKey !== null;
@@ -89,6 +90,8 @@ export default function CollectionDetailScreen({
   const collection = collectionKey
     ? buildCollections(lib).find(c => c.key === collectionKey) ?? null
     : null;
+
+  useEffect(() => subscribePlayer(() => setShuffleOn(getShuffle())), []);
 
   const inSelectRef = React.useRef(false);
   inSelectRef.current = selectedIds !== null;
@@ -108,13 +111,13 @@ export default function CollectionDetailScreen({
 
   if (!collection) {
     return (
-      <Modal visible={visible} animationType="slide" onRequestClose={onBack}>
+      <SlideOverModal visible={visible} onRequestClose={onBack}>
         <View style={styles.fallback}>
           <TouchableOpacity onPress={onBack} style={styles.backFloating} hitSlop={12}>
             <Ic icon={ArrowLeft01Icon} size={26} color={theme.text} />
           </TouchableOpacity>
         </View>
-      </Modal>
+      </SlideOverModal>
     );
   }
 
@@ -130,7 +133,7 @@ export default function CollectionDetailScreen({
       : tracks;
 
   const shufflePlay = () => {
-    if (tracks.length) playTracks(tracks, 0, { shuffle: true });
+    if (tracks.length) playTracks(tracks, 0, { shuffle: true, randomStart: true });
   };
 
   const selectMode = selectedIds !== null;
@@ -265,7 +268,7 @@ export default function CollectionDetailScreen({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onBack}>
+    <SlideOverModal visible={visible} onRequestClose={onBack}>
       <View style={styles.root}>
         <Svg width="100%" height={HEADER_H} style={StyleSheet.absoluteFill}>
           <Defs>
@@ -382,7 +385,7 @@ export default function CollectionDetailScreen({
               ) : (
                 <View style={styles.headerContent}>
                   {collection.cover ? (
-                    <Image source={{ uri: collection.cover }} style={styles.cover} />
+                    <TrackArt uri={collection.cover} style={styles.cover} iconSize={66} />
                   ) : (
                     <GradientTile colors={collection.gradient} size={150} radius={16}>
                       <Ic icon={collection.icon} size={66} color="#fff" strokeWidth={2} />
@@ -407,7 +410,14 @@ export default function CollectionDetailScreen({
                         <Ic
                           icon={ShuffleIcon}
                           size={22}
-                          color={tracks.length ? theme.text : theme.textFaint}
+                          color={
+                            !tracks.length
+                              ? theme.textFaint
+                              : shuffleOn
+                              ? theme.accent
+                              : theme.text
+                          }
+                          strokeWidth={shuffleOn ? 2.6 : 1.9}
                         />
                       </TouchableOpacity>
                       <TouchableOpacity
@@ -469,7 +479,7 @@ export default function CollectionDetailScreen({
           }}
         />
       </View>
-    </Modal>
+    </SlideOverModal>
   );
 }
 
