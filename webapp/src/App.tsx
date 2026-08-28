@@ -364,10 +364,17 @@ export default function App() {
 
   useEffect(() => {
     const a = audioRef.current;
-    if (!a || !onWeb) return;
+    if (!a) return;
+    // Handing the audio back to the phone must silence the browser, otherwise
+    // both devices play the same track at once.
+    if (!onWeb) {
+      a.pause();
+      return;
+    }
     if (phone?.playing) a.play().catch(() => {});
     else a.pause();
   }, [onWeb, phone?.playing, phoneTrackId, audioMounted]);
+
 
   useEffect(() => {
     const a = audioRef.current;

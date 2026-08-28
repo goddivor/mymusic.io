@@ -75,8 +75,10 @@ export default function WebRemoteSync() {
           setWebPosition(Number(value) || 0);
           return;
         case 'next':
+          setWebPosition(0);
           return TrackPlayer.skipToNext().catch(() => {});
         case 'prev':
+          setWebPosition(0);
           return TrackPlayer.skipToPrevious().catch(() => {});
         case 'seek':
           if (onWeb) {
@@ -118,11 +120,21 @@ export default function WebRemoteSync() {
     const timer = setInterval(tick, TICK_MS);
     const unsub = subscribeOutput(() => {
       if (getOutput() === 'web') {
+        // Hand the exact position over through the seek channel: it carries a
+        // nonce, so the browser applies it once instead of racing its own
+        // position reports back to the phone.
+        TrackPlayer.getProgress()
+          .then(p => {
+            setWebPosition(p.position);
+            requestSeek(p.position);
+            publish();
+          })
+          .catch(() => {});
         TrackPlayer.pause().catch(() => {});
-      } else {
-        TrackPlayer.seekTo(getWebPosition()).catch(() => {});
-        if (getPlayIntent()) TrackPlayer.play().catch(() => {});
+        return;
       }
+      TrackPlayer.seekTo(getWebPosition()).catch(() => {});
+      if (getPlayIntent()) TrackPlayer.play().catch(() => {});
       publish();
     });
     tick();
