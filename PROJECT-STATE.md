@@ -6,9 +6,10 @@
 
 ## Now
 
-v1.7.0 releasing — Connect (one shared session with the LAN web player, switchable audio output),
-cover-coloured player with gesture-driven artwork swipe, playback session restored on relaunch,
-balanced shuffle, and a `dev` buildType so testing never touches the signed release.
+v1.8.0 releasing — the app now has its own identity: adaptive launcher icon, circular splash screen
+and a monochrome status icon, plus an OLED black theme and an Inter/Roboto font picker. The now
+playing screen gained a player-style header and a paging artwork carousel, and the media
+notification is tinted with the cover colour.
 
 ## Shape
 
@@ -38,11 +39,15 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] collections — playlist multiselect (play/queue next/add/remove/delete downloads) + delete-playlist choice keeps or erases downloaded tracks.
 - [x] connect — phone owns the session; the browser mirrors it, controls it, or takes over the audio (/state + /command).
 - [x] player polish — palette-tinted player, finger-tracking cover carousel, balanced shuffle, session restored on relaunch.
+- [x] branding — adaptive launcher icon, circular splash screen (AndroidX backport), monochrome status icon, all derived from branding/*.svg.
+- [x] appearance — OLED black scheme and a bundled Inter/Roboto font picker, both applied live at the style funnel.
+- [x] now playing — player-style/equalizer/overflow header actions, label-free footer, paging artwork carousel, cover-tinted notification.
 
 ## Next
 
-1. Confirm on device that auto-repair re-downloads the user's broken tracks and swipe works.
-2. Listening stats screen — play counts are already tracked (unit `listening-stats`).
+1. Confirm on device: notification tint on a track whose artwork loads, and the launcher icon after MIUI clears its cache.
+2. Implement the now playing overflow actions — they are placeholders today.
+3. Listening stats screen — play counts are already tracked (unit `listening-stats`).
 3. Optional: player styles / account connect (both `⬜ todo`, scope to confirm).
 
 ## Watch
