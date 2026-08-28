@@ -7,6 +7,7 @@ import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.musicapp.appupdater.AppUpdaterPackage
+import com.musicapp.artcolor.ArtColorPackage
 import com.musicapp.backup.BackupPackage
 import com.musicapp.mediascanner.MediaScannerPackage
 import com.musicapp.mediasaver.MediaSaverPackage
@@ -26,6 +27,7 @@ class MainApplication : Application(), ReactApplication {
           add(MediaSaverPackage())
           add(AppUpdaterPackage())
           add(BackupPackage())
+          add(ArtColorPackage())
         },
     )
   }

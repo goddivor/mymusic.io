@@ -8,7 +8,6 @@ import React, { useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
-  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +16,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ic from '../components/Ic';
+import SlideOverModal from '../components/SlideOverModal';
+import PlayerBar from '../components/PlayerBar';
 import { useI18n } from '../i18n';
 import { playTracks } from '../lib/player';
 import { useLibrary } from '../store/library';
@@ -92,7 +93,7 @@ export default function SearchScreen({ visible, onClose }: Props) {
   );
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={close}>
+    <SlideOverModal visible={visible} onRequestClose={close}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={close} style={styles.back} activeOpacity={0.7}>
@@ -129,8 +130,9 @@ export default function SearchScreen({ visible, onClose }: Props) {
             </Text>
           }
         />
+        <PlayerBar />
       </SafeAreaView>
-    </Modal>
+    </SlideOverModal>
   );
 }
 

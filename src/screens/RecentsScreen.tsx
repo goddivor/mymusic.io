@@ -6,7 +6,6 @@ import React from 'react';
 import {
   FlatList,
   Image,
-  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,6 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ic from '../components/Ic';
+import SlideOverModal from '../components/SlideOverModal';
+import PlayerBar from '../components/PlayerBar';
 import { useI18n } from '../i18n';
 import { playTracks } from '../lib/player';
 import { useLibrary } from '../store/library';
@@ -59,7 +60,7 @@ export default function RecentsScreen({ visible, onClose }: Props) {
   );
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <SlideOverModal visible={visible} onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.back} activeOpacity={0.7}>
@@ -77,8 +78,9 @@ export default function RecentsScreen({ visible, onClose }: Props) {
             <Text style={styles.empty}>{t('noRecentPlays')}</Text>
           }
         />
+        <PlayerBar />
       </SafeAreaView>
-    </Modal>
+    </SlideOverModal>
   );
 }
 

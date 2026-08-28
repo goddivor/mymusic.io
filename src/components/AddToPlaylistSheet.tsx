@@ -71,7 +71,7 @@ export default function AddToPlaylistSheet({ track, tracks, onClose }: Props) {
 
         <TouchableOpacity style={styles.row} onPress={handleToggleLiked}>
           <GradientTile colors={gradients.liked} size={44} radius={9}>
-            <Ic icon={FavouriteIcon} size={20} color="#fff" strokeWidth={2.2} />
+            <Ic icon={FavouriteIcon} size={20} color="#fff" strokeWidth={2.2} filled={liked} />
           </GradientTile>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.rowName} numberOfLines={1}>

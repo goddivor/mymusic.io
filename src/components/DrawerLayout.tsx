@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { startsOnPlayerBar } from '../lib/gestureZones';
 import { useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 
@@ -86,11 +87,15 @@ export default function DrawerLayout({
 
   const pan = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponderCapture: (_evt, g) => {
+      onMoveShouldSetPanResponderCapture: (evt, g) => {
         const horizontal = Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5;
         if (!horizontal) return false;
+        // gestureState x0/y0 are still 0 during the capture phase (no grant yet),
+        // so the origin has to be derived from the touch itself.
+        const { pageX, pageY } = evt.nativeEvent;
+        if (startsOnPlayerBar(pageY)) return false;
         if (openRef.current) return g.dx < 0;
-        return enabledRef.current && g.x0 <= EDGE && g.dx > 0;
+        return enabledRef.current && pageX - g.dx <= EDGE && g.dx > 0;
       },
       onPanResponderMove: (_evt, g) => {
         const base = openRef.current ? DRAWER_WIDTH : 0;

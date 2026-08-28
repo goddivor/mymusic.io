@@ -12,6 +12,13 @@ type WebServerNative = {
     pin: string | null;
   }>;
   updateLibrary(json: string): void;
+  updateState(json: string): void;
+  drainCommands(): Promise<string>;
+};
+
+export type RemoteCommand = {
+  action: string;
+  value?: string;
 };
 
 const Native: WebServerNative | undefined = NativeModules.WebServer;
@@ -25,6 +32,15 @@ export const WebServer = {
       ? Native.status()
       : Promise.resolve({ running: false, ip: '', port: 8080, pin: null }),
   updateLibrary: (json: string) => Native?.updateLibrary(json),
+  updateState: (json: string) => Native?.updateState(json),
+  drainCommands: async (): Promise<RemoteCommand[]> => {
+    if (!Native) return [];
+    try {
+      return JSON.parse(await Native.drainCommands());
+    } catch {
+      return [];
+    }
+  },
   available: !!Native,
 };
 

@@ -3,6 +3,8 @@ import TrackPlayer, {
   Capability,
   RepeatMode,
 } from 'react-native-track-player';
+import { getOutput, getPlayIntent, requestSeek, setPlayIntent } from './connect';
+import { balancedShuffle } from './shuffle';
 import { AppTrack } from '../types';
 
 let isSetup = false;
@@ -25,15 +27,6 @@ export function subscribePlayer(l: () => void): () => void {
 
 export function getShuffle(): boolean {
   return shuffleOn;
-}
-
-function shuffleArr<T>(arr: T[]): T[] {
-  const r = [...arr];
-  for (let i = r.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [r[i], r[j]] = [r[j], r[i]];
-  }
-  return r;
 }
 
 export async function setupPlayer(): Promise<void> {
@@ -90,7 +83,7 @@ export async function playNext(t: AppTrack): Promise<void> {
 export async function playTracks(
   tracks: AppTrack[],
   startIndex: number,
-  opts?: { shuffle?: boolean },
+  opts?: { shuffle?: boolean; randomStart?: boolean },
 ): Promise<void> {
   if (tracks.length === 0) return;
   await setupPlayer();
@@ -101,9 +94,12 @@ export async function playTracks(
   let ordered = tracks;
   let start = startIndex;
   if (shuffleOn) {
-    const head = tracks[startIndex];
-    const rest = shuffleArr(tracks.filter((_, i) => i !== startIndex));
-    ordered = [head, ...rest];
+    if (opts?.randomStart) {
+      ordered = balancedShuffle(tracks);
+    } else {
+      const head = tracks[startIndex];
+      ordered = [head, ...balancedShuffle(tracks.filter((_, i) => i !== startIndex))];
+    }
     start = 0;
   }
 
@@ -112,7 +108,12 @@ export async function playTracks(
   if (start > 0) {
     await TrackPlayer.skip(start);
   }
-  await TrackPlayer.play();
+  if (getOutput() === 'web') {
+    await TrackPlayer.pause().catch(() => {});
+  } else {
+    await TrackPlayer.play();
+  }
+  setPlayIntent(true);
   emit();
 }
 
@@ -146,7 +147,7 @@ export async function setShuffle(
       const head = context.find(t => t.id === currentId);
       context = head ? [head, ...pool] : pool;
     }
-    rest = shuffleArr(pool);
+    rest = balancedShuffle(pool);
   } else {
     const ctxIdx = context.findIndex(t => t.id === currentId);
     rest = ctxIdx >= 0 ? context.slice(ctxIdx + 1) : [];
@@ -162,4 +163,39 @@ export async function setShuffle(
 export async function toggleShuffle(enrichPool?: AppTrack[]): Promise<boolean> {
   await setShuffle(!shuffleOn, enrichPool);
   return shuffleOn;
+}
+
+/**
+ * Play/pause that honours the chosen output: on web output the phone stays
+ * silent and only the shared intent changes, which the browser follows.
+ */
+export async function togglePlayback(): Promise<void> {
+  await setupPlayer();
+  if (getOutput() === 'web') {
+    setPlayIntent(!getPlayIntent());
+    await TrackPlayer.pause().catch(() => {});
+    return;
+  }
+  const state = await TrackPlayer.getPlaybackState();
+  const isPlaying = state.state === 'playing';
+  setPlayIntent(!isPlaying);
+  if (isPlaying) await TrackPlayer.pause();
+  else await TrackPlayer.play();
+}
+
+/** Seek that targets whichever device is producing the sound. */
+export async function seekPlayback(to: number): Promise<void> {
+  if (getOutput() === 'web') {
+    requestSeek(to);
+    return;
+  }
+  await TrackPlayer.seekTo(to);
+}
+
+/** Starts playback on whichever device currently owns the output. */
+export async function resumePlayback(): Promise<void> {
+  setPlayIntent(true);
+  if (getOutput() === 'web') return;
+  await setupPlayer();
+  await TrackPlayer.play();
 }

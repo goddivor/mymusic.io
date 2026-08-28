@@ -114,7 +114,7 @@ export default function QueueScreen({ visible, onClose }: Props) {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.root}>
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
           <View style={styles.header}>

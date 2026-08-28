@@ -341,6 +341,7 @@ export default function LibraryScreen({ onOpen, onOpenProfile, onOpenSearch }: P
       </SwipeableSheet>
 
       <Modal
+        statusBarTranslucent
         visible={openFolder !== null}
         animationType="slide"
         onRequestClose={() => setOpenFolderId(null)}>

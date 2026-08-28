@@ -10,7 +10,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ic from '../components/Ic';
+import SlideOverModal from '../components/SlideOverModal';
 import YtVideoRow, { fmtCount } from '../components/YtVideoRow';
 import { useI18n } from '../i18n';
 import { parseHtmlText } from '../lib/htmlText';
@@ -105,7 +105,7 @@ export default function YoutubeVideoScreen({ url, onClose, onOpenVideo, onOpenWe
   };
 
   return (
-    <Modal visible={url !== null} animationType="slide" onRequestClose={onClose}>
+    <SlideOverModal visible={url !== null} onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={onClose} hitSlop={10} style={styles.topBtn}>
@@ -240,7 +240,7 @@ export default function YoutubeVideoScreen({ url, onClose, onOpenVideo, onOpenWe
           </ScrollView>
         )}
       </SafeAreaView>
-    </Modal>
+    </SlideOverModal>
   );
 }
 

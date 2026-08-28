@@ -7,12 +7,19 @@ type Props = {
   size?: number;
   color?: string;
   strokeWidth?: number;
+  filled?: boolean;
 };
 
 // Thin wrapper around HugeIcons to enforce consistent defaults app-wide.
 // Also accepts a React component (e.g. BrandYoutubeIcon) instead of a
 // HugeIcons icon, for brand logos.
-export default function Ic({ icon, size = 24, color, strokeWidth = 1.9 }: Props) {
+export default function Ic({
+  icon,
+  size = 24,
+  color,
+  strokeWidth = 1.9,
+  filled,
+}: Props) {
   const theme = useTheme();
   if (typeof icon === 'function') {
     const Custom = icon;
@@ -24,6 +31,7 @@ export default function Ic({ icon, size = 24, color, strokeWidth = 1.9 }: Props)
       size={size}
       color={color ?? theme.text}
       strokeWidth={strokeWidth}
+      fill={filled ? color ?? theme.text : 'none'}
     />
   );
 }

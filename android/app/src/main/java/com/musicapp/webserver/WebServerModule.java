@@ -132,6 +132,16 @@ public class WebServerModule extends ReactContextBaseJavaModule {
         if (server != null) server.updateLibrary(json);
     }
 
+    @ReactMethod
+    public void updateState(String json) {
+        if (server != null) server.updateState(json);
+    }
+
+    @ReactMethod
+    public void drainCommands(Promise promise) {
+        promise.resolve(server != null ? server.drainCommands() : "[]");
+    }
+
     /** First site-local IPv4 address, preferring wlan interfaces. */
     private static String localIp() {
         try {

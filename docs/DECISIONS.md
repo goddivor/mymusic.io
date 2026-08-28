@@ -23,3 +23,7 @@ there.
 - 2026-08-01 — LAN web player serves local covers via a token-gated /art/<id> endpoint — content:// URIs are unreachable from a browser
 - 2026-08-01 — Debug build coexists with the signed release via applicationIdSuffix .debug + ${applicationId}.fileprovider authority — never uninstall the release to test
 - 2026-08-01 — Library backup uses SAF (user-picked folder) via a native Backup module, auto on every change — survives uninstall on MIUI, no runtime permission; Music/MusicApp path failed under scoped storage and MIUI wipe
+- 2026-08-28 — Dev builds ship as a `dev` buildType (bundled JS, .debug id) — the release must never be uninstalled to test
+- 2026-08-28 — Shuffle uses Fiedler's balanced spread, not a uniform shuffle — clustered artists read as "not random"
+- 2026-08-28 — The phone owns the playback session; Connect output only picks the audio device — two independent players never stayed in sync
+

@@ -2,13 +2,13 @@
 
 > Live state, not history. **Max 80 lines.** Rewrite in place — never append.
 > History: `git log`. Decisions: `docs/DECISIONS.md`. Spec: `docs/BRIEF.md`.
-> Last updated: 2026-08-19
+> Last updated: 2026-08-28
 
 ## Now
 
-v1.6.0 releasing — download queue upgrades (configurable parallelism + per-playlist limit, queued status,
-retry-failed button) + playlist multiselect (play/queue/add/remove/delete) + delete-playlist choice
-(playlist only vs also downloaded tracks). Merging psycho→master to trigger the signed release.
+v1.7.0 releasing — Connect (one shared session with the LAN web player, switchable audio output),
+cover-coloured player with gesture-driven artwork swipe, playback session restored on relaunch,
+balanced shuffle, and a `dev` buildType so testing never touches the signed release.
 
 ## Shape
 
@@ -36,6 +36,8 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] backup — SAF user-picked folder, auto on every change, restore prompt on empty library; survives uninstall.
 - [x] dev — debug build (com.musicapp.debug) coexists with the signed release; never uninstall the release.
 - [x] collections — playlist multiselect (play/queue next/add/remove/delete downloads) + delete-playlist choice keeps or erases downloaded tracks.
+- [x] connect — phone owns the session; the browser mirrors it, controls it, or takes over the audio (/state + /command).
+- [x] player polish — palette-tinted player, finger-tracking cover carousel, balanced shuffle, session restored on relaunch.
 
 ## Next
 

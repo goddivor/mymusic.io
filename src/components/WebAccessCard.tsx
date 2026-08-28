@@ -30,10 +30,15 @@ export default function WebAccessCard() {
 
   useEffect(() => {
     if (!WebServer.available) return;
-    WebServer.status().then(s => {
-      setEnabled(s.running);
-      if (s.running) setInfo({ ip: s.ip, port: s.port, pin: s.pin });
-    });
+    const refresh = () =>
+      WebServer.status().then(s => {
+        setEnabled(s.running);
+        if (s.running) setInfo({ ip: s.ip, port: s.port, pin: s.pin });
+        else setInfo(null);
+      });
+    refresh();
+    const timer = setInterval(refresh, 1500);
+    return () => clearInterval(timer);
   }, []);
 
   const toggle = async (next: boolean) => {
