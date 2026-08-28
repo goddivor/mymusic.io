@@ -124,6 +124,17 @@ android {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+        // Standalone test build: bundled JS (no Metro) and its own applicationId,
+        // so it runs alongside the signed release without touching its data.
+        dev {
+            initWith release
+            signingConfig signingConfigs.debug
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-dev"
+            manifestPlaceholders.put("appLabel", "MusicApp Dev")
+            manifestPlaceholders.put("usesCleartextTraffic", "false")
+            matchingFallbacks = ["release"]
+        }
     }
 }
 
@@ -144,6 +155,9 @@ dependencies {
 
     // SAF document access for user-chosen backup folder (Backup native module)
     implementation("androidx.documentfile:documentfile:1.0.1")
+
+    // Cover colour extraction (ArtColor native module)
+    implementation("androidx.palette:palette:1.0.0")
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
