@@ -16,7 +16,9 @@ function emit() {
  * Shared playback session. The phone always owns what is playing; `output`
  * only decides which device produces the sound. In web output the phone stays
  * silent, so the intent to play and the position reported by the browser are
- * kept here rather than read from TrackPlayer.
+ * kept here rather than read from TrackPlayer. Only `setOutput` notifies:
+ * subscribers hand the audio over when they are called, and a play intent or
+ * a seek must never be mistaken for a device switch.
  */
 export function getOutput(): Output {
   return output;
@@ -33,9 +35,7 @@ export function getPlayIntent(): boolean {
 }
 
 export function setPlayIntent(next: boolean): void {
-  if (playIntent === next) return;
   playIntent = next;
-  emit();
 }
 
 export function getWebPosition(): number {
@@ -53,7 +53,6 @@ export function getSeek(): { nonce: number; to: number } {
 export function requestSeek(to: number): void {
   seekNonce += 1;
   seekTo = to;
-  emit();
 }
 
 export function subscribeOutput(l: () => void): () => void {

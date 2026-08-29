@@ -28,6 +28,7 @@ export default function WebRemoteSync() {
   const { playing } = useIsPlaying();
   const lib = useLibrary();
   const running = useRef(false);
+  const lastOutput = useRef(getOutput());
   const poolRef = useRef(lib.youtubeTracks.concat(lib.localTracks));
   poolRef.current = lib.youtubeTracks.concat(lib.localTracks);
 
@@ -119,7 +120,10 @@ export default function WebRemoteSync() {
 
     const timer = setInterval(tick, TICK_MS);
     const unsub = subscribeOutput(() => {
-      if (getOutput() === 'web') {
+      const next = getOutput();
+      if (next === lastOutput.current) return;
+      lastOutput.current = next;
+      if (next === 'web') {
         // Hand the exact position over through the seek channel: it carries a
         // nonce, so the browser applies it once instead of racing its own
         // position reports back to the phone.
