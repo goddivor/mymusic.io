@@ -22,6 +22,18 @@ const CONVENTIONS_SKILL = "musicapp-conventions";
 const ARCHITECTURE_RULE = "the layered architecture (context -> src/lib + src/db -> native modules)";
 const CONSTRAINTS = "strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21";
 
+/* Visual projects point each unit at a mockup in ARTIFACT_DIR, named <id>ARTIFACT_EXT.
+   Leave ARTIFACT_DIR empty and every artifact reference disappears — the existing
+   implementation becomes the reference instead. A unit whose file is missing emits no
+   link at all and is reported at the end, so the directory never ships a dead one. */
+const ARTIFACT_DIR = "work/mockups";
+const ARTIFACT_EXT = ".html";
+const HAS_ARTIFACT = ARTIFACT_DIR !== "";
+const artifactLeaf = HAS_ARTIFACT ? ARTIFACT_DIR.split("/").pop() : "";
+const artifactPath = (u) => `${ARTIFACT_DIR}/${u.id}${ARTIFACT_EXT}`;
+const hasArtifact = (u) =>
+  HAS_ARTIFACT && existsSync(join(ROOT, artifactLeaf, `${u.id}${ARTIFACT_EXT}`));
+
 /* UNITS — the queue. Order = build order. Add an object, re-run. */
 const UNITS = [
   { id: "home", title: "Home", entry: "tab", path: "src/screens/HomeScreen.tsx", container: "App.tsx", priority: "P0", status: "✅ done",
@@ -50,6 +62,8 @@ const UNITS = [
     pieces: { data: ["playCounts from the library store"] }, states: ["top tracks/artists", "empty"], notes: ["play counts already tracked in SQLite; drawer entry shows 'coming soon'"] },
   { id: "account-connect", title: "Account connect", entry: "modal from drawer", path: "src/screens/AccountScreen.tsx", container: "App.tsx", priority: "P2", status: "⬜ todo",
     pieces: {}, states: ["signed out", "signed in"], notes: ["scope undecided — no backend yet; confirm intent before building"] },
+  { id: "identify", title: "Identify", entry: "modal from home header", path: "src/screens/IdentifyScreen.tsx", container: "App.tsx", priority: "P1", status: "✅ done",
+    pieces: { UI: ["AddToPlaylistSheet"], lib: ["recognise (capture + AudD lookup)", "db: identifications table"], native: ["AudioRecorder + IdentifyService (foreground, microphone type)"] }, states: ["listening", "match", "no match", "no sound", "history", "permission denied", "offline", "key missing"], notes: ["A match feeds the existing YouTube search → download pipeline", "One microphone stream stays open for the whole session: reopening it in bursts made the audio policy duck whatever else was playing", "The trigger needs 700ms of sustained level, so a chime does not burn the attempt"] },
   { id: "player-styles", title: "Player styles", entry: "modal from drawer", path: "src/screens/PlayerStylesScreen.tsx", container: "App.tsx", priority: "P2", status: "⬜ todo",
     pieces: {}, states: ["style picker", "preview"], notes: ["cosmetic variants for the now-playing screen"] },
 ];
@@ -60,7 +74,9 @@ const piecesBlock = (pieces = {}) =>
 
 const shortPrompt = (u) =>
   `${u.status === "✅ done" ? "Work on" : "Build"} "${u.title}" for ${PROJECT} (${u.entry}). ` +
-  `BEFORE coding, read: ${WORK_DIR}/handoffs/${u.id}.md, the existing implementation in ${u.path}, ` +
+  `BEFORE coding, read: ${WORK_DIR}/handoffs/${u.id}.md, ` +
+  (hasArtifact(u) ? `the artifact ${artifactPath(u)}, ` : "") +
+  `the existing implementation in ${u.path}, ` +
   `and the ${BUILD_SKILL} skill (+ ${CONVENTIONS_SKILL}). ` +
   `Follow ${ARCHITECTURE_RULE} (container ${u.container}) and REUSE our shared pieces. ` +
   `${CONSTRAINTS}. Finish with: ${VERIFY}. Then refresh PROJECT-STATE.md and set this unit's status in ${WORK_DIR}/INDEX.md.`;
@@ -72,7 +88,7 @@ const handoffMd = (u) => `# Handoff — ${u.title}
 ## 1. Read BEFORE coding (mandatory)
 
 - 📍 **State**: [\`../../PROJECT-STATE.md\`](../../PROJECT-STATE.md) — what exists, what is decided
-- 💻 **Reference**: the existing implementation, \`${u.path}\` — match its conventions
+${hasArtifact(u) ? `- 🎨 **Artifact**: [\`${u.id}${ARTIFACT_EXT}\`](../${artifactLeaf}/${u.id}${ARTIFACT_EXT}) — the visual reference to match\n` : ""}- 💻 **Reference**: the existing implementation, \`${u.path}\` — match its conventions
 - 📐 **Spec**: \`docs/BRIEF.md\`
 - ⚠️ **Traps**: \`docs/STACK.md\` — check the APIs this unit uses
 - 🛠️ **Skills**: \`${BUILD_SKILL}\`, \`${CONVENTIONS_SKILL}\`
@@ -97,7 +113,7 @@ ${list(u.notes)}
 
 ## 6. Definition of Done
 
-- [ ] Consistent with the surrounding code
+- [ ] ${hasArtifact(u) ? `Matches the artifact \`${u.id}${ARTIFACT_EXT}\`` : "Consistent with the surrounding code"}
 - [ ] All states in §4 are handled
 - [ ] ${CONSTRAINTS}
 - [ ] Reuses shared pieces — no duplicated ad-hoc code
@@ -130,18 +146,22 @@ const statusOf = (u) => statuses[u.id] ?? u.status ?? DEFAULT_STATUS;
 for (const u of UNITS) writeFileSync(join(HANDOFFS, `${u.id}.md`), handoffMd(u), "utf8");
 
 const row = (u) =>
-  `| ${u.priority} | **${u.title}** | \`${u.entry}\` | [handoff](./handoffs/${u.id}.md) | \`${u.container}\` | ${statusOf(u)} |`;
+  `| ${u.priority} | **${u.title}** | \`${u.entry}\` | [handoff](./handoffs/${u.id}.md)` +
+  (hasArtifact(u) ? ` · [artifact](./${artifactLeaf}/${u.id}${ARTIFACT_EXT})` : "") +
+  ` | \`${u.container}\` | ${statusOf(u)} |`;
 const byPrio = (p) => UNITS.filter((u) => u.priority === p).map((u) => u.title);
 
 writeFileSync(
   INDEX_PATH,
   `# ${UNIT_NAME} index — ${PROJECT}
 
-Each ${UNIT_NAME} has a **handoff** (what to read, pieces, states, DoD, prompt).
+Each ${UNIT_NAME} has a **handoff** (what to read, pieces, states, DoD, prompt)${
+  HAS_ARTIFACT ? " and, where one exists, an **artifact** — the visual reference to match" : ""
+}.
 Generated — edit \`_generate-units.mjs\`, not this file.
 **The Status column is the exception**: it is hand-updated and preserved across regenerations.
 
-> Before building: read the handoff, then follow the \`${BUILD_SKILL}\` skill.
+> Before building: read the handoff${HAS_ARTIFACT ? ", open the artifact" : ""}, then follow the \`${BUILD_SKILL}\` skill.
 
 New work that is not listed here gets appended: add an object to the \`UNITS\` array and re-run the
 generator. Nothing unit-sized should exist outside this table.
@@ -181,3 +201,11 @@ ${UNITS.map((u) => `## ${u.title} — \`${u.entry}\` (${u.priority})\n\n\`\`\`\n
 );
 
 console.log(`OK — ${UNITS.length} handoff(s) + INDEX.md + START-PROMPTS.md generated.`);
+
+if (HAS_ARTIFACT) {
+  const missing = UNITS.filter((u) => !hasArtifact(u)).map((u) => `${u.id}${ARTIFACT_EXT}`);
+  if (missing.length) {
+    console.log(`\n${missing.length} ${UNIT_NAME}(s) without an artifact in ${ARTIFACT_DIR}/:`);
+    for (const m of missing) console.log(`  - ${m}`);
+  }
+}

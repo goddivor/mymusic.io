@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — Now playing</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-NowPlaying a { color: #B57BFF; }
+#f-NowPlaying a:hover { color: #C9A0FF; }
+#f-NowPlaying .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-NowPlaying .tint { position: absolute; left: 0; right: 0; top: 0; height: 430px; background: linear-gradient(180deg, #4A5726 0%, #2A3118 42%, #0A0A0F 100%); }
+#f-NowPlaying .body { position: relative; }
+#f-NowPlaying .hdr { display: flex; align-items: center; padding: 40px 14px 0; }
+#f-NowPlaying .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-NowPlaying .cap { flex-grow: 1; text-align: center; font-size: 11.5px; font-weight: 700; letter-spacing: 2.4px; color: #C6CBB4; }
+#f-NowPlaying .cover { width: 253px; height: 253px; margin: 16px auto 0; border-radius: 14px; background: linear-gradient(150deg, #7E9B45, #35431C); box-shadow: 0 18px 40px rgba(0,0,0,0.45); }
+#f-NowPlaying .meta { display: flex; align-items: flex-start; padding: 30px 22px 0; }
+#f-NowPlaying .mt { flex-grow: 1; }
+#f-NowPlaying .ttl { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+#f-NowPlaying .art { font-size: 14.5px; color: #9B9BAC; margin-top: 5px; }
+#f-NowPlaying .track { position: relative; height: 4px; margin: 26px 22px 0; border-radius: 2px; background: rgba(255,255,255,0.18); }
+#f-NowPlaying .fill { position: absolute; left: 0; top: 0; height: 4px; width: 92%; border-radius: 2px; background: #B57BFF; }
+#f-NowPlaying .knob { position: absolute; left: 92%; top: -5px; width: 14px; height: 14px; border-radius: 7px; background: #B57BFF; }
+#f-NowPlaying .times { display: flex; padding: 12px 22px 0; font-size: 12px; color: #9B9BAC; }
+#f-NowPlaying .times .sp { flex-grow: 1; }
+#f-NowPlaying .ctrls { display: flex; align-items: center; justify-content: space-between; padding: 22px 26px 0; }
+#f-NowPlaying .play { width: 78px; height: 78px; border-radius: 39px; background: #B57BFF; display: flex; align-items: center; justify-content: center; }
+#f-NowPlaying .sub { display: flex; align-items: center; padding: 22px 26px 0; }
+#f-NowPlaying .subr { margin-left: auto; display: flex; gap: 26px; }
+#f-NowPlaying .sech { font-size: 20px; font-weight: 800; padding: 30px 20px 6px; letter-spacing: -0.3px; }
+#f-NowPlaying .row { display: flex; align-items: center; padding: 8px 16px; }
+#f-NowPlaying .rart { width: 50px; height: 50px; border-radius: 8px; flex-shrink: 0; }
+#f-NowPlaying .rm { flex-grow: 1; margin-left: 12px; }
+#f-NowPlaying .rt { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#f-NowPlaying .rs { font-size: 12.5px; color: #9B9BAC; margin-top: 3px; }
+  
+
+#f-TrackMenu a { color: #B57BFF; }
+#f-TrackMenu a:hover { color: #C9A0FF; }
+#f-TrackMenu .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-TrackMenu .tint { position: absolute; left: 0; right: 0; top: 0; height: 430px; background: linear-gradient(180deg, #2C3417 0%, #191D0F 42%, #0A0A0F 100%); }
+#f-TrackMenu .hdr { position: relative; display: flex; align-items: center; padding: 40px 14px 0; opacity: 0.4; }
+#f-TrackMenu .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-TrackMenu .cap { flex-grow: 1; text-align: center; font-size: 11.5px; font-weight: 700; letter-spacing: 2.4px; color: #C6CBB4; }
+#f-TrackMenu .cover { position: relative; width: 232px; height: 232px; margin: 18px auto 0; border-radius: 14px; background: linear-gradient(150deg, #4E6129, #202912); opacity: 0.45; }
+#f-TrackMenu .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #16161F; border-radius: 22px 22px 0 0; padding-bottom: 22px; }
+#f-TrackMenu .grab { width: 44px; height: 4px; border-radius: 2px; background: #2E2E3C; margin: 12px auto 0; }
+#f-TrackMenu .st { font-size: 18px; font-weight: 800; padding: 18px 22px 0; }
+#f-TrackMenu .ss { font-size: 13.5px; color: #9B9BAC; padding: 4px 22px 0; }
+#f-TrackMenu .opt { display: flex; align-items: center; gap: 22px; padding: 15px 24px; font-size: 16.5px; font-weight: 500; }
+#f-TrackMenu .cancel { margin: 10px 18px 0; height: 52px; border-radius: 26px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
+  
+
+#f-Connect a { color: #B57BFF; }
+#f-Connect a:hover { color: #C9A0FF; }
+#f-Connect .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Connect .peek { opacity: 0.32; padding-top: 42px; }
+#f-Connect .hdr { display: flex; align-items: center; gap: 12px; padding: 0 16px 4px; }
+#f-Connect .av { width: 42px; height: 42px; border-radius: 21px; background: #1E1E2A; }
+#f-Connect .h1 { font-size: 26px; font-weight: 800; }
+#f-Connect .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 16px 12px 0; }
+#f-Connect .tile { height: 48px; background: #16161F; border-radius: 10px; }
+#f-Connect .rail { display: flex; gap: 14px; padding: 26px 16px 0; }
+#f-Connect .cart { width: 148px; height: 148px; border-radius: 10px; flex-shrink: 0; }
+#f-Connect .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #131320; border-radius: 22px 22px 0 0; padding-bottom: 34px; }
+#f-Connect .grab { width: 44px; height: 4px; border-radius: 2px; background: #2E2E3C; margin: 12px auto 0; }
+#f-Connect .st { font-size: 22px; font-weight: 800; padding: 20px 22px 0; letter-spacing: -0.3px; }
+#f-Connect .opt { display: flex; align-items: center; gap: 20px; margin: 18px 16px 0; padding: 16px 18px; border-radius: 14px; }
+#f-Connect .opt.on { background: #1B1B2A; }
+#f-Connect .ot { font-size: 17px; font-weight: 700; }
+#f-Connect .os { font-size: 13px; color: #9B9BAC; margin-top: 4px; }
+#f-Connect .dot { margin-left: auto; width: 18px; height: 18px; border-radius: 9px; background: #B57BFF; flex-shrink: 0; }
+#f-Connect .hint { font-size: 13px; color: #63636F; line-height: 1.5; padding: 22px 22px 0; }
+  
+</style>
+</head>
+<body>
+<h1>Now playing</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Default</figcaption>
+    <div id="f-NowPlaying" class="mk-hold"><div class="scr">
+  <div class="tint"></div>
+  <div class="body">
+
+    <div class="hdr">
+      <div class="ico">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5 12 16l6.5-6.5"/></svg>
+      </div>
+      <div class="cap">NOW PLAYING</div>
+      <div class="ico">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.6" stroke-linejoin="round"><path d="M8.6 3.5 5 5.2v4l2.4-.8V20h9.2V8.4l2.4.8v-4l-3.6-1.7a3.4 3.4 0 0 1-6.8 0z"/></svg>
+      </div>
+      <div class="ico">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h9M17 17h3"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="17" r="2"/></svg>
+      </div>
+      <div class="ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#F5F5F8"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+      </div>
+    </div>
+
+    <div class="cover"></div>
+
+    <div class="meta">
+      <div class="mt">
+        <div class="ttl">Feerix — UwU Phonky</div>
+        <div class="art">Feerix</div>
+      </div>
+      <div class="ico" style="margin-top:2px">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+      </div>
+    </div>
+
+    <div class="track"><div class="fill"></div><div class="knob"></div></div>
+    <div class="times"><div>2:16</div><div class="sp"></div><div>2:24</div></div>
+
+    <div class="ctrls">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 18h1.4c1.3 0 2.5-.6 3.3-1.7l6-8.6c.8-1.1 2-1.7 3.3-1.7h4"/><path d="m18 3 3.5 3-3.5 3"/><path d="M2.5 6h1.9c1.4 0 2.8.8 3.5 2.1"/><path d="M20.5 18h-4.4c-1.3 0-2.5-.6-3.3-1.7l-.5-.8"/><path d="m18 15 3.5 3-3.5 3"/></svg>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><path d="M18 5.5v13l-9-6.5z"/><path d="M6 5.5v13"/></svg>
+      <div class="play">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#14101C" stroke-width="1.9" stroke-linejoin="round"><path d="M8.5 5.5v13l10.5-6.5z"/></svg>
+      </div>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><path d="M6 5.5v13l9-6.5z"/><path d="M18 5.5v13"/></svg>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 2.5 3.5 3.5-3.5 3.5"/><path d="M3.5 11.5v-1.5a4 4 0 0 1 4-4H20"/><path d="m7.5 21.5-3.5-3.5 3.5-3.5"/><path d="M20.5 12.5v1.5a4 4 0 0 1-4 4H4"/></svg>
+    </div>
+
+    <div class="sub">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M3 8V6.2A2.2 2.2 0 0 1 5.2 4h13.6A2.2 2.2 0 0 1 21 6.2v11.6a2.2 2.2 0 0 1-2.2 2.2H12"/><path d="M3 12.4A7.6 7.6 0 0 1 10.6 20"/><path d="M3 16.6A3.4 3.4 0 0 1 6.4 20"/><circle cx="3.4" cy="19.7" r="0.95" stroke="none"/></svg>
+      <div class="subr">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M7 17h10"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><circle cx="18" cy="5.5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><path d="M8.3 10.7 15.7 6.8M8.3 13.3l7.4 3.9"/></svg>
+      </div>
+    </div>
+
+    <div class="sech">More like this</div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(160deg, #6B5B4A, #241C16)"></div>
+      <div class="rm"><div class="rt">Ravyn Lenae — Love Me Not</div><div class="rs">Minimal Sounds</div></div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(160deg, #B4231F, #3A0A10)"></div>
+      <div class="rm"><div class="rt">SEM CONTROLE</div><div class="rs">Nightfxrce — Topic</div></div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+    </div>
+
+  </div>
+</div></div>
+  </figure>
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Overflow menu</figcaption>
+    <div id="f-TrackMenu" class="mk-hold"><div class="scr">
+  <div class="tint"></div>
+
+  <div class="hdr">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5 12 16l6.5-6.5"/></svg></div>
+    <div class="cap">NOW PLAYING</div>
+    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="#F5F5F8"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></div>
+  </div>
+  <div class="cover"></div>
+
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="st">Feerix — UwU Phonky</div>
+    <div class="ss">Feerix</div>
+
+    <div style="height:14px"></div>
+
+    <div class="opt">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Add to a playlist
+    </div>
+    <div class="opt">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round"><path d="M3 8h11M3 12h7M3 16h11"/><path d="M15 6.4 21 12l-6 5.6z"/></svg>
+      Playback speed
+    </div>
+    <div class="opt">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><circle cx="18" cy="5.5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><path d="M8.3 10.7 15.7 6.8M8.3 13.3l7.4 3.9"/></svg>
+      Share
+    </div>
+    <div class="opt">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.6" y="13.6" width="4.4" height="6.4" rx="2.2"/><rect x="17" y="13.6" width="4.4" height="6.4" rx="2.2"/></svg>
+      Earphones
+    </div>
+    <div class="opt">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16"/><path d="M9.5 6.5V4.2h5v2.3"/><path d="M6.4 6.5 7.3 20h9.4l.9-13.5"/></svg>
+      Remove from queue
+    </div>
+    <div class="opt">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><path d="M16.6 3.9a2.1 2.1 0 0 1 3 3L9 17.5l-4 1 1-4z"/></svg>
+      Edit song info
+    </div>
+
+    <div class="cancel">Cancel</div>
+  </div>
+
+</div></div>
+  </figure>
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Output picker</figcaption>
+    <div id="f-Connect" class="mk-hold"><div class="scr">
+
+  <div class="peek">
+    <div class="hdr"><div class="av"></div><div class="h1">Home</div></div>
+    <div class="grid">
+      <div class="tile"></div><div class="tile"></div>
+      <div class="tile"></div><div class="tile"></div>
+      <div class="tile"></div>
+    </div>
+    <div class="rail">
+      <div class="cart" style="background: linear-gradient(160deg, #6B5B4A, #241C16)"></div>
+      <div class="cart" style="background: linear-gradient(160deg, #B4231F, #3A0A10)"></div>
+      <div class="cart" style="background: linear-gradient(160deg, #4A4A52, #101014)"></div>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="st">Connect</div>
+
+    <div class="opt">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7"><rect x="6.5" y="2.6" width="11" height="18.8" rx="2.6"/><path d="M10.6 18.6h2.8"/></svg>
+      <div><div class="ot">This phone</div><div class="os">Audio plays on the phone</div></div>
+    </div>
+
+    <div class="opt on">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7"><rect x="2.6" y="4.4" width="18.8" height="12.6" rx="2.2"/><path d="M8.6 21h6.8M12 17v4"/></svg>
+      <div><div class="ot">Web player</div><div class="os">http://192.168.0.100:8080</div></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="hint">PIN: 183003. Open the address above on your computer to control playback.</div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>

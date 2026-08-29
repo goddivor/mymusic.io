@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — Settings</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-Settings a { color: #B57BFF; }
+#f-Settings a:hover { color: #C9A0FF; }
+#f-Settings .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Settings .hdr { display: flex; align-items: center; padding: 40px 14px 0; }
+#f-Settings .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-Settings .cap { flex-grow: 1; text-align: center; font-size: 21px; font-weight: 800; letter-spacing: -0.3px; }
+#f-Settings .lab { font-size: 11.5px; font-weight: 700; letter-spacing: 2.2px; color: #63636F; padding: 24px 20px 10px; }
+#f-Settings .grp { margin: 0 16px; background: #16161F; border-radius: 14px; overflow: hidden; }
+#f-Settings .row { display: flex; align-items: center; padding: 13px 14px; }
+#f-Settings .tile { width: 44px; height: 44px; border-radius: 12px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#f-Settings .rm { margin-left: 14px; }
+#f-Settings .rt { font-size: 16px; font-weight: 700; }
+#f-Settings .rs { font-size: 13px; color: #9B9BAC; margin-top: 3px; }
+#f-Settings .sepwrap { padding-left: 72px; }
+#f-Settings .sep { height: 1px; background: #23232F; }
+  
+</style>
+</head>
+<body>
+<h1>Settings</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">General → Data</figcaption>
+    <div id="f-Settings" class="mk-hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></div>
+    <div class="cap">Settings</div>
+    <div class="ico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg></div>
+  </div>
+
+  <div class="lab">GENERAL</div>
+  <div class="grp">
+    <div class="row">
+      <div class="tile"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h8M7 5v2c0 3-1.6 5.6-4 7"/><path d="M5 10.5c1.6 2.4 3.8 3.8 6 4.5"/><path d="M13 20l3.6-9 3.6 9M14.6 17.2h5.2"/></svg></div>
+      <div class="rm"><div class="rt">Language</div><div class="rs">System</div></div>
+    </div>
+    <div class="sepwrap"><div class="sep"></div></div>
+    <div class="row">
+      <div class="tile"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7" stroke-linejoin="round"><path d="M20 13.6A8 8 0 0 1 10.4 4a8.4 8.4 0 1 0 9.6 9.6z"/></svg></div>
+      <div class="rm"><div class="rt">Theme</div><div class="rs">System</div></div>
+    </div>
+    <div class="sepwrap"><div class="sep"></div></div>
+    <div class="row">
+      <div class="tile"><span style="color:#B57BFF;font-size:17px;font-weight:700">Aa</span></div>
+      <div class="rm"><div class="rt">Font</div><div class="rs">System</div></div>
+    </div>
+  </div>
+
+  <div class="lab">PLAYBACK</div>
+  <div class="grp">
+    <div class="row">
+      <div class="tile"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7"><circle cx="7" cy="17" r="2.6"/><circle cx="17.5" cy="15" r="2.6"/><path d="M9.6 17V7.2l10.5-2v9.8"/></svg></div>
+      <div class="rm"><div class="rt">Audio quality</div><div class="rs">High-quality audio-only, auto fallback.</div></div>
+    </div>
+  </div>
+
+  <div class="lab">DOWNLOADS</div>
+  <div class="grp">
+    <div class="row">
+      <div class="tile"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg></div>
+      <div class="rm"><div class="rt">Simultaneous downloads</div><div class="rs">2</div></div>
+    </div>
+    <div class="sepwrap"><div class="sep"></div></div>
+    <div class="row">
+      <div class="tile"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h13M4 12h9M4 17h6"/><circle cx="17" cy="17" r="2.4"/><path d="M19.4 17V10"/></svg></div>
+      <div class="rm"><div class="rt">Playlist download limit</div><div class="rs">50</div></div>
+    </div>
+  </div>
+
+  <div class="lab">DATA</div>
+  <div class="grp">
+    <div class="row">
+      <div class="tile"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h3.2l2 2.4h7.8a2 2 0 0 1 2 2v8.6a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></div>
+      <div class="rm"><div class="rt">Backup folder</div><div class="rs">Not set</div></div>
+    </div>
+    <div class="sepwrap"><div class="sep"></div></div>
+    <div class="row">
+      <div class="tile"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4h-4"/></svg></div>
+      <div class="rm"><div class="rt">Automatic backup</div><div class="rs">On</div></div>
+    </div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>

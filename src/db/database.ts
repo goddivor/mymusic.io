@@ -39,6 +39,10 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS play_counts (track_id TEXT PRIMARY KEY, count INTEGER)`,
   `CREATE TABLE IF NOT EXISTS recents (track_id TEXT PRIMARY KEY, position INTEGER)`,
   `CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT)`,
+  `CREATE TABLE IF NOT EXISTS identifications (
+    id TEXT PRIMARY KEY, title TEXT, artist TEXT, album TEXT, artwork TEXT,
+    at INTEGER, track_id TEXT
+  )`,
 ];
 
 function rowToTrack(r: any): AppTrack {
@@ -238,4 +242,43 @@ export function loadKv(key: string): string | null {
   const row = conn().executeSync('SELECT value FROM kv WHERE key = ?', [key])
     .rows[0] as { value?: string } | undefined;
   return row?.value ?? null;
+}
+
+export type Identification = {
+  id: string;
+  title: string;
+  artist: string;
+  album?: string;
+  artwork?: string;
+  at: number;
+  trackId?: string;
+};
+
+export function loadIdentifications(): Identification[] {
+  const rows = conn().executeSync('SELECT * FROM identifications ORDER BY at DESC').rows as any[];
+  return rows.map(r => ({
+    id: r.id,
+    title: r.title,
+    artist: r.artist,
+    album: r.album || undefined,
+    artwork: r.artwork || undefined,
+    at: r.at,
+    trackId: r.track_id || undefined,
+  }));
+}
+
+export function saveIdentification(i: Identification): void {
+  conn().executeSync(
+    `INSERT OR REPLACE INTO identifications (id, title, artist, album, artwork, at, track_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [i.id, i.title, i.artist, i.album ?? null, i.artwork ?? null, i.at, i.trackId ?? null],
+  );
+}
+
+export function linkIdentification(id: string, trackId: string): void {
+  conn().executeSync('UPDATE identifications SET track_id = ? WHERE id = ?', [trackId, id]);
+}
+
+export function deleteIdentification(id: string): void {
+  conn().executeSync('DELETE FROM identifications WHERE id = ?', [id]);
 }

@@ -28,8 +28,17 @@ export default function WebRemoteSync() {
   const { playing } = useIsPlaying();
   const lib = useLibrary();
   const running = useRef(false);
+  const lastOutput = useRef(getOutput());
+  const trackId = track ? String(track.id) : null;
   const poolRef = useRef(lib.youtubeTracks.concat(lib.localTracks));
   poolRef.current = lib.youtubeTracks.concat(lib.localTracks);
+
+  // A position belongs to the track it was measured on. Without this reset the
+  // browser's last report survives a skip and is applied to the next track,
+  // which then starts past its own end and skips again.
+  useEffect(() => {
+    setWebPosition(0);
+  }, [trackId]);
 
   useEffect(() => {
     let alive = true;
@@ -119,7 +128,10 @@ export default function WebRemoteSync() {
 
     const timer = setInterval(tick, TICK_MS);
     const unsub = subscribeOutput(() => {
-      if (getOutput() === 'web') {
+      const next = getOutput();
+      if (next === lastOutput.current) return;
+      lastOutput.current = next;
+      if (next === 'web') {
         // Hand the exact position over through the seek channel: it carries a
         // nonce, so the browser applies it once instead of racing its own
         // position reports back to the phone.

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — Library</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-Library a { color: #B57BFF; }
+#f-Library a:hover { color: #C9A0FF; }
+#f-Library .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Library .hdr { display: flex; align-items: center; gap: 12px; padding: 42px 16px 4px; }
+#f-Library .av { width: 42px; height: 42px; border-radius: 21px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; }
+#f-Library .h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.4px; }
+#f-Library .sp { flex-grow: 1; }
+#f-Library .ico { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; }
+#f-Library .chips { display: flex; gap: 7px; padding: 16px 16px 4px; }
+#f-Library .chip { padding: 6px 13px; border-radius: 14px; background: #16161F; font-size: 12px; font-weight: 600; color: #9B9BAC; white-space: nowrap; }
+#f-Library .chip.on { background: #B57BFF; color: #14101C; }
+#f-Library .rows { padding-top: 10px; }
+#f-Library .row { display: flex; align-items: center; padding: 10px 16px; }
+#f-Library .rart { width: 56px; height: 56px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+#f-Library .rm { flex-grow: 1; margin-left: 14px; }
+#f-Library .rt { font-size: 15.5px; font-weight: 700; }
+#f-Library .rs { font-size: 12.5px; color: #9B9BAC; margin-top: 3px; }
+#f-Library .pb { position: absolute; left: 8px; right: 8px; bottom: 62px; border-radius: 12px; background: #3E4A2A; overflow: hidden; }
+#f-Library .pbr { display: flex; align-items: center; padding: 8px; }
+#f-Library .pba { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; background: linear-gradient(140deg, #5C7A2E, #2E4416); }
+#f-Library .pbm { flex-grow: 1; margin: 0 12px; overflow: hidden; }
+#f-Library .pbt { font-size: 14px; font-weight: 700; }
+#f-Library .pbs { font-size: 12px; color: #C8CBB8; margin-top: 2px; }
+#f-Library .pbc { display: flex; gap: 8px; }
+#f-Library .pbtr { height: 3px; margin: 0 10px 7px; border-radius: 2px; background: rgba(255,255,255,0.22); }
+#f-Library .pbfl { height: 3px; border-radius: 2px; background: #B57BFF; width: 82%; }
+#f-Library .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 62px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #0A0A0F; border-top: 1px solid #23232F; }
+#f-Library .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: #63636F; }
+#f-Library .tab.on { color: #B57BFF; }
+  
+</style>
+</head>
+<body>
+<h1>Library</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">All filter</figcaption>
+    <div id="f-Library" class="mk-hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="av">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+    </div>
+    <div class="h1">Library</div>
+    <div class="sp"></div>
+    <div class="ico">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+    </div>
+    <div class="ico">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+  </div>
+
+  <div class="chips">
+    <div class="chip on">All</div>
+    <div class="chip">Albums</div>
+    <div class="chip">Playlists</div>
+    <div class="chip">Youtube</div>
+    <div class="chip">Local</div>
+  </div>
+
+  <div class="rows">
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(135deg, #8B5CF6, #EC4899)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+      </div>
+      <div class="rm"><div class="rt">Liked tracks</div><div class="rs">Auto playlist · 9 tracks</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(135deg, #FF512F, #DD2476)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M9.2 8.4v7.2l6.2-3.6z"/></svg>
+      </div>
+      <div class="rm"><div class="rt">Youtube</div><div class="rs">Downloads · 107 tracks</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(135deg, #0EA5E9, #6366F1)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="7" cy="17" r="2.6"/><circle cx="17.5" cy="15" r="2.6"/><path d="M9.6 17V7.2l10.5-2v9.8"/></svg>
+      </div>
+      <div class="rm"><div class="rt">My music</div><div class="rs">Local files · 74 tracks</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(135deg, #22D3EE, #6366F1)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 7h13M4 12h9M4 17h6"/><circle cx="17" cy="17" r="2.4"/><path d="M19.4 17V10"/></svg>
+      </div>
+      <div class="rm"><div class="rt">Montagem / Funk / Phonk</div><div class="rs">Playlist · 100 tracks</div></div>
+      <div class="ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="pb">
+    <div class="pbr">
+      <div class="pba"></div>
+      <div class="pbm"><div class="pbt">Feerix — UwU Phonky</div><div class="pbs">Feerix</div></div>
+      <div class="pbc">
+        <div class="ico" style="width:32px;height:32px">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M3 8V6.2A2.2 2.2 0 0 1 5.2 4h13.6A2.2 2.2 0 0 1 21 6.2v11.6a2.2 2.2 0 0 1-2.2 2.2H12"/><path d="M3 12.4A7.6 7.6 0 0 1 10.6 20"/><path d="M3 16.6A3.4 3.4 0 0 1 6.4 20"/><circle cx="3.4" cy="19.7" r="0.95" stroke="none"/></svg>
+        </div>
+        <div class="ico" style="width:32px;height:32px">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+        </div>
+        <div class="ico" style="width:32px;height:32px">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="pbtr"><div class="pbfl"></div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>
+      Home
+    </div>
+    <div class="tab on">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="5" height="16" rx="1.2"/><rect x="10" y="4" width="5" height="16" rx="1.2"/><path d="M17.4 5.4l3.2 15.2"/></svg>
+      Library
+    </div>
+    <div class="tab">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10.2 9.6v4.8l4.3-2.4z" fill="currentColor" stroke="none"/></svg>
+      YouTube
+    </div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>
