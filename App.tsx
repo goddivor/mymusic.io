@@ -37,6 +37,7 @@ import LibraryScreen from './src/screens/LibraryScreen';
 import NowPlayingScreen from './src/screens/NowPlayingScreen';
 import QueueScreen from './src/screens/QueueScreen';
 import UpdateSheet from './src/components/UpdateSheet';
+import IdentifyScreen from './src/screens/IdentifyScreen';
 import RecentsScreen from './src/screens/RecentsScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -70,6 +71,8 @@ function AppInner(): React.JSX.Element {
   const [showDrawer, setShowDrawer] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showRecents, setShowRecents] = useState(false);
+  const [showIdentify, setShowIdentify] = useState(false);
+  const [ytSeed, setYtSeed] = useState<string | undefined>(undefined);
   const [showSettings, setShowSettings] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
@@ -132,6 +135,7 @@ function AppInner(): React.JSX.Element {
               onAddToPlaylist={setAddTarget}
               onOpenProfile={() => setShowDrawer(true)}
               onOpenSearch={() => setShowSearch(true)}
+              onOpenIdentify={() => setShowIdentify(true)}
             />
           </View>
           <View style={[styles.screen, tab !== 'library' && styles.hidden]}>
@@ -142,7 +146,7 @@ function AppInner(): React.JSX.Element {
             />
           </View>
           <View style={[styles.screen, tab !== 'youtube' && styles.hidden]}>
-            <YoutubeScreen active={tab === 'youtube'} />
+            <YoutubeScreen active={tab === 'youtube'} seed={ytSeed} />
           </View>
 
           <PlayerBar onPress={() => setShowNowPlaying(true)} registerZone />
@@ -188,6 +192,19 @@ function AppInner(): React.JSX.Element {
         <SearchScreen visible={showSearch} onClose={() => setShowSearch(false)} />
         <UpdateSheet info={updateInfo} onClose={() => setUpdateInfo(null)} />
         <RecentsScreen visible={showRecents} onClose={() => setShowRecents(false)} />
+        <IdentifyScreen
+          visible={showIdentify}
+          onClose={() => setShowIdentify(false)}
+          onSettings={() => {
+            setShowIdentify(false);
+            setShowSettings(true);
+          }}
+          onSearch={query => {
+            setShowIdentify(false);
+            setYtSeed(query || ' ');
+            setTab('youtube');
+          }}
+        />
         <Modal
           statusBarTranslucent
           visible={showSettings}

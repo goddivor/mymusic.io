@@ -62,8 +62,8 @@ const UNITS = [
     pieces: { data: ["playCounts from the library store"] }, states: ["top tracks/artists", "empty"], notes: ["play counts already tracked in SQLite; drawer entry shows 'coming soon'"] },
   { id: "account-connect", title: "Account connect", entry: "modal from drawer", path: "src/screens/AccountScreen.tsx", container: "App.tsx", priority: "P2", status: "⬜ todo",
     pieces: {}, states: ["signed out", "signed in"], notes: ["scope undecided — no backend yet; confirm intent before building"] },
-  { id: "identify", title: "Identify", entry: "modal from home header", path: "src/screens/IdentifyScreen.tsx", container: "App.tsx", priority: "P1", status: "⬜ todo",
-    pieces: { UI: ["TrackArt", "AddToPlaylistSheet"], lib: ["recognise (audio capture + lookup)", "db: identifications table"], native: ["AudioRecorder module"] }, states: ["listening", "match", "no match", "history", "permission denied", "offline"], notes: ["A match feeds the existing YouTube search → download pipeline", "Every identification is kept, so a song caught offline can be fetched later"] },
+  { id: "identify", title: "Identify", entry: "modal from home header", path: "src/screens/IdentifyScreen.tsx", container: "App.tsx", priority: "P1", status: "✅ done",
+    pieces: { UI: ["AddToPlaylistSheet"], lib: ["recognise (capture + AudD lookup)", "db: identifications table"], native: ["AudioRecorder + IdentifyService (foreground, microphone type)"] }, states: ["listening", "match", "no match", "no sound", "history", "permission denied", "offline", "key missing"], notes: ["A match feeds the existing YouTube search → download pipeline", "One microphone stream stays open for the whole session: reopening it in bursts made the audio policy duck whatever else was playing", "The trigger needs 700ms of sustained level, so a chime does not burn the attempt"] },
   { id: "player-styles", title: "Player styles", entry: "modal from drawer", path: "src/screens/PlayerStylesScreen.tsx", container: "App.tsx", priority: "P2", status: "⬜ todo",
     pieces: {}, states: ["style picker", "preview"], notes: ["cosmetic variants for the now-playing screen"] },
 ];

@@ -16,6 +16,7 @@ export type AppSettings = {
   restoreOffered: boolean;
   maxParallelDownloads: number;
   maxCollectionDownloads: number;
+  auddToken: string | null;
 };
 
 const KEY = 'app_settings';
@@ -29,6 +30,7 @@ let current: AppSettings = {
   restoreOffered: false,
   maxParallelDownloads: 2,
   maxCollectionDownloads: 50,
+  auddToken: null,
 };
 
 /**

@@ -6,10 +6,9 @@
 
 ## Now
 
-v1.8.0 releasing — the app now has its own identity: adaptive launcher icon, circular splash screen
-and a monochrome status icon, plus an OLED black theme and an Inter/Roboto font picker. The now
-playing screen gained a player-style header and a paging artwork carousel, and the media
-notification is tinted with the cover colour.
+v1.9.0 releasing — Identify: hold the phone to whatever is playing, in the room or in another app on
+the phone, and the match feeds straight into the download pipeline. Every identification is kept so a
+song caught offline can be fetched later. Recognition runs on AudD with a user-supplied key.
 
 ## Shape
 
@@ -42,12 +41,14 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] branding — adaptive launcher icon, circular splash screen (AndroidX backport), monochrome status icon, all derived from branding/*.svg.
 - [x] appearance — OLED black scheme and a bundled Inter/Roboto font picker, both applied live at the style funnel.
 - [x] now playing — player-style/equalizer/overflow header actions, label-free footer, paging artwork carousel, cover-tinted notification.
+- [x] identify — one microphone session that survives leaving the app (foreground service), triggers on sustained sound, looks up on AudD, tints from the cover, downloads through the YouTube pipeline, and keeps a history.
 
 ## Next
 
 1. Confirm on device: notification tint on a track whose artwork loads, and the launcher icon after MIUI clears its cache.
 2. Implement the now playing overflow actions — they are placeholders today.
-3. Listening stats screen — play counts are already tracked (unit `listening-stats`).
+3. Identify: a floating bubble instead of the notification, if the system-overlay permission proves workable on MIUI.
+4. Listening stats screen — play counts are already tracked (unit `listening-stats`).
 3. Optional: player styles / account connect (both `⬜ todo`, scope to confirm).
 
 ## Watch
