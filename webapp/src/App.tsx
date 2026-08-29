@@ -390,11 +390,13 @@ export default function App() {
     if (!onWeb) return;
     const timer = setInterval(() => {
       const a = audioRef.current;
-      if (a && !a.paused) sendCommand('webpos', String(a.currentTime));
+      if (!a || a.paused || !phoneTrackId || !token) return;
+      if (a.src !== trackUrl(phoneTrackId, token)) return;
+      sendCommand('webpos', String(a.currentTime));
     }, 1000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onWeb, token]);
+  }, [onWeb, token, phoneTrackId]);
 
 
   if (authNeeded) return <Pairing onPair={pair} />;
