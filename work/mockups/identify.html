@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — Identify</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-Identify a { color: #B57BFF; }
+#f-Identify a:hover { color: #C9A0FF; }
+#f-Identify .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Identify .glow { position: absolute; left: 50%; top: 232px; width: 620px; height: 620px; margin-left: -310px; border-radius: 310px;
+            background: radial-gradient(circle, rgba(181,123,255,0.22) 0%, rgba(255,111,181,0.09) 42%, rgba(10,10,15,0) 68%); }
+#f-Identify .hdr { position: relative; display: flex; align-items: center; padding: 40px 14px 0; }
+#f-Identify .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-Identify .cap { flex-grow: 1; text-align: center; font-size: 11.5px; font-weight: 700; letter-spacing: 2.4px; color: #9B9BAC; }
+#f-Identify .stage { position: relative; height: 386px; display: flex; align-items: center; justify-content: center; }
+#f-Identify .ring { position: absolute; border-radius: 50%; border: 1.4px solid rgba(181,123,255,0.4); }
+#f-Identify .r1 { width: 208px; height: 208px; }
+#f-Identify .r2 { width: 268px; height: 268px; border-color: rgba(181,123,255,0.22); }
+#f-Identify .r3 { width: 330px; height: 330px; border-color: rgba(255,111,181,0.13); }
+#f-Identify .target { position: relative; width: 152px; height: 152px; border-radius: 76px;
+              background: linear-gradient(150deg, #B57BFF, #FF6FB5);
+              display: flex; align-items: center; justify-content: center;
+              box-shadow: 0 16px 46px rgba(181,123,255,0.34); }
+#f-Identify .bars { display: flex; align-items: flex-end; gap: 7px; height: 54px; }
+#f-Identify .bar { width: 7px; border-radius: 4px; background: #14101C; }
+#f-Identify .txt { position: relative; text-align: center; padding: 6px 40px 0; }
+#f-Identify .t1 { font-size: 23px; font-weight: 800; letter-spacing: -0.4px; }
+#f-Identify .t2 { font-size: 14px; color: #9B9BAC; margin-top: 12px; line-height: 1.55; }
+#f-Identify .foot { position: absolute; left: 0; right: 0; bottom: 46px; display: flex; justify-content: center; }
+#f-Identify .cancel { min-width: 148px; height: 50px; border-radius: 25px; background: #16161F; border: 1px solid #23232F;
+              display: flex; align-items: center; justify-content: center; font-size: 15.5px; font-weight: 700; }
+  
+
+#f-IdentifyMatch a { color: #B57BFF; }
+#f-IdentifyMatch a:hover { color: #C9A0FF; }
+#f-IdentifyMatch .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-IdentifyMatch .tint { position: absolute; left: 0; right: 0; top: 0; height: 470px; background: linear-gradient(180deg, #7A2E52 0%, #3A1830 44%, #0A0A0F 100%); }
+#f-IdentifyMatch .body { position: relative; }
+#f-IdentifyMatch .hdr { display: flex; align-items: center; padding: 40px 14px 0; }
+#f-IdentifyMatch .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-IdentifyMatch .cap { flex-grow: 1; text-align: center; font-size: 11.5px; font-weight: 700; letter-spacing: 2.4px; color: #E3C6D6; }
+#f-IdentifyMatch .found { text-align: center; font-size: 12.5px; font-weight: 700; letter-spacing: 1.6px; color: #F0B9D4; padding-top: 14px; }
+#f-IdentifyMatch .cover { width: 214px; height: 214px; margin: 16px auto 0; border-radius: 14px;
+             background: linear-gradient(150deg, #D94E8C, #4A1030); box-shadow: 0 18px 44px rgba(0,0,0,0.5); }
+#f-IdentifyMatch .ttl { text-align: center; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; padding: 26px 26px 0; line-height: 1.25; }
+#f-IdentifyMatch .art { text-align: center; font-size: 15px; color: #C9AEBD; margin-top: 8px; }
+#f-IdentifyMatch .meta { text-align: center; font-size: 12.5px; color: #9B9BAC; margin-top: 10px; }
+#f-IdentifyMatch .prim { display: flex; align-items: center; justify-content: center; gap: 11px; height: 54px; margin: 30px 20px 0;
+            border-radius: 27px; background: #B57BFF; color: #14101C; font-size: 16.5px; font-weight: 800; }
+#f-IdentifyMatch .secs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 20px 0; }
+#f-IdentifyMatch .sec { display: flex; align-items: center; justify-content: center; gap: 9px; height: 48px; border-radius: 24px;
+           background: #16161F; border: 1px solid #23232F; font-size: 14px; font-weight: 600; }
+#f-IdentifyMatch .alt { text-align: center; font-size: 13.5px; color: #9B9BAC; margin-top: 26px; }
+#f-IdentifyMatch .alt b { color: #B57BFF; font-weight: 600; }
+  
+
+#f-IdentifyNone a { color: #B57BFF; }
+#f-IdentifyNone a:hover { color: #C9A0FF; }
+#f-IdentifyNone .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-IdentifyNone .hdr { display: flex; align-items: center; padding: 40px 14px 0; }
+#f-IdentifyNone .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-IdentifyNone .cap { flex-grow: 1; text-align: center; font-size: 11.5px; font-weight: 700; letter-spacing: 2.4px; color: #9B9BAC; }
+#f-IdentifyNone .stage { height: 386px; display: flex; align-items: center; justify-content: center; }
+#f-IdentifyNone .target { width: 152px; height: 152px; border-radius: 76px; background: #16161F; border: 1px solid #23232F;
+              display: flex; align-items: center; justify-content: center; }
+#f-IdentifyNone .txt { text-align: center; padding: 6px 44px 0; }
+#f-IdentifyNone .t1 { font-size: 23px; font-weight: 800; letter-spacing: -0.4px; }
+#f-IdentifyNone .t2 { font-size: 14px; color: #9B9BAC; margin-top: 12px; line-height: 1.55; }
+#f-IdentifyNone .foot { position: absolute; left: 20px; right: 20px; bottom: 46px; display: grid; gap: 12px; }
+#f-IdentifyNone .prim { display: flex; align-items: center; justify-content: center; gap: 11px; height: 54px; border-radius: 27px;
+            background: #B57BFF; color: #14101C; font-size: 16.5px; font-weight: 800; }
+#f-IdentifyNone .sec { display: flex; align-items: center; justify-content: center; gap: 10px; height: 50px; border-radius: 25px;
+           background: #16161F; border: 1px solid #23232F; font-size: 15px; font-weight: 600; }
+  
+
+#f-IdentifyHistory a { color: #B57BFF; }
+#f-IdentifyHistory a:hover { color: #C9A0FF; }
+#f-IdentifyHistory .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-IdentifyHistory .hdr { display: flex; align-items: center; gap: 8px; padding: 40px 14px 0; }
+#f-IdentifyHistory .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-IdentifyHistory .cap { font-size: 21px; font-weight: 800; letter-spacing: -0.3px; }
+#f-IdentifyHistory .lab { font-size: 11.5px; font-weight: 700; letter-spacing: 2.2px; color: #63636F; padding: 22px 16px 8px; }
+#f-IdentifyHistory .row { display: flex; align-items: center; padding: 8px 16px; }
+#f-IdentifyHistory .rart { width: 50px; height: 50px; border-radius: 8px; flex-shrink: 0; }
+#f-IdentifyHistory .rm { flex-grow: 1; margin-left: 12px; overflow: hidden; }
+#f-IdentifyHistory .rt { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#f-IdentifyHistory .rs { font-size: 12.5px; color: #9B9BAC; margin-top: 3px; }
+#f-IdentifyHistory .act { width: 36px; height: 36px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#f-IdentifyHistory .act.todo { border: 1.5px solid #3A3A46; }
+#f-IdentifyHistory .act.done { background: rgba(181,123,255,0.14); }
+#f-IdentifyHistory .empty { text-align: center; font-size: 13.5px; color: #63636F; padding: 40px 40px 0; line-height: 1.6; }
+  
+</style>
+</head>
+<body>
+<h1>Identify</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Listening</figcaption>
+    <div id="f-Identify" class="mk-hold"><div class="scr">
+  <div class="glow"></div>
+
+  <div class="hdr">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5 12 16l6.5-6.5"/></svg></div>
+    <div class="cap">IDENTIFY</div>
+    <div class="ico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.2 1.9"/></svg></div>
+  </div>
+
+  <div class="stage">
+    <div class="ring r3"></div>
+    <div class="ring r2"></div>
+    <div class="ring r1"></div>
+    <div class="target">
+      <div class="bars">
+        <div class="bar" style="height: 22px"></div>
+        <div class="bar" style="height: 40px"></div>
+        <div class="bar" style="height: 54px"></div>
+        <div class="bar" style="height: 33px"></div>
+        <div class="bar" style="height: 46px"></div>
+        <div class="bar" style="height: 18px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="txt">
+    <div class="t1">Listening…</div>
+    <div class="t2">Hold your phone near the music. This takes about ten seconds.</div>
+  </div>
+
+  <div class="foot"><div class="cancel">Cancel</div></div>
+
+</div></div>
+  </figure>
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Match</figcaption>
+    <div id="f-IdentifyMatch" class="mk-hold"><div class="scr">
+  <div class="tint"></div>
+  <div class="body">
+
+    <div class="hdr">
+      <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5 12 16l6.5-6.5"/></svg></div>
+      <div class="cap">IDENTIFY</div>
+      <div class="ico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.2 1.9"/></svg></div>
+    </div>
+
+    <div class="found">FOUND IT</div>
+    <div class="cover"></div>
+
+    <div class="ttl">Nuit Blanche</div>
+    <div class="art">Sofiane Pamart</div>
+    <div class="meta">Letter · 2023 · 3:41</div>
+
+    <div class="prim">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#14101C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+      Download
+    </div>
+
+    <div class="secs">
+      <div class="sec">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Add to playlist
+      </div>
+      <div class="sec">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10.2 9.6v4.8l4.3-2.4z" fill="#F5F5F8" stroke="none"/></svg>
+        On YouTube
+      </div>
+    </div>
+
+    <div class="alt">Not the right song? <b>Search manually</b></div>
+
+  </div>
+</div></div>
+  </figure>
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">No match</figcaption>
+    <div id="f-IdentifyNone" class="mk-hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5 12 16l6.5-6.5"/></svg></div>
+    <div class="cap">IDENTIFY</div>
+    <div class="ico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.2 1.9"/></svg></div>
+  </div>
+
+  <div class="stage">
+    <div class="target">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#4E4E5C" stroke-width="1.5" stroke-linecap="round">
+        <path d="M4 9.5h3L11 6v12l-4-3.5H4z"/>
+        <path d="M15.5 9.5 20.5 14.5M20.5 9.5 15.5 14.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="txt">
+    <div class="t1">No match</div>
+    <div class="t2">The recording was too short or the room too noisy. Move closer to the speaker and try again.</div>
+  </div>
+
+  <div class="foot">
+    <div class="prim">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#14101C" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4h-4"/></svg>
+      Try again
+    </div>
+    <div class="sec">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+      Search manually
+    </div>
+  </div>
+
+</div></div>
+  </figure>
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">History</figcaption>
+    <div id="f-IdentifyHistory" class="mk-hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></div>
+    <div class="cap">Identified</div>
+  </div>
+
+  <div class="lab">TODAY</div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #D94E8C, #4A1030)"></div>
+    <div class="rm"><div class="rt">Nuit Blanche</div><div class="rs">Sofiane Pamart · 11:42</div></div>
+    <div class="act todo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #2E7A8A, #0C2028)"></div>
+    <div class="rm"><div class="rt">Ocean Drive</div><div class="rs">Duke Dumont · 09:15</div></div>
+    <div class="act done">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>
+    </div>
+  </div>
+
+  <div class="lab">YESTERDAY</div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #8A6A20, #2A2008)"></div>
+    <div class="rm"><div class="rt">Redbone</div><div class="rs">Childish Gambino · 21:07</div></div>
+    <div class="act done">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #6B3AA0, #1A0F2A)"></div>
+    <div class="rm"><div class="rt">Montagem Coral</div><div class="rs">Unknown artist · 18:33</div></div>
+    <div class="act todo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #A0442A, #2A0F08)"></div>
+    <div class="rm"><div class="rt">Feel So Close</div><div class="rs">Calvin Harris · 16:20</div></div>
+    <div class="act todo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+    </div>
+  </div>
+
+  <div class="empty">Everything you identify is kept here, so a song caught on the move can still be downloaded once you are back on Wi-Fi.</div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>

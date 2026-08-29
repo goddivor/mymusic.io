@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — Queue</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-Queue a { color: #B57BFF; }
+#f-Queue a:hover { color: #C9A0FF; }
+#f-Queue .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Queue .hdr { display: flex; align-items: center; padding: 40px 14px 0; }
+#f-Queue .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-Queue .cap { flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; margin-right: 40px; }
+#f-Queue .lab { font-size: 11.5px; font-weight: 700; letter-spacing: 2.2px; color: #63636F; padding: 22px 16px 8px; }
+#f-Queue .row { display: flex; align-items: center; padding: 8px 16px; }
+#f-Queue .rart { width: 50px; height: 50px; border-radius: 8px; flex-shrink: 0; }
+#f-Queue .rm { flex-grow: 1; margin-left: 12px; overflow: hidden; }
+#f-Queue .rt { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#f-Queue .rt.on { color: #B57BFF; font-weight: 700; }
+#f-Queue .rs { font-size: 12.5px; color: #9B9BAC; margin-top: 3px; }
+#f-Queue .acts { display: flex; align-items: center; gap: 14px; }
+  
+</style>
+</head>
+<body>
+<h1>Queue</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Default</figcaption>
+    <div id="f-Queue" class="mk-hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 9.5 12 16l6.5-6.5"/></svg></div>
+    <div class="cap">Queue</div>
+  </div>
+
+  <div class="lab">NOW PLAYING</div>
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(140deg, #5C7A2E, #2E4416)"></div>
+    <div class="rm"><div class="rt on">Feerix — UwU Phonky</div><div class="rs">Feerix</div></div>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.8" stroke-linejoin="round"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 9.4a4 4 0 0 1 0 5.2"/><path d="M18.6 7a7.5 7.5 0 0 1 0 10"/></svg>
+  </div>
+
+  <div class="lab">UP NEXT</div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #1F6FB0, #0B2740)"></div>
+    <div class="rm"><div class="rt">BREGA DO SANS II SEKIMANE, DJ K3…</div><div class="rs">Karioz</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #8A1A1A, #200808)"></div>
+    <div class="rm"><div class="rt">6YNTHMANE, RXDXVIL — BRAZILIA…</div><div class="rs">6YNTHMANE</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #6B3AA0, #1A0F2A)"></div>
+    <div class="rm"><div class="rt">Kordhell — Live Another Day</div><div class="rs">KORDHELL</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #4A2A7A, #140A24)"></div>
+    <div class="rm"><div class="rt">NUEKI, TOLCHONOV — EPIC PHONK …</div><div class="rs">NUEKI</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #C0246B, #2A0A1C)"></div>
+    <div class="rm"><div class="rt">g3ox_em — GigaChad Theme (Phonk Ho…</div><div class="rs">g3ox_em</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #2A6E8A, #0B2028)"></div>
+    <div class="rm"><div class="rt">VELVETAL</div><div class="rs">Phonkha — Topic</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #3E7A3A, #0F2410)"></div>
+    <div class="rm"><div class="rt">Eternxlkz — BRODYAGA FUNK 2</div><div class="rs">ZONIK</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="rart" style="background: linear-gradient(150deg, #A0442A, #2A0F08)"></div>
+    <div class="rm"><div class="rt">DERNIERE DANCE FUNK — SACHIN S…</div><div class="rs">CG FUNK</div></div>
+    <div class="acts">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#63636F"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+    </div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>

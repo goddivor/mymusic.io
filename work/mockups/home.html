@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — Home</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-Main a { color: #B57BFF; }
+#f-Main a:hover { color: #C9A0FF; }
+#f-Main .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Main .hdr { display: flex; align-items: center; gap: 12px; padding: 42px 16px 4px; }
+#f-Main .av { width: 42px; height: 42px; border-radius: 21px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; }
+#f-Main .h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.4px; }
+#f-Main .sp { flex-grow: 1; }
+#f-Main .ico { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; }
+#f-Main .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 16px 12px 0; }
+#f-Main .tile { display: flex; align-items: center; background: #16161F; border-radius: 10px; overflow: hidden; min-height: 64px; }
+#f-Main .thumb { width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+#f-Main .tlab { font-size: 12.5px; font-weight: 600; margin: 0 10px; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+#f-Main .sec { display: flex; align-items: baseline; padding: 24px 16px 12px; }
+#f-Main .sech { font-size: 21px; font-weight: 800; letter-spacing: -0.3px; }
+#f-Main .all { margin-left: auto; font-size: 13px; font-weight: 600; color: #B57BFF; }
+#f-Main .rail { display: flex; gap: 14px; padding: 0 16px; }
+#f-Main .card { width: 148px; flex-shrink: 0; }
+#f-Main .cart { width: 148px; height: 148px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+#f-Main .ct { font-size: 13.5px; font-weight: 700; margin-top: 9px; line-height: 1.25; }
+#f-Main .cs { font-size: 12px; color: #9B9BAC; margin-top: 3px; }
+#f-Main .pb { position: absolute; left: 8px; right: 8px; bottom: 62px; border-radius: 12px; background: #3E4A2A; overflow: hidden; }
+#f-Main .pbr { display: flex; align-items: center; padding: 8px; }
+#f-Main .pba { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; }
+#f-Main .pbm { flex-grow: 1; margin: 0 12px; overflow: hidden; }
+#f-Main .pbt { font-size: 14px; font-weight: 700; }
+#f-Main .pbs { font-size: 12px; color: #C8CBB8; margin-top: 2px; }
+#f-Main .pbc { display: flex; gap: 8px; }
+#f-Main .pbtr { height: 3px; margin: 0 10px 7px; border-radius: 2px; background: rgba(255,255,255,0.22); }
+#f-Main .pbfl { height: 3px; border-radius: 2px; background: #B57BFF; width: 82%; }
+#f-Main .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 62px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #0A0A0F; border-top: 1px solid #23232F; }
+#f-Main .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: #63636F; }
+#f-Main .tab.on { color: #B57BFF; }
+  
+
+#f-Drawer a { color: #B57BFF; }
+#f-Drawer a:hover { color: #C9A0FF; }
+#f-Drawer .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; display: flex; }
+#f-Drawer .panel { width: 302px; background: #0D0D13; padding-top: 44px; flex-shrink: 0; }
+#f-Drawer .who { display: flex; align-items: center; gap: 14px; padding: 0 20px 20px; }
+#f-Drawer .av { width: 56px; height: 56px; border-radius: 28px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; }
+#f-Drawer .name { font-size: 19px; font-weight: 800; }
+#f-Drawer .sub { font-size: 13px; color: #9B9BAC; margin-top: 3px; }
+#f-Drawer .sep { height: 1px; background: #23232F; margin: 0 20px; }
+#f-Drawer .items { padding: 14px 0; }
+#f-Drawer .it { display: flex; align-items: center; gap: 18px; padding: 13px 24px; font-size: 16px; font-weight: 600; }
+#f-Drawer .card { margin: 8px 16px 0; background: #16161F; border-radius: 14px; display: flex; align-items: center; gap: 14px; padding: 14px; }
+#f-Drawer .badge { width: 44px; height: 44px; border-radius: 12px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#f-Drawer .ct { font-size: 15.5px; font-weight: 700; }
+#f-Drawer .cs { font-size: 12.5px; color: #9B9BAC; margin-top: 3px; }
+#f-Drawer .sw { margin-left: auto; width: 46px; height: 27px; border-radius: 14px; background: #2A2A36; position: relative; flex-shrink: 0; }
+#f-Drawer .knob { position: absolute; left: 3px; top: 3px; width: 21px; height: 21px; border-radius: 11px; background: #F5F5F8; }
+#f-Drawer .peek { flex-grow: 1; background: #0A0A0F; opacity: 0.5; padding-top: 44px; overflow: hidden; }
+#f-Drawer .ph { height: 42px; margin: 12px; border-radius: 10px; background: #16161F; }
+#f-Drawer .pc { height: 96px; margin: 12px; border-radius: 10px; background: #16161F; }
+  
+</style>
+</head>
+<body>
+<h1>Home</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Default</figcaption>
+    <div id="f-Main" class="mk-hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="av">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+    </div>
+    <div class="h1">Home</div>
+    <div class="sp"></div>
+    <div class="ico">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="tile">
+      <div class="thumb" style="background: linear-gradient(135deg, #8B5CF6, #EC4899)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+      </div>
+      <div class="tlab">Liked tracks</div>
+    </div>
+    <div class="tile">
+      <div class="thumb" style="background: linear-gradient(140deg, #2A2A35, #4A3550)"></div>
+      <div class="tlab">MONTAGEM GLORIA (Slowed)</div>
+    </div>
+    <div class="tile">
+      <div class="thumb" style="background: #1E1E2A"></div>
+      <div class="tlab">YOSHO HAI MONTAGEM [Wo…</div>
+    </div>
+    <div class="tile">
+      <div class="thumb" style="background: linear-gradient(140deg, #5C7A2E, #2E4416)"></div>
+      <div class="tlab">Feerix — UwU Phonky</div>
+    </div>
+    <div class="tile">
+      <div class="thumb" style="background: linear-gradient(135deg, #FF512F, #DD2476)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M9.2 8.4v7.2l6.2-3.6z"/></svg>
+      </div>
+      <div class="tlab">Youtube</div>
+    </div>
+  </div>
+
+  <div class="sec"><div class="sech">Recently added</div><div class="all">Show all</div></div>
+  <div class="rail">
+    <div class="card">
+      <div class="cart" style="background: linear-gradient(160deg, #6B5B4A, #241C16)"></div>
+      <div class="ct">Ravyn Lenae — Love Me Not</div>
+      <div class="cs">Minimal Sounds</div>
+    </div>
+    <div class="card">
+      <div class="cart" style="background: linear-gradient(160deg, #B4231F, #3A0A10)"></div>
+      <div class="ct">SEM CONTROLE</div>
+      <div class="cs">Nightfxrce — Topic</div>
+    </div>
+    <div class="card">
+      <div class="cart" style="background: linear-gradient(160deg, #4A4A52, #101014)"></div>
+      <div class="ct">MONTAGEM GLORIA (Slowed)</div>
+      <div class="cs">Rushex — Topic</div>
+    </div>
+  </div>
+
+  <div class="sec"><div class="sech">Your local library</div><div class="all">Show all</div></div>
+  <div class="rail">
+    <div class="card">
+      <div class="cart" style="background: #16161F">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3A3A46" stroke-width="1.6"><circle cx="7" cy="17" r="2.6"/><circle cx="17.5" cy="15" r="2.6"/><path d="M9.6 17V7.2l10.5-2v9.8"/></svg>
+      </div>
+      <div class="ct">Unknown title</div>
+      <div class="cs">Local file</div>
+    </div>
+    <div class="card">
+      <div class="cart" style="background: linear-gradient(160deg, #4C5A66, #171B20)"></div>
+      <div class="ct">XGALX — Live session</div>
+      <div class="cs">Local file</div>
+    </div>
+    <div class="card">
+      <div class="cart" style="background: linear-gradient(160deg, #1F6A78, #0B2029)"></div>
+      <div class="ct">NIGHT DANCER</div>
+      <div class="cs">Local file</div>
+    </div>
+  </div>
+
+  <div class="pb">
+    <div class="pbr">
+      <div class="pba" style="background: linear-gradient(140deg, #5C7A2E, #2E4416)"></div>
+      <div class="pbm">
+        <div class="pbt">Feerix — UwU Phonky</div>
+        <div class="pbs">Feerix</div>
+      </div>
+      <div class="pbc">
+        <div class="ico" style="width:32px;height:32px">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M3 8V6.2A2.2 2.2 0 0 1 5.2 4h13.6A2.2 2.2 0 0 1 21 6.2v11.6a2.2 2.2 0 0 1-2.2 2.2H12"/><path d="M3 12.4A7.6 7.6 0 0 1 10.6 20"/><path d="M3 16.6A3.4 3.4 0 0 1 6.4 20"/><circle cx="3.4" cy="19.7" r="0.95" stroke="none"/></svg>
+        </div>
+        <div class="ico" style="width:32px;height:32px">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+        </div>
+        <div class="ico" style="width:32px;height:32px">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="pbtr"><div class="pbfl"></div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>
+      Home
+    </div>
+    <div class="tab">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="5" height="16" rx="1.2"/><rect x="10" y="4" width="5" height="16" rx="1.2"/><path d="M17.4 5.4l3.2 15.2"/></svg>
+      Library
+    </div>
+    <div class="tab">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10.2 9.6v4.8l4.3-2.4z" fill="currentColor" stroke="none"/></svg>
+      YouTube
+    </div>
+  </div>
+
+</div></div>
+  </figure>
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Profile drawer</figcaption>
+    <div id="f-Drawer" class="mk-hold"><div class="scr">
+
+  <div class="panel">
+    <div class="who">
+      <div class="av"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></div>
+      <div><div class="name">Guest</div><div class="sub">Not signed in</div></div>
+    </div>
+    <div class="sep"></div>
+
+    <div class="items">
+      <div class="it">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M15 8.5 18.5 12 15 15.5M18.5 12H9"/></svg>
+        Sign in
+      </div>
+      <div class="it">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3.2 1.9"/></svg>
+        Recents
+      </div>
+      <div class="it">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7"><circle cx="12" cy="12" r="3.1"/><path d="M12 2.8v2.4M12 18.8v2.4M4.5 12H2.1M21.9 12h-2.4M6.7 6.7 5 5M19 19l-1.7-1.7M6.7 17.3 5 19M19 5l-1.7 1.7"/></svg>
+        Settings
+      </div>
+      <div class="it">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7"><path d="M12 3.4a8.6 8.6 0 0 0 0 17.2c1.4 0 2.1-.9 2.1-1.9 0-1.3-1-1.7-1-2.7 0-.8.7-1.4 1.6-1.4h1.5c2.4 0 4.4-2 4.4-4.5C20.6 6.3 16.8 3.4 12 3.4z"/><circle cx="8" cy="10" r="1.1" fill="#F5F5F8"/><circle cx="12" cy="7.6" r="1.1" fill="#F5F5F8"/><circle cx="15.8" cy="9.4" r="1.1" fill="#F5F5F8"/></svg>
+        Player styles
+      </div>
+      <div class="it">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.7" stroke-linecap="round"><path d="M4 4v16h16"/><path d="M8 16V11M12.4 16V7.5M16.8 16v-3.4"/></svg>
+        Listening stats
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="card">
+      <div class="badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B57BFF" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.6 2.4 14.4 0 17M12 3.5c-2.4 2.6-2.4 14.4 0 17"/></svg></div>
+      <div><div class="ct">Listen on the web</div><div class="cs">Stream over the same Wi-Fi.</div></div>
+      <div class="sw"><div class="knob"></div></div>
+    </div>
+  </div>
+
+  <div class="peek">
+    <div class="ph"></div>
+    <div class="ph"></div>
+    <div class="pc"></div>
+    <div class="pc"></div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>
