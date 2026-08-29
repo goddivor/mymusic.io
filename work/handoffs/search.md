@@ -5,6 +5,7 @@
 ## 1. Read BEFORE coding (mandatory)
 
 - 📍 **State**: [`../../PROJECT-STATE.md`](../../PROJECT-STATE.md) — what exists, what is decided
+- 🎨 **Artifact**: [`search.html`](../mockups/search.html) — the visual reference to match
 - 💻 **Reference**: the existing implementation, `src/screens/SearchScreen.tsx` — match its conventions
 - 📐 **Spec**: `docs/BRIEF.md`
 - ⚠️ **Traps**: `docs/STACK.md` — check the APIs this unit uses
@@ -33,7 +34,7 @@
 
 ## 6. Definition of Done
 
-- [ ] Consistent with the surrounding code
+- [ ] Matches the artifact `search.html`
 - [ ] All states in §4 are handled
 - [ ] strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21
 - [ ] Reuses shared pieces — no duplicated ad-hoc code
@@ -43,5 +44,5 @@
 ## 7. Start prompt (paste to Claude Code)
 
 ```
-Work on "Search" for MusicApp (modal from header). BEFORE coding, read: work/handoffs/search.md, the existing implementation in src/screens/SearchScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+Work on "Search" for MusicApp (modal from header). BEFORE coding, read: work/handoffs/search.md, the artifact work/mockups/search.html, the existing implementation in src/screens/SearchScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```

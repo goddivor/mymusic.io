@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — YouTube (native tab)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  figure { margin: 0; }
+  figcaption { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-Youtube a { color: #B57BFF; }
+#f-Youtube a:hover { color: #C9A0FF; }
+#f-Youtube .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Youtube .hdr { display: flex; align-items: center; gap: 10px; padding: 42px 16px 4px; }
+#f-Youtube .ytm { width: 34px; height: 24px; border-radius: 6px; background: #FF0033; display: flex; align-items: center; justify-content: center; }
+#f-Youtube .h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; }
+#f-Youtube .sp { flex-grow: 1; }
+#f-Youtube .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-Youtube .sech { font-size: 21px; font-weight: 800; padding: 20px 16px 8px; letter-spacing: -0.3px; }
+#f-Youtube .vrow { display: flex; align-items: center; padding: 9px 16px; gap: 14px; }
+#f-Youtube .thumb { width: 148px; height: 84px; border-radius: 9px; flex-shrink: 0; }
+#f-Youtube .vm { flex-grow: 1; overflow: hidden; }
+#f-Youtube .vt { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+#f-Youtube .vs { font-size: 11.5px; color: #9B9BAC; margin-top: 5px; }
+#f-Youtube .dl { width: 34px; height: 34px; border-radius: 17px; border: 1.6px solid #63636F; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#f-Youtube .fab { position: absolute; right: 16px; bottom: 152px; width: 62px; height: 62px; border-radius: 31px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(0,0,0,0.5); }
+#f-Youtube .badge { position: absolute; right: -2px; top: -4px; min-width: 24px; height: 24px; border-radius: 12px; background: #B57BFF; color: #14101C; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+#f-Youtube .pb { position: absolute; left: 8px; right: 8px; bottom: 62px; border-radius: 12px; background: #3E4A2A; overflow: hidden; }
+#f-Youtube .pbr { display: flex; align-items: center; padding: 8px; }
+#f-Youtube .pba { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; background: linear-gradient(140deg, #5C7A2E, #2E4416); }
+#f-Youtube .pbm { flex-grow: 1; margin: 0 12px; overflow: hidden; }
+#f-Youtube .pbt { font-size: 14px; font-weight: 700; }
+#f-Youtube .pbs { font-size: 12px; color: #C8CBB8; margin-top: 2px; }
+#f-Youtube .pbc { display: flex; gap: 8px; }
+#f-Youtube .pbtr { height: 3px; margin: 0 10px 7px; border-radius: 2px; background: rgba(255,255,255,0.22); }
+#f-Youtube .pbfl { height: 3px; border-radius: 2px; background: #B57BFF; width: 82%; }
+#f-Youtube .tabs { position: absolute; left: 0; right: 0; bottom: 0; height: 62px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #0A0A0F; border-top: 1px solid #23232F; }
+#f-Youtube .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: #63636F; }
+#f-Youtube .tab.on { color: #B57BFF; }
+  
+
+#f-Downloads a { color: #B57BFF; }
+#f-Downloads a:hover { color: #C9A0FF; }
+#f-Downloads .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Downloads .peek { opacity: 0.3; padding-top: 42px; }
+#f-Downloads .hdr { display: flex; align-items: center; gap: 10px; padding: 0 16px 4px; }
+#f-Downloads .ytm { width: 34px; height: 24px; border-radius: 6px; background: #FF0033; }
+#f-Downloads .h1 { font-size: 24px; font-weight: 800; }
+#f-Downloads .sech { font-size: 21px; font-weight: 800; padding: 20px 16px 8px; }
+#f-Downloads .vrow { display: flex; align-items: center; padding: 9px 16px; gap: 14px; }
+#f-Downloads .thumb { width: 148px; height: 84px; border-radius: 9px; flex-shrink: 0; }
+#f-Downloads .vl { height: 12px; border-radius: 4px; background: #1E1E2A; }
+#f-Downloads .sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 590px; background: #131320; border-radius: 22px 22px 0 0; }
+#f-Downloads .grab { width: 44px; height: 4px; border-radius: 2px; background: #2E2E3C; margin: 12px auto 0; }
+#f-Downloads .shd { display: flex; align-items: baseline; padding: 20px 22px 6px; }
+#f-Downloads .st { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; }
+#f-Downloads .clr { margin-left: auto; font-size: 14px; font-weight: 600; color: #9B9BAC; }
+#f-Downloads .row { display: flex; align-items: center; padding: 9px 18px; }
+#f-Downloads .rart { width: 50px; height: 50px; border-radius: 8px; flex-shrink: 0; }
+#f-Downloads .rm { flex-grow: 1; margin-left: 14px; overflow: hidden; }
+#f-Downloads .rt { font-size: 15px; font-weight: 500; }
+#f-Downloads .rs { font-size: 12.5px; color: #9B9BAC; margin-top: 4px; }
+  
+</style>
+</head>
+<body>
+<h1>YouTube (native tab)</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="row">
+  <figure>
+    <figcaption>Trending</figcaption>
+    <div id="f-Youtube" class="hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="ytm"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M9.4 7.6v8.8l7.6-4.4z"/></svg></div>
+    <div class="h1">YouTube</div>
+    <div class="sp"></div>
+    <div class="ico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg></div>
+    <div class="ico"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.6 2.4 14.4 0 17M12 3.5c-2.4 2.6-2.4 14.4 0 17"/></svg></div>
+  </div>
+
+  <div class="sech">Trending</div>
+
+  <div class="vrow">
+    <div class="thumb" style="background: linear-gradient(150deg, #7A6A55, #2B2118)"></div>
+    <div class="vm"><div class="vt">KÔMANDE MATEN'W | RADIO EMMANUEL | PIERRE BINSE …</div><div class="vs">Radio Emmanuel · 17.2 k views</div></div>
+    <div class="dl"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg></div>
+  </div>
+
+  <div class="vrow">
+    <div class="thumb" style="background: linear-gradient(150deg, #3A2B6B, #14102A)"></div>
+    <div class="vm"><div class="vt">T1 vs BFX | 2026 Wooribank LCK Playoffs Round 1</div><div class="vs">LCK Global · 76.3 k views</div></div>
+    <div class="dl"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg></div>
+  </div>
+
+  <div class="vrow">
+    <div class="thumb" style="background: linear-gradient(150deg, #6B2B55, #1E0F1C)"></div>
+    <div class="vm"><div class="vt">UFC SHANGHAI LIVE NURMAGOMEDOV VS SONG L…</div><div class="vs">THE MMA GURU · 4.9 k views</div></div>
+    <div class="dl"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg></div>
+  </div>
+
+  <div class="vrow">
+    <div class="thumb" style="background: linear-gradient(150deg, #1B4C6B, #0A1A26)"></div>
+    <div class="vm"><div class="vt">BLAST Open Porto 2026, Day 4 — Vitality vs 9z, IC vs MOUZ, …</div><div class="vs">BLAST Premier · 17.7 k views</div></div>
+    <div class="dl"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg></div>
+  </div>
+
+  <div class="vrow">
+    <div class="thumb" style="background: linear-gradient(150deg, #7A7A4A, #24240F)"></div>
+    <div class="vm"><div class="vt">The Bond Buybacks Just Doubled… And Now There's a M…</div><div class="vs">Peter Schiff · 1.7 k views</div></div>
+    <div class="dl"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg></div>
+  </div>
+
+  <div class="fab">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+    <div class="badge">51</div>
+  </div>
+
+  <div class="pb">
+    <div class="pbr">
+      <div class="pba"></div>
+      <div class="pbm"><div class="pbt">Feerix — UwU Phonky</div><div class="pbs">Feerix</div></div>
+      <div class="pbc">
+        <div class="ico" style="width:32px;height:32px"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M3 17a4 4 0 0 1 4 4"/><path d="M3 12.5A8.5 8.5 0 0 1 11.5 21"/><rect x="3" y="4" width="18" height="12" rx="2"/></svg></div>
+        <div class="ico" style="width:32px;height:32px"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg></div>
+        <div class="ico" style="width:32px;height:32px"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z"/></svg></div>
+      </div>
+    </div>
+    <div class="pbtr"><div class="pbfl"></div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>Home</div>
+    <div class="tab"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="5" height="16" rx="1.2"/><rect x="10" y="4" width="5" height="16" rx="1.2"/><path d="M17.4 5.4l3.2 15.2"/></svg>Library</div>
+    <div class="tab on"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10.2 9.6v4.8l4.3-2.4z" fill="currentColor" stroke="none"/></svg>YouTube</div>
+  </div>
+
+</div></div>
+  </figure>
+  <figure>
+    <figcaption>Downloads sheet</figcaption>
+    <div id="f-Downloads" class="hold"><div class="scr">
+
+  <div class="peek">
+    <div class="hdr"><div class="ytm"></div><div class="h1">YouTube</div></div>
+    <div class="sech">Trending</div>
+    <div class="vrow">
+      <div class="thumb" style="background: linear-gradient(150deg, #7A6A55, #2B2118)"></div>
+      <div style="flex-grow:1"><div class="vl" style="width:100%"></div><div class="vl" style="width:72%;margin-top:8px"></div></div>
+    </div>
+    <div class="vrow">
+      <div class="thumb" style="background: linear-gradient(150deg, #3A2B6B, #14102A)"></div>
+      <div style="flex-grow:1"><div class="vl" style="width:92%"></div><div class="vl" style="width:60%;margin-top:8px"></div></div>
+    </div>
+    <div class="vrow">
+      <div class="thumb" style="background: linear-gradient(150deg, #6B2B55, #1E0F1C)"></div>
+      <div style="flex-grow:1"><div class="vl" style="width:88%"></div><div class="vl" style="width:54%;margin-top:8px"></div></div>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="shd"><div class="st">Downloads</div><div class="clr">Clear finished</div></div>
+
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #A03AC0, #2A0F34)"></div>
+      <div class="rm"><div class="rt">MONTAGEM GAME (SLOWED) — NISVANIS, V…</div><div class="rs">Queued…</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #7A6A20, #241E08)"></div>
+      <div class="rm"><div class="rt">ZAYLO — MONTAGEM URANIUM</div><div class="rs">Queued…</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #4A3A1A, #14100A)"></div>
+      <div class="rm"><div class="rt">ZAYLO — MONTAGEM URANIUM (Slowed)</div><div class="rs">Queued…</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #C03A9A, #300A28)"></div>
+      <div class="rm"><div class="rt">NISVANIS &amp; vilvi — MONTAGEM GAME — (Ult…</div><div class="rs">Queued…</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #8A3AB0, #220F2A)"></div>
+      <div class="rm"><div class="rt">MONTAGEM GAME — NISVANIS, vilvi</div><div class="rs">Queued…</div></div>
+    </div>
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #A08A20, #2A2408)"></div>
+      <div class="rm"><div class="rt">PAIZO, DJ LXILL, DJ FALLTHOX — MONTAGE…</div><div class="rs">Queued…</div></div>
+    </div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>

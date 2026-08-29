@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — Collection detail</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  figure { margin: 0; }
+  figcaption { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-Playlist a { color: #B57BFF; }
+#f-Playlist a:hover { color: #C9A0FF; }
+#f-Playlist .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-Playlist .tint { position: absolute; left: 0; right: 0; top: 0; height: 340px; background: linear-gradient(180deg, #1E9EC4 0%, #3A3A8E 46%, #0A0A0F 100%); }
+#f-Playlist .body { position: relative; }
+#f-Playlist .hdr { display: flex; align-items: center; padding: 40px 14px 0; }
+#f-Playlist .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-Playlist .cover { width: 152px; height: 152px; margin: 6px auto 0; border-radius: 16px; background: linear-gradient(135deg, #22D3EE, #6366F1); display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 34px rgba(0,0,0,0.4); }
+#f-Playlist .ttl { text-align: center; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-top: 22px; }
+#f-Playlist .sub { text-align: center; font-size: 13.5px; color: #C0C4D8; margin-top: 8px; }
+#f-Playlist .bar { display: flex; align-items: center; padding: 24px 16px 0; }
+#f-Playlist .pill { display: flex; align-items: center; gap: 10px; background: #16161F; border-radius: 20px; padding: 10px 18px; font-size: 14px; color: #9B9BAC; font-weight: 500; }
+#f-Playlist .sp { flex-grow: 1; }
+#f-Playlist .play { width: 58px; height: 58px; border-radius: 29px; background: #B57BFF; display: flex; align-items: center; justify-content: center; margin-left: 18px; }
+#f-Playlist .row { display: flex; align-items: center; padding: 8px 16px; }
+#f-Playlist .rart { width: 50px; height: 50px; border-radius: 8px; flex-shrink: 0; }
+#f-Playlist .rm { flex-grow: 1; margin-left: 12px; overflow: hidden; }
+#f-Playlist .rt { font-size: 15px; font-weight: 500; }
+#f-Playlist .rsub { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+#f-Playlist .rs { font-size: 12.5px; color: #9B9BAC; }
+#f-Playlist .pb { position: absolute; left: 8px; right: 8px; bottom: 8px; border-radius: 12px; background: #3E4A2A; overflow: hidden; }
+#f-Playlist .pbr { display: flex; align-items: center; padding: 8px; }
+#f-Playlist .pba { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; background: linear-gradient(140deg, #5C7A2E, #2E4416); }
+#f-Playlist .pbm { flex-grow: 1; margin: 0 12px; overflow: hidden; }
+#f-Playlist .pbt { font-size: 14px; font-weight: 700; }
+#f-Playlist .pbs { font-size: 12px; color: #C8CBB8; margin-top: 2px; }
+#f-Playlist .pbc { display: flex; gap: 8px; }
+#f-Playlist .pbtr { height: 3px; margin: 0 10px 7px; border-radius: 2px; background: rgba(255,255,255,0.22); }
+#f-Playlist .pbfl { height: 3px; border-radius: 2px; background: #B57BFF; width: 82%; }
+  
+</style>
+</head>
+<body>
+<h1>Collection detail</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="row">
+  <figure>
+    <figcaption>Playlist</figcaption>
+    <div id="f-Playlist" class="hold"><div class="scr">
+  <div class="tint"></div>
+  <div class="body">
+
+    <div class="hdr">
+      <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></div>
+    </div>
+
+    <div class="cover">
+      <svg width="62" height="62" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h13M4 12h9M4 17h6"/><circle cx="17" cy="17" r="2.4"/><path d="M19.4 17V10"/></svg>
+    </div>
+
+    <div class="ttl">Montagem / Funk / Phonk</div>
+    <div class="sub">Playlist · 100 tracks</div>
+
+    <div class="bar">
+      <div class="pill">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9B9BAC" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+        Search
+      </div>
+      <div class="sp"></div>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 4l3 3-3 3"/><path d="M17 14l3 3-3 3"/><path d="M4 7h4l8 10h4"/><path d="M4 17h4l2.4-3"/></svg>
+      <div class="play"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#14101C" stroke-width="1.9" stroke-linejoin="round"><path d="M8.5 5.5v13l10.5-6.5z"/></svg></div>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <div class="rart" style="background: linear-gradient(150deg, #A03AC0, #2A0F34)"></div>
+      <div class="rm">
+        <div class="rt">MONTAGEM GAME (SLOWED) — NISVANIS, …</div>
+        <div class="rsub">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#B57BFF"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+          <div class="rs">Monktagem</div>
+        </div>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+    </div>
+
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #7A6A20, #241E08)"></div>
+      <div class="rm"><div class="rt">ZAYLO — MONTAGEM URANIUM</div><div class="rsub"><div class="rs">phonk</div></div></div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+    </div>
+
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #4A3A1A, #14100A)"></div>
+      <div class="rm"><div class="rt">ZAYLO — MONTAGEM URANIUM (Slowed)</div><div class="rsub"><div class="rs">void</div></div></div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+    </div>
+
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #C03A9A, #300A28)"></div>
+      <div class="rm">
+        <div class="rt">NISVANIS &amp; vilvi — MONTAGEM GAME — (U…</div>
+        <div class="rsub">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="#B57BFF"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+          <div class="rs">GRIMMHZ</div>
+        </div>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+    </div>
+
+    <div class="row">
+      <div class="rart" style="background: linear-gradient(150deg, #8A3AB0, #220F2A)"></div>
+      <div class="rm"><div class="rt">MONTAGEM GAME — NISVANIS, vilvi</div><div class="rsub"><div class="rs">FUNK CLUBHOUSE</div></div></div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#9B9BAC"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+    </div>
+
+  </div>
+
+  <div class="pb">
+    <div class="pbr">
+      <div class="pba"></div>
+      <div class="pbm"><div class="pbt">Feerix — UwU Phonky</div><div class="pbs">Feerix</div></div>
+      <div class="pbc">
+        <div class="ico" style="width:32px;height:32px"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M3 17a4 4 0 0 1 4 4"/><path d="M3 12.5A8.5 8.5 0 0 1 11.5 21"/><rect x="3" y="4" width="18" height="12" rx="2"/></svg></div>
+        <div class="ico" style="width:32px;height:32px"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg></div>
+        <div class="ico" style="width:32px;height:32px"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z"/></svg></div>
+      </div>
+    </div>
+    <div class="pbtr"><div class="pbfl"></div></div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>
