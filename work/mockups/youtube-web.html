@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — YouTube web fallback</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-YoutubeWeb a { color: #B57BFF; }
+#f-YoutubeWeb a:hover { color: #C9A0FF; }
+#f-YoutubeWeb .scr { width: 390px; height: 866px; background: #0F0F0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-YoutubeWeb .chrome { background: #0A0A0F; padding: 40px 14px 12px; display: flex; align-items: center; }
+#f-YoutubeWeb .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#f-YoutubeWeb .cap { flex-grow: 1; text-align: center; font-size: 17px; font-weight: 700; margin-right: 40px; }
+#f-YoutubeWeb .web { font-family: Roboto, Arial, sans-serif; }
+#f-YoutubeWeb .ythdr { display: flex; align-items: center; padding: 16px 16px 0; }
+#f-YoutubeWeb .ytlogo { display: flex; align-items: center; gap: 5px; }
+#f-YoutubeWeb .ytmark { width: 30px; height: 21px; border-radius: 5px; background: #FF0000; display: flex; align-items: center; justify-content: center; }
+#f-YoutubeWeb .ytword { font-size: 19px; font-weight: 700; letter-spacing: -1px; }
+#f-YoutubeWeb .sp { flex-grow: 1; }
+#f-YoutubeWeb .bigmark { width: 78px; height: 55px; border-radius: 13px; background: #FF0000; margin: 84px auto 0; display: flex; align-items: center; justify-content: center; }
+#f-YoutubeWeb .srch { display: flex; align-items: center; gap: 12px; padding: 30px 20px 0; }
+#f-YoutubeWeb .circ { width: 40px; height: 40px; border-radius: 20px; background: #212121; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#f-YoutubeWeb .field { flex-grow: 1; height: 40px; border-radius: 20px; background: #212121; display: flex; align-items: center; padding: 0 20px; font-size: 15px; color: #909090; }
+#f-YoutubeWeb .card { margin: 46px 16px 0; background: #212121; border-radius: 12px; padding: 26px 22px; text-align: center; }
+#f-YoutubeWeb .ct { font-size: 21px; font-weight: 700; }
+#f-YoutubeWeb .cs { font-size: 14px; color: #AAAAAA; margin-top: 12px; line-height: 1.45; }
+#f-YoutubeWeb .ytbar { position: absolute; left: 0; right: 0; bottom: 0; height: 56px; border-top: 1px solid #272727; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #0F0F0F; }
+#f-YoutubeWeb .ytt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; color: #F1F1F1; }
+#f-YoutubeWeb .fab { position: absolute; right: 14px; bottom: 34px; width: 58px; height: 58px; border-radius: 29px; background: #1E1E2A; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(0,0,0,0.55); }
+#f-YoutubeWeb .dot { position: absolute; right: 2px; top: 2px; width: 11px; height: 11px; border-radius: 6px; background: #B57BFF; }
+  
+</style>
+</head>
+<body>
+<h1>YouTube web fallback</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Default</figcaption>
+    <div id="f-YoutubeWeb" class="mk-hold"><div class="scr">
+
+  <div class="chrome">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></div>
+    <div class="cap">Web version</div>
+  </div>
+
+  <div class="web">
+    <div class="ythdr">
+      <div class="ytlogo">
+        <div class="ytmark"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M9.4 7.6v8.8l7.6-4.4z"/></svg></div>
+        <div class="ytword">YouTube</div>
+      </div>
+      <div class="sp"></div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F1F1F1" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+    </div>
+
+    <div class="bigmark"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M9.2 7.2v9.6l8.2-4.8z"/></svg></div>
+
+    <div class="srch">
+      <div class="circ"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#F1F1F1" stroke-width="1.7"><circle cx="12" cy="12" r="8.6"/><path d="M14.8 9.2 9.2 14.8 14.8 9.2z"/><path d="M9.6 9.6 14.4 14.4"/></svg></div>
+      <div class="field">Search YouTube</div>
+      <div class="circ"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F1F1F1" stroke-width="1.7" stroke-linecap="round"><rect x="9.2" y="3" width="5.6" height="11" rx="2.8"/><path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0"/><path d="M12 17.8V21"/></svg></div>
+    </div>
+
+    <div class="card">
+      <div class="ct">Try searching to get started</div>
+      <div class="cs">Start watching videos to help us build a feed of videos you'll love.</div>
+    </div>
+
+    <div class="ytbar">
+      <div class="ytt">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#F1F1F1"><path d="M4 10.8 12 4.2l8 6.6V20h-5.6v-5.6H9.6V20H4z"/></svg>
+        Home
+      </div>
+      <div class="ytt">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F1F1F1" stroke-width="1.7" stroke-linejoin="round"><path d="M14.2 3.6a4.2 4.2 0 0 1 3.6 6.9l-7.6 9a4.2 4.2 0 0 1-3.6-6.9z"/><path d="M9.8 9.6v5l4.6-2.5z"/></svg>
+        Shorts
+      </div>
+      <div class="ytt">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F1F1F1" stroke-width="1.7"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20a7.4 7.4 0 0 1 14.8 0"/></svg>
+        You
+      </div>
+    </div>
+  </div>
+
+  <div class="fab">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11.5l5 5 5-5"/><path d="M5 20h14"/></svg>
+    <div class="dot"></div>
+  </div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>

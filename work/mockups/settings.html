@@ -12,10 +12,10 @@
   h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
   .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
   .lede code { color: #C9A0FF; font-size: 12.5px; }
-  .row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
-  figure { margin: 0; }
-  figcaption { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
-  .hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
           border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
 
 #f-Settings a { color: #B57BFF; }
@@ -40,10 +40,10 @@
 <h1>Settings</h1>
 <p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
 Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
-<div class="row">
-  <figure>
-    <figcaption>General → Data</figcaption>
-    <div id="f-Settings" class="hold"><div class="scr">
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">General → Data</figcaption>
+    <div id="f-Settings" class="mk-hold"><div class="scr">
 
   <div class="hdr">
     <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></div>

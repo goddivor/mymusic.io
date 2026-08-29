@@ -24,7 +24,7 @@ Work on "YouTube (native tab)" for MusicApp (tab). BEFORE coding, read: work/han
 ## YouTube video page — `modal from youtube` (P0)
 
 ```
-Work on "YouTube video page" for MusicApp (modal from youtube). BEFORE coding, read: work/handoffs/youtube-video.md, the existing implementation in src/screens/YoutubeVideoScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+Work on "YouTube video page" for MusicApp (modal from youtube). BEFORE coding, read: work/handoffs/youtube-video.md, the artifact work/mockups/youtube-video.html, the existing implementation in src/screens/YoutubeVideoScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```
 
 ## Now playing — `modal` (P0)
@@ -48,7 +48,7 @@ Work on "Search" for MusicApp (modal from header). BEFORE coding, read: work/han
 ## Recents — `modal from drawer` (P2)
 
 ```
-Work on "Recents" for MusicApp (modal from drawer). BEFORE coding, read: work/handoffs/recents.md, the existing implementation in src/screens/RecentsScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+Work on "Recents" for MusicApp (modal from drawer). BEFORE coding, read: work/handoffs/recents.md, the artifact work/mockups/recents.html, the existing implementation in src/screens/RecentsScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```
 
 ## Settings — `modal from drawer` (P1)
@@ -66,7 +66,7 @@ Work on "Collection detail" for MusicApp (modal). BEFORE coding, read: work/hand
 ## YouTube web fallback — `modal from youtube` (P2)
 
 ```
-Work on "YouTube web fallback" for MusicApp (modal from youtube). BEFORE coding, read: work/handoffs/youtube-web.md, the existing implementation in src/screens/YoutubeWebScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+Work on "YouTube web fallback" for MusicApp (modal from youtube). BEFORE coding, read: work/handoffs/youtube-web.md, the artifact work/mockups/youtube-web.html, the existing implementation in src/screens/YoutubeWebScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```
 
 ## Listening stats — `modal from drawer` (P1)
@@ -79,6 +79,12 @@ Build "Listening stats" for MusicApp (modal from drawer). BEFORE coding, read: w
 
 ```
 Build "Account connect" for MusicApp (modal from drawer). BEFORE coding, read: work/handoffs/account-connect.md, the existing implementation in src/screens/AccountScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+```
+
+## Identify — `modal from home header` (P1)
+
+```
+Build "Identify" for MusicApp (modal from home header). BEFORE coding, read: work/handoffs/identify.md, the artifact work/mockups/identify.html, the existing implementation in src/screens/IdentifyScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```
 
 ## Player styles — `modal from drawer` (P2)

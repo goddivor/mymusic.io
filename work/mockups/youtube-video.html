@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MusicApp — YouTube video page</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #050508; color: #F5F5F8;
+         font-family: Inter, "Helvetica Neue", Arial, sans-serif; padding: 40px 32px 64px; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+  .lede { color: #9B9BAC; font-size: 13.5px; line-height: 1.65; max-width: 74ch; margin: 0; }
+  .lede code { color: #C9A0FF; font-size: 12.5px; }
+  .mk-row { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 34px; }
+  .mk-fig { margin: 0; }
+  .mk-cap { font-size: 12.5px; font-weight: 600; color: #9B9BAC; margin-bottom: 10px; }
+  .mk-hold { width: 390px; height: 866px; border-radius: 22px; overflow: hidden;
+          border: 1px solid #23232F; box-shadow: 0 12px 34px rgba(0,0,0,0.5); }
+
+#f-YoutubeVideo a { color: #B57BFF; }
+#f-YoutubeVideo a:hover { color: #C9A0FF; }
+#f-YoutubeVideo .scr { width: 390px; height: 866px; background: #0A0A0F; color: #F5F5F8; overflow: hidden; position: relative; }
+#f-YoutubeVideo .hdr { display: flex; align-items: center; padding: 40px 14px 0; }
+#f-YoutubeVideo .ico { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+#f-YoutubeVideo .hero { width: 390px; height: 219px; margin-top: 6px; background: linear-gradient(150deg, #6E5A46, #241B14); position: relative; }
+#f-YoutubeVideo .live { position: absolute; left: 8px; top: 8px; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.55); border-radius: 5px; padding: 3px 7px; font-size: 10.5px; font-weight: 700; }
+#f-YoutubeVideo .ttl { font-size: 20px; font-weight: 700; line-height: 1.3; padding: 22px 16px 0; }
+#f-YoutubeVideo .chan { display: flex; align-items: center; gap: 14px; padding: 16px 16px 0; }
+#f-YoutubeVideo .cav { width: 42px; height: 42px; border-radius: 21px; background: linear-gradient(140deg, #4A4038, #1A1512); flex-shrink: 0; }
+#f-YoutubeVideo .cname { font-size: 16px; font-weight: 700; }
+#f-YoutubeVideo .stats { display: flex; align-items: center; gap: 7px; font-size: 13.5px; color: #9B9BAC; padding: 16px 16px 0; }
+#f-YoutubeVideo .pills { display: flex; gap: 12px; padding: 22px 16px 0; }
+#f-YoutubeVideo .pill { flex-grow: 1; height: 44px; border-radius: 22px; background: #16161F; display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 14.5px; font-weight: 600; }
+#f-YoutubeVideo .pill.go { background: #B57BFF; color: #14101C; }
+#f-YoutubeVideo .tabs { display: flex; gap: 26px; padding: 26px 16px 0; font-size: 15px; font-weight: 600; color: #9B9BAC; }
+#f-YoutubeVideo .tab.on { color: #F5F5F8; }
+#f-YoutubeVideo .rule { height: 1px; background: #23232F; margin: 12px 16px 0; position: relative; }
+#f-YoutubeVideo .ind { position: absolute; left: 0; top: -1px; width: 92px; height: 2px; background: #B57BFF; }
+#f-YoutubeVideo .empty { font-size: 14px; color: #63636F; padding: 22px 16px 0; }
+  
+</style>
+</head>
+<body>
+<h1>YouTube video page</h1>
+<p class="lede">Reference mockup, drawn from the source: palette from <code>src/theme.ts</code>, measurements read off <code>PlayerBar</code>, <code>TrackRow</code> and <code>HomeScreen</code>. Frames are 390&nbsp;×&nbsp;866&nbsp;px — the target screen's ratio, where one <code>dp</code> in the code is one pixel here.<br>
+Typeface is Inter, the font the project bundles; a MIUI device set to “System” renders the app in its own handwritten face instead. Cover art is deliberately abstract — only the dominant colour is kept, so the player's tint stays readable.</p>
+<div class="mk-row">
+  <figure class="mk-fig">
+    <figcaption class="mk-cap">Default</figcaption>
+    <div id="f-YoutubeVideo" class="mk-hold"><div class="scr">
+
+  <div class="hdr">
+    <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></div>
+  </div>
+
+  <div class="hero">
+    <div class="live">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="#FF0033"><rect x="2" y="5" width="20" height="14" rx="3"/></svg>
+      87122
+    </div>
+  </div>
+
+  <div class="ttl">OFFICIAL 24 HOUR STREAM</div>
+
+  <div class="chan">
+    <div class="cav"></div>
+    <div class="cname">Kai Cenat Live</div>
+  </div>
+
+  <div class="stats">
+    35.6 k views · 9.4 k
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="#FF4D6D"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg>
+  </div>
+
+  <div class="pills">
+    <div class="pill">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linejoin="round"><rect x="2.5" y="6" width="12.5" height="12" rx="2.4"/><path d="M15 11l6.5-3.4v8.8L15 13z"/></svg>
+      Video
+    </div>
+    <div class="pill go">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#14101C" stroke-width="1.9" stroke-linejoin="round"><path d="M8.5 5.5v13l10.5-6.5z"/></svg>
+      Play
+    </div>
+    <div class="pill">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F5F8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6v7.2M8.8 11.6 12 14.8l3.2-3.2"/></svg>
+      Download
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on">Comments</div>
+    <div class="tab">Related</div>
+  </div>
+  <div class="rule"><div class="ind"></div></div>
+
+  <div class="empty">No comments.</div>
+
+</div></div>
+  </figure>
+</div>
+</body>
+</html>

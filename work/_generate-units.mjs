@@ -62,6 +62,8 @@ const UNITS = [
     pieces: { data: ["playCounts from the library store"] }, states: ["top tracks/artists", "empty"], notes: ["play counts already tracked in SQLite; drawer entry shows 'coming soon'"] },
   { id: "account-connect", title: "Account connect", entry: "modal from drawer", path: "src/screens/AccountScreen.tsx", container: "App.tsx", priority: "P2", status: "⬜ todo",
     pieces: {}, states: ["signed out", "signed in"], notes: ["scope undecided — no backend yet; confirm intent before building"] },
+  { id: "identify", title: "Identify", entry: "modal from home header", path: "src/screens/IdentifyScreen.tsx", container: "App.tsx", priority: "P1", status: "⬜ todo",
+    pieces: { UI: ["TrackArt", "AddToPlaylistSheet"], lib: ["recognise (audio capture + lookup)", "db: identifications table"], native: ["AudioRecorder module"] }, states: ["listening", "match", "no match", "history", "permission denied", "offline"], notes: ["A match feeds the existing YouTube search → download pipeline", "Every identification is kept, so a song caught offline can be fetched later"] },
   { id: "player-styles", title: "Player styles", entry: "modal from drawer", path: "src/screens/PlayerStylesScreen.tsx", container: "App.tsx", priority: "P2", status: "⬜ todo",
     pieces: {}, states: ["style picker", "preview"], notes: ["cosmetic variants for the now-playing screen"] },
 ];
