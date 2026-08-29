@@ -1,5 +1,6 @@
 import {
   Add01Icon,
+  AudioWave01Icon,
   FavouriteIcon,
   PlayIcon,
   Queue01Icon,
@@ -32,6 +33,7 @@ type Props = {
   onAddToPlaylist: (track: AppTrack) => void;
   onOpenProfile: () => void;
   onOpenSearch: () => void;
+  onOpenIdentify: () => void;
 };
 
 type QuickItem =
@@ -43,6 +45,7 @@ export default function HomeScreen({
   onAddToPlaylist,
   onOpenProfile,
   onOpenSearch,
+  onOpenIdentify,
 }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
@@ -103,6 +106,12 @@ export default function HomeScreen({
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('tabHome')}</Text>
         <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.searchBtn}
+          activeOpacity={0.7}
+          onPress={onOpenIdentify}>
+          <Ic icon={AudioWave01Icon} size={22} color={theme.text} strokeWidth={2} />
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.searchBtn}
           activeOpacity={0.7}

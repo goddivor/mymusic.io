@@ -1,5 +1,6 @@
 import {
   ArrowLeft01Icon,
+  AudioWave01Icon,
   Download01Icon,
   Folder01Icon,
   GithubIcon,
@@ -26,6 +27,7 @@ import {
 } from 'react-native';
 import { useActionSheet } from '../components/ActionSheet';
 import Ic from '../components/Ic';
+import SwipeableSheet from '../components/SwipeableSheet';
 import UpdateSheet from '../components/UpdateSheet';
 import {
   chooseBackupFolder,
@@ -96,6 +98,9 @@ export default function SettingsScreen({ onClose }: Props) {
   const [folderSet, setFolderSet] = useState(hasBackupFolder());
   const [maxParallel, setMaxParallel] = useState(getSettings().maxParallelDownloads);
   const [maxCollection, setMaxCollection] = useState(getSettings().maxCollectionDownloads);
+  const [tokenOpen, setTokenOpen] = useState(false);
+  const [tokenDraft, setTokenDraft] = useState(getSettings().auddToken ?? '');
+  const [hasToken, setHasToken] = useState(!!getSettings().auddToken);
 
   const pickLanguage = () =>
     show({
@@ -266,6 +271,17 @@ export default function SettingsScreen({ onClose }: Props) {
       onPress: pickMaxCollection as undefined | (() => void),
     },
     {
+      key: 'auddToken',
+      icon: AudioWave01Icon,
+      title: t('auddToken'),
+      sub: hasToken ? t('auddTokenSet') : t('auddTokenUnset'),
+      keywords: 'audd cle key reconnaissance recognition identify identifier shazam',
+      onPress: (() => {
+        setTokenDraft(getSettings().auddToken ?? '');
+        setTokenOpen(true);
+      }) as undefined | (() => void),
+    },
+    {
       key: 'backupFolder',
       icon: Folder01Icon,
       title: t('backupFolder'),
@@ -408,6 +424,11 @@ export default function SettingsScreen({ onClose }: Props) {
           {renderItemRow(items.find(it => it.key === 'maxCollection')!, true)}
         </View>
 
+        <Text style={styles.sectionLabel}>{t('recognition')}</Text>
+        <View style={styles.card}>
+          {renderItemRow(items.find(it => it.key === 'auddToken')!, true)}
+        </View>
+
         <Text style={styles.sectionLabel}>{t('sectionData')}</Text>
         <View style={styles.card}>
           {renderItemRow(items.find(it => it.key === 'backupFolder')!, false)}
@@ -425,6 +446,33 @@ export default function SettingsScreen({ onClose }: Props) {
       </ScrollView>
 
       <UpdateSheet info={updateInfo} onClose={() => setUpdateInfo(null)} />
+
+      <SwipeableSheet visible={tokenOpen} onClose={() => setTokenOpen(false)}>
+        <View style={styles.tokenBody}>
+          <Text style={styles.tokenTitle}>{t('auddToken')}</Text>
+          <Text style={styles.tokenHint}>{t('noTokenHint')}</Text>
+          <TextInput
+            style={styles.tokenInput}
+            value={tokenDraft}
+            onChangeText={setTokenDraft}
+            placeholder="api_token"
+            placeholderTextColor={theme.textFaint}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TouchableOpacity
+            style={styles.tokenSave}
+            activeOpacity={0.85}
+            onPress={async () => {
+              const clean = tokenDraft.trim();
+              await saveSettings({ auddToken: clean || null });
+              setHasToken(!!clean);
+              setTokenOpen(false);
+            }}>
+            <Text style={styles.tokenSaveLabel}>{t('save')}</Text>
+          </TouchableOpacity>
+        </View>
+      </SwipeableSheet>
     </View>
   );
 }
@@ -456,6 +504,29 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     fontSize: 16,
     paddingVertical: 10,
     marginLeft: 4,
+  },
+  tokenBody: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 28 },
+  tokenTitle: { color: theme.text, fontSize: 19, fontWeight: '800' },
+  tokenHint: { color: theme.textDim, fontSize: 13.5, lineHeight: 20, marginTop: 10 },
+  tokenSave: {
+    height: 52,
+    borderRadius: 26,
+    marginTop: 16,
+    backgroundColor: theme.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tokenSaveLabel: { color: '#14101C', fontSize: 16, fontWeight: '800' },
+  tokenInput: {
+    marginTop: 14,
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    backgroundColor: theme.surfaceHi,
+    borderWidth: 1,
+    borderColor: theme.border,
+    color: theme.text,
+    fontSize: 15,
   },
   sectionLabel: {
     color: theme.textDim,

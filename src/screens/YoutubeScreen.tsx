@@ -39,7 +39,7 @@ import YoutubeWebScreen from './YoutubeWebScreen';
  * Native YouTube tab built on NewPipeExtractor (InnerTube): trending feed,
  * search with live suggestions, native video page — no WebView involved.
  */
-export default function YoutubeScreen({ active }: { active: boolean }) {
+export default function YoutubeScreen({ active, seed }: { active: boolean; seed?: string }) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
@@ -58,6 +58,7 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [webOpen, setWebOpen] = useState(false);
   const [webUrl, setWebUrl] = useState<string | undefined>(undefined);
+  const runSearchRef = useRef<(q: string) => void>(() => {});
   const [sheetOpen, setSheetOpen] = useState(false);
   const loadedRef = useRef(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -112,6 +113,13 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
     }, 220);
   };
 
+  useEffect(() => {
+    if (!seed) return;
+    setSearchMode(true);
+    runSearchRef.current(seed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seed]);
+
   const runSearch = async (q: string) => {
     const clean = q.trim();
     if (!clean) return;
@@ -150,6 +158,8 @@ export default function YoutubeScreen({ active }: { active: boolean }) {
   const showSuggestions = searchMode && suggestions.length > 0 && results === null && !searching;
   const showList = !showSuggestions;
   const loading = searching || (results === null && trending === null);
+
+  runSearchRef.current = runSearch;
 
   return (
     <View style={styles.container}>
