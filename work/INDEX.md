@@ -26,7 +26,7 @@ generator. Nothing unit-sized should exist outside this table.
 | P2 | **YouTube web fallback** | `modal from youtube` | [handoff](./handoffs/youtube-web.md) · [artifact](./mockups/youtube-web.html) | `App.tsx` | ✅ done |
 | P1 | **Listening stats** | `modal from drawer` | [handoff](./handoffs/listening-stats.md) | `App.tsx` | ⬜ todo |
 | P2 | **Account connect** | `modal from drawer` | [handoff](./handoffs/account-connect.md) | `App.tsx` | ⬜ todo |
-| P1 | **Identify** | `modal from home header` | [handoff](./handoffs/identify.md) · [artifact](./mockups/identify.html) | `App.tsx` | ⬜ todo |
+| P1 | **Identify** | `modal from home header` | [handoff](./handoffs/identify.md) · [artifact](./mockups/identify.html) | `App.tsx` | ✅ done |
 | P2 | **Player styles** | `modal from drawer` | [handoff](./handoffs/player-styles.md) | `App.tsx` | ⬜ todo |
 
 Status vocabulary: `⬜ todo` · `🟡 in progress` · `✅ done`

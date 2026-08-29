@@ -31,3 +31,7 @@ there.
 - 2026-08-28 — Launcher icon keeps a gradient adaptive background, never transparent — MIUI fills a transparent mask with black
 - 2026-08-28 — Bundled fonts are committed under android/app/src/main/assets too — the release CI never runs react-native-asset
 - 2026-08-28 — Stay on react-native-track-player 4.1.2; the notification keeps six buttons — v5 is @rntp/player, commercially licensed, and still exposes the same seven commands
+- 2026-08-29 — The AudD key is a user setting, never a bundled constant — the repository is public, so a committed key would be everyone's key
+- 2026-08-29 — Identify listens through the microphone only, no AudioPlaybackCapture — the consent dialog and the mediaProjection service type cost more than they returned, and the speaker already carries another app's sound to the mic
+- 2026-08-29 — One microphone stream stays open for a whole session — reopening it every few hundred ms made the audio policy duck the very sound being captured
+- 2026-08-29 — The capture waits for 700ms of sustained level before recording — the button is pressed before the user reaches the app that makes the sound

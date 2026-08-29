@@ -21,31 +21,33 @@
 
 **UI**
 
-- TrackArt
 - AddToPlaylistSheet
 
 **lib**
 
-- recognise (audio capture + lookup)
+- recognise (capture + AudD lookup)
 - db: identifications table
 
 **native**
 
-- AudioRecorder module
+- AudioRecorder + IdentifyService (foreground, microphone type)
 
 ## 4. States to cover
 
 - listening
 - match
 - no match
+- no sound
 - history
 - permission denied
 - offline
+- key missing
 
 ## 5. Watch-points
 
 - A match feeds the existing YouTube search → download pipeline
-- Every identification is kept, so a song caught offline can be fetched later
+- One microphone stream stays open for the whole session: reopening it in bursts made the audio policy duck whatever else was playing
+- The trigger needs 700ms of sustained level, so a chime does not burn the attempt
 
 ## 6. Definition of Done
 
@@ -59,5 +61,5 @@
 ## 7. Start prompt (paste to Claude Code)
 
 ```
-Build "Identify" for MusicApp (modal from home header). BEFORE coding, read: work/handoffs/identify.md, the artifact work/mockups/identify.html, the existing implementation in src/screens/IdentifyScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+Work on "Identify" for MusicApp (modal from home header). BEFORE coding, read: work/handoffs/identify.md, the artifact work/mockups/identify.html, the existing implementation in src/screens/IdentifyScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```
