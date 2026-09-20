@@ -6,8 +6,9 @@ import {
   Settings01Icon,
   UserCircleIcon,
 } from '@hugeicons/core-free-icons';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { useI18n } from '../i18n';
+import { getAccount, subscribeAccount } from '../lib/account';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 import Ic from './Ic';
@@ -38,18 +40,28 @@ export default function ProfileDrawer({ onSelect }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
+  const [account, setAccount] = useState(getAccount());
+  useEffect(() => subscribeAccount(() => setAccount(getAccount())), []);
   return (
     <ScrollView
       style={styles.panel}
       contentContainerStyle={{ paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}>
       <View style={styles.profile}>
-        <View style={styles.avatar}>
-          <Ic icon={UserCircleIcon} size={38} color={theme.textDim} strokeWidth={1.6} />
-        </View>
+        {account?.photo ? (
+          <Image source={{ uri: account.photo }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatar}>
+            <Ic icon={UserCircleIcon} size={38} color={theme.textDim} strokeWidth={1.6} />
+          </View>
+        )}
         <View style={{ marginLeft: 12, flex: 1 }}>
-          <Text style={styles.name}>{t('guest')}</Text>
-          <Text style={styles.sub}>{t('notConnected')}</Text>
+          <Text style={styles.name} numberOfLines={1}>
+            {account ? account.name : t('guest')}
+          </Text>
+          <Text style={styles.sub} numberOfLines={1}>
+            {account ? account.email : t('notConnected')}
+          </Text>
         </View>
       </View>
 
@@ -62,7 +74,9 @@ export default function ProfileDrawer({ onSelect }: Props) {
           activeOpacity={0.7}
           onPress={() => onSelect(item.key)}>
           <Ic icon={item.icon} size={22} color={theme.textDim} strokeWidth={1.9} />
-          <Text style={styles.itemLabel}>{t(item.labelKey)}</Text>
+          <Text style={styles.itemLabel}>
+            {item.key === 'connect' && account ? t('account') : t(item.labelKey)}
+          </Text>
         </TouchableOpacity>
       ))}
 
