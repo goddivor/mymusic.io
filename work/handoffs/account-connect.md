@@ -18,16 +18,27 @@
 
 ## 3. Pieces — reuse first, create in the right layer if missing
 
-- _to be defined_
+**UI**
+
+- ProfileDrawer header
+
+**lib**
+
+- account (Google Sign-In wrapper, silent restore, shared state)
 
 ## 4. States to cover
 
 - signed out
 - signed in
+- unconfigured build
+- cancelled
+- no Play services
 
 ## 5. Watch-points
 
-- scope undecided — no backend yet; confirm intent before building
+- Basic profile scope only; Drive comes with the sync unit via incremental auth
+- Web client id is committed: a public identifier, the Android client binds sign-in to package + signing key
+- Consent screen is in production so sessions do not expire weekly
 
 ## 6. Definition of Done
 
@@ -41,5 +52,5 @@
 ## 7. Start prompt (paste to Claude Code)
 
 ```
-Build "Account connect" for MusicApp (modal from drawer). BEFORE coding, read: work/handoffs/account-connect.md, the existing implementation in src/screens/AccountScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+Work on "Account connect" for MusicApp (modal from drawer). BEFORE coding, read: work/handoffs/account-connect.md, the existing implementation in src/screens/AccountScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```

@@ -78,7 +78,7 @@ Build "Listening stats" for MusicApp (modal from drawer). BEFORE coding, read: w
 ## Account connect — `modal from drawer` (P2)
 
 ```
-Build "Account connect" for MusicApp (modal from drawer). BEFORE coding, read: work/handoffs/account-connect.md, the existing implementation in src/screens/AccountScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+Work on "Account connect" for MusicApp (modal from drawer). BEFORE coding, read: work/handoffs/account-connect.md, the existing implementation in src/screens/AccountScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```
 
 ## Identify — `modal from home header` (P1)
