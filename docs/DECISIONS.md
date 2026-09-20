@@ -35,3 +35,7 @@ there.
 - 2026-08-29 — Identify listens through the microphone only, no AudioPlaybackCapture — the consent dialog and the mediaProjection service type cost more than they returned, and the speaker already carries another app's sound to the mic
 - 2026-08-29 — One microphone stream stays open for a whole session — reopening it every few hundred ms made the audio policy duck the very sound being captured
 - 2026-08-29 — The capture waits for 700ms of sustained level before recording — the button is pressed before the user reaches the app that makes the sound
+- 2026-09-20 — An optional Google account joins the app, reversing "no account, no server" for the account half only — it is the key to backing the library up to the user's own Drive; the app stays fully usable signed out
+- 2026-09-20 — No web player and no relay for now — a phone-sourced relay is a remote control, not a cloud library, and YouTube cannot be played from a browser; Drive sync of the audio itself is the path if web listening is ever wanted
+- 2026-09-20 — The Google Web client id is committed in src/lib/account.ts — a public identifier by design; the Android OAuth clients bind sign-in to package name and signing key
+- 2026-09-20 — Site, privacy policy and terms live on an orphan gh-pages branch — Google requires public pages to publish the consent screen; the branch carries no application code
