@@ -37,6 +37,8 @@ import LibraryScreen from './src/screens/LibraryScreen';
 import NowPlayingScreen from './src/screens/NowPlayingScreen';
 import QueueScreen from './src/screens/QueueScreen';
 import UpdateSheet from './src/components/UpdateSheet';
+import { restoreAccount } from './src/lib/account';
+import AccountScreen from './src/screens/AccountScreen';
 import IdentifyScreen from './src/screens/IdentifyScreen';
 import RecentsScreen from './src/screens/RecentsScreen';
 import SearchScreen from './src/screens/SearchScreen';
@@ -72,6 +74,7 @@ function AppInner(): React.JSX.Element {
   const [showSearch, setShowSearch] = useState(false);
   const [showRecents, setShowRecents] = useState(false);
   const [showIdentify, setShowIdentify] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const [ytSeed, setYtSeed] = useState<string | undefined>(undefined);
   const [showSettings, setShowSettings] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
@@ -86,6 +89,8 @@ function AppInner(): React.JSX.Element {
         setShowSettings(true);
         break;
       case 'connect':
+        setShowAccount(true);
+        break;
       case 'playerStyles':
       case 'stats':
         ToastAndroid.show(t('comingSoon'), ToastAndroid.SHORT);
@@ -102,6 +107,7 @@ function AppInner(): React.JSX.Element {
     getStartupUpdate().then(info => {
       if (info) setUpdateInfo(info);
     });
+    restoreAccount();
   }, []);
 
   const openCollection = (c: Collection) => setDetailKey(c.key);
@@ -192,6 +198,7 @@ function AppInner(): React.JSX.Element {
         <SearchScreen visible={showSearch} onClose={() => setShowSearch(false)} />
         <UpdateSheet info={updateInfo} onClose={() => setUpdateInfo(null)} />
         <RecentsScreen visible={showRecents} onClose={() => setShowRecents(false)} />
+        <AccountScreen visible={showAccount} onClose={() => setShowAccount(false)} />
         <IdentifyScreen
           visible={showIdentify}
           onClose={() => setShowIdentify(false)}

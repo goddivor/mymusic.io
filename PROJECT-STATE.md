@@ -6,9 +6,9 @@
 
 ## Now
 
-v1.9.0 releasing — Identify: hold the phone to whatever is playing, in the room or in another app on
-the phone, and the match feeds straight into the download pipeline. Every identification is kept so a
-song caught offline can be fetched later. Recognition runs on AudD with a user-supplied key.
+v1.10.0 releasing — an optional Google account, the foundation for backing the library and its audio
+up to the user's own Drive. Direction settled: no web player and no relay for now; the phone keeps
+the files, Drive keeps the copy. Consent screen published, site and policies live on GitHub Pages.
 
 ## Shape
 
@@ -41,14 +41,16 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] branding — adaptive launcher icon, circular splash screen (AndroidX backport), monochrome status icon, all derived from branding/*.svg.
 - [x] appearance — OLED black scheme and a bundled Inter/Roboto font picker, both applied live at the style funnel.
 - [x] now playing — player-style/equalizer/overflow header actions, label-free footer, paging artwork carousel, cover-tinted notification.
+- [x] account — optional Google sign-in (basic profile), silent restore at startup, drawer reflects the account; consent screen in production with site/privacy/terms on GitHub Pages.
 - [x] identify — one microphone session that survives leaving the app (foreground service), triggers on sustained sound, looks up on AudD, tints from the cover, downloads through the YouTube pipeline, and keeps a history.
 
 ## Next
 
-1. Confirm on device: notification tint on a track whose artwork loads, and the launcher icon after MIUI clears its cache.
-2. Implement the now playing overflow actions — they are placeholders today.
-3. Identify: a floating bubble instead of the notification, if the system-overlay permission proves workable on MIUI.
-4. Listening stats screen — play counts are already tracked (unit `listening-stats`).
+1. Confirm sign-in on a device — shipped untested there; failure mode is a toast, the rest of the app is untouched.
+2. Drive sync unit: library JSON + audio files into an app-owned Drive folder (scope drive.file, incremental auth).
+3. Implement the now playing overflow actions — they are placeholders today.
+4. Identify: a floating bubble instead of the notification, if the system-overlay permission proves workable on MIUI.
+5. Listening stats screen — play counts are already tracked (unit `listening-stats`).
 3. Optional: player styles / account connect (both `⬜ todo`, scope to confirm).
 
 ## Watch

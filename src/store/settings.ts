@@ -17,6 +17,7 @@ export type AppSettings = {
   maxParallelDownloads: number;
   maxCollectionDownloads: number;
   auddToken: string | null;
+  account: { id: string; email: string; name: string; photo: string | null } | null;
 };
 
 const KEY = 'app_settings';
@@ -31,6 +32,7 @@ let current: AppSettings = {
   maxParallelDownloads: 2,
   maxCollectionDownloads: 50,
   auddToken: null,
+  account: null,
 };
 
 /**
