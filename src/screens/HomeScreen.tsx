@@ -5,7 +5,6 @@ import {
   PlayIcon,
   Queue01Icon,
   Search01Icon,
-  UserCircleIcon,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 import {
@@ -18,6 +17,7 @@ import {
 } from 'react-native';
 import { useActionSheet } from '../components/ActionSheet';
 import GradientTile from '../components/GradientTile';
+import AccountAvatar from '../components/AccountAvatar';
 import Ic from '../components/Ic';
 import TrackArt from '../components/TrackArt';
 import { buildCollections, Collection } from '../lib/collections';
@@ -98,12 +98,7 @@ export default function HomeScreen({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.avatar}
-          activeOpacity={0.7}
-          onPress={onOpenProfile}>
-          <Ic icon={UserCircleIcon} size={26} color={theme.textDim} strokeWidth={1.7} />
-        </TouchableOpacity>
+        <AccountAvatar onPress={onOpenProfile} />
         <Text style={styles.headerTitle}>{t('tabHome')}</Text>
         <View style={styles.headerSpacer} />
         <TouchableOpacity
@@ -241,14 +236,6 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 4,
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: theme.surfaceHi,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   headerTitle: { color: theme.text, fontSize: 26, fontWeight: '800', marginLeft: 12 },
   headerSpacer: { flex: 1 },
