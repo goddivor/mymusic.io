@@ -8,7 +8,6 @@ import {
   Playlist03Icon,
   RemoveCircleIcon,
   Search01Icon,
-  UserCircleIcon,
 } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
 import {
@@ -25,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useActionSheet } from '../components/ActionSheet';
 import { useConfirm } from '../components/ConfirmSheet';
 import CollectionRow from '../components/CollectionRow';
+import AccountAvatar from '../components/AccountAvatar';
 import Ic from '../components/Ic';
 import SwipeableSheet from '../components/SwipeableSheet';
 import { buildCollections, Collection } from '../lib/collections';
@@ -264,12 +264,7 @@ export default function LibraryScreen({ onOpen, onOpenProfile, onOpenSearch }: P
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity
-            style={styles.avatar}
-            activeOpacity={0.7}
-            onPress={onOpenProfile}>
-            <Ic icon={UserCircleIcon} size={26} color={theme.textDim} strokeWidth={1.7} />
-          </TouchableOpacity>
+          <AccountAvatar onPress={onOpenProfile} />
           <Text style={styles.headerTitle}>{t('tabLibrary')}</Text>
         </View>
         <View style={styles.headerRight}>
@@ -393,14 +388,6 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 20 },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: theme.surfaceHi,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   headerTitle: { color: theme.text, fontSize: 26, fontWeight: '800' },
   chips: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 10 },
   chip: {

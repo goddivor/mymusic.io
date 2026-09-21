@@ -87,6 +87,12 @@ Work on "Account connect" for MusicApp (modal from drawer). BEFORE coding, read:
 Work on "Identify" for MusicApp (modal from home header). BEFORE coding, read: work/handoffs/identify.md, the artifact work/mockups/identify.html, the existing implementation in src/screens/IdentifyScreen.tsx, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container App.tsx) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
 ```
 
+## Drive backup — `account screen` (P1)
+
+```
+Work on "Drive backup" for MusicApp (account screen). BEFORE coding, read: work/handoffs/drive-backup.md, the existing implementation in src/lib/drive.ts, and the build-a-screen skill (+ musicapp-conventions). Follow the layered architecture (context -> src/lib + src/db -> native modules) (container AccountScreen) and REUSE our shared pieces. strings via t() (fr+en), styles via useThemedStyles, Android + JDK 21. Finish with: npx tsc --noEmit && npx eslint .. Then refresh PROJECT-STATE.md and set this unit's status in work/INDEX.md.
+```
+
 ## Player styles — `modal from drawer` (P2)
 
 ```
