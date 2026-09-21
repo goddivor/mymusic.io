@@ -6,9 +6,10 @@
 
 ## Now
 
-v1.10.0 releasing — an optional Google account, the foundation for backing the library and its audio
-up to the user's own Drive. Direction settled: no web player and no relay for now; the phone keeps
-the files, Drive keeps the copy. Consent screen published, site and policies live on GitHub Pages.
+v1.11.0 releasing — Drive backup: the library and every downloaded audio file go to a MusicApp folder
+in the user's own Drive, and a restore brings back both the list and the sound on another phone.
+Direction settled: no web player and no relay; the phone keeps the files, Drive keeps the copy.
+OAuth consent screen stays in Testing (sessions expire weekly), Drive API enabled.
 
 ## Shape
 
@@ -41,13 +42,14 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 - [x] branding — adaptive launcher icon, circular splash screen (AndroidX backport), monochrome status icon, all derived from branding/*.svg.
 - [x] appearance — OLED black scheme and a bundled Inter/Roboto font picker, both applied live at the style funnel.
 - [x] now playing — player-style/equalizer/overflow header actions, label-free footer, paging artwork carousel, cover-tinted notification.
-- [x] account — optional Google sign-in (basic profile), silent restore at startup, drawer reflects the account; consent screen in production with site/privacy/terms on GitHub Pages.
+- [x] account — optional Google sign-in (basic profile), silent restore at startup; the header avatar and drawer show the account photo.
+- [x] drive backup — resumable upload of library.json and audio into an app-owned Drive folder (drive.file), skips what is there; restore republishes missing files through MediaSaver.
 - [x] identify — one microphone session that survives leaving the app (foreground service), triggers on sustained sound, looks up on AudD, tints from the cover, downloads through the YouTube pipeline, and keeps a history.
 
 ## Next
 
-1. Confirm sign-in on a device — shipped untested there; failure mode is a toast, the rest of the app is untouched.
-2. Drive sync unit: library JSON + audio files into an app-owned Drive folder (scope drive.file, incremental auth).
+1. Confirm Drive backup and restore on a device — shipped untested there; sign-in itself is confirmed.
+2. Automatic Drive backup after each download, once the manual path is proven.
 3. Implement the now playing overflow actions — they are placeholders today.
 4. Identify: a floating bubble instead of the notification, if the system-overlay permission proves workable on MIUI.
 5. Listening stats screen — play counts are already tracked (unit `listening-stats`).

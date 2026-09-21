@@ -1,6 +1,14 @@
-import { Alert02Icon, ArrowLeft01Icon, Login01Icon, UserCircleIcon } from '@hugeicons/core-free-icons';
+import {
+  Alert02Icon,
+  ArrowLeft01Icon,
+  Download01Icon,
+  Login01Icon,
+  Upload01Icon,
+  UserCircleIcon,
+} from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   StyleSheet,
   Text,
@@ -20,6 +28,9 @@ import {
   signOut,
   subscribeAccount,
 } from '../lib/account';
+import { backupToDrive, driveName, Progress, restoreFromDrive, Uploadable } from '../lib/drive';
+import { exportSnapshot, importSnapshot } from '../db/database';
+import { useLibrary } from '../store/library';
 import { useTheme, useThemedStyles } from '../store/theme';
 import { Palette } from '../theme';
 
@@ -32,10 +43,65 @@ export default function AccountScreen({ visible, onClose }: Props) {
   const theme = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { t } = useI18n();
+  const lib = useLibrary();
   const [account, setAccount] = useState<Account | null>(getAccount());
   const [busy, setBusy] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [progress, setProgress] = useState<Progress | null>(null);
 
   useEffect(() => subscribeAccount(() => setAccount(getAccount())), []);
+
+  // Only downloaded tracks carry a local file; streamed ones have nothing to send.
+  const uploadables = (): Uploadable[] =>
+    lib.youtubeTracks.flatMap(t => {
+      const name = t.url ? driveName(t.url) : null;
+      return name ? [{ id: t.id, uri: t.url, name }] : [];
+    });
+
+  const onBackup = async () => {
+    setSyncing(true);
+    setProgress(null);
+    const result = await backupToDrive(exportSnapshot(), uploadables(), setProgress);
+    setSyncing(false);
+    setProgress(null);
+    if (result.kind === 'denied') ToastAndroid.show(t('driveDenied'), ToastAndroid.LONG);
+    else if (result.kind !== 'ok') ToastAndroid.show(t('driveOffline'), ToastAndroid.LONG);
+    else if (result.uploaded === 0) ToastAndroid.show(t('driveNothing'), ToastAndroid.SHORT);
+    else {
+      ToastAndroid.show(
+        t('driveDone', { uploaded: result.uploaded, skipped: result.skipped }),
+        ToastAndroid.LONG,
+      );
+    }
+  };
+
+  const onRestore = async () => {
+    setSyncing(true);
+    setProgress(null);
+    const result = await restoreFromDrive(setProgress);
+    setSyncing(false);
+    setProgress(null);
+    if (result.kind === 'none') {
+      ToastAndroid.show(t('driveNoBackup'), ToastAndroid.LONG);
+      return;
+    }
+    if (result.kind !== 'ok' || !importSnapshot(result.snapshot)) {
+      ToastAndroid.show(t(result.kind === 'denied' ? 'driveDenied' : 'driveOffline'), ToastAndroid.LONG);
+      return;
+    }
+    lib.reloadLibrary();
+    ToastAndroid.show(
+      t('driveRestoredCount', { restored: result.restored, missing: result.missing }),
+      ToastAndroid.LONG,
+    );
+  };
+
+  const stepLabel = () => {
+    if (!progress) return t('driveWorking');
+    if (progress.phase === 'library') return t('driveLibraryStep');
+    if (progress.phase === 'done') return t('driveWorking');
+    return t('driveAudioStep', { done: progress.done + 1, total: progress.total });
+  };
 
   const onSignIn = async () => {
     setBusy(true);
@@ -73,9 +139,39 @@ export default function AccountScreen({ visible, onClose }: Props) {
             )}
             <Text style={styles.name}>{account.name}</Text>
             <Text style={styles.email}>{account.email}</Text>
-            <Text style={styles.hint}>{t('signedInHint')}</Text>
-            <TouchableOpacity style={styles.secondary} onPress={signOut} activeOpacity={0.8}>
-              <Text style={styles.secondaryLabel}>{t('signOut')}</Text>
+            <Text style={styles.hint}>{t('driveBackupHint')}</Text>
+            <Text style={styles.wifi}>{t('wifiOnly')}</Text>
+
+            {syncing ? (
+              <View style={styles.working}>
+                <ActivityIndicator color={theme.accent} />
+                <Text style={styles.workingLabel}>{stepLabel()}</Text>
+                {progress && progress.phase === 'audio' && (
+                  <View style={styles.track}>
+                    <View
+                      style={[
+                        styles.fill,
+                        { width: `${Math.round((progress.done / Math.max(1, progress.total)) * 100)}%` },
+                      ]}
+                    />
+                  </View>
+                )}
+              </View>
+            ) : (
+              <>
+                <TouchableOpacity style={styles.primary} onPress={onBackup} activeOpacity={0.85}>
+                  <Ic icon={Upload01Icon} size={20} color="#14101C" strokeWidth={2} />
+                  <Text style={styles.primaryLabel}>{t('driveBackup')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.secondary} onPress={onRestore} activeOpacity={0.8}>
+                  <Ic icon={Download01Icon} size={19} color={theme.text} strokeWidth={1.9} />
+                  <Text style={styles.secondaryLabel}>{t('driveRestore')}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            <TouchableOpacity style={styles.plain} onPress={signOut} activeOpacity={0.7}>
+              <Text style={styles.plainLabel}>{t('signOut')}</Text>
             </TouchableOpacity>
           </View>
         ) : !isConfigured() ? (
@@ -157,16 +253,42 @@ const makeStyles = (theme: Palette) => StyleSheet.create({
   },
   gLetter: { color: '#4285F4', fontSize: 16, fontWeight: '800' },
   googleLabel: { color: '#1F1F1F', fontSize: 16, fontWeight: '700' },
+  wifi: { color: theme.textFaint, fontSize: 12.5, marginTop: 12, textAlign: 'center' },
+  primary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+    height: 52,
+    borderRadius: 26,
+    marginTop: 26,
+    backgroundColor: theme.accent,
+  },
+  primaryLabel: { color: '#14101C', fontSize: 16, fontWeight: '800', marginLeft: 10 },
   secondary: {
+    flexDirection: 'row',
     alignSelf: 'stretch',
     height: 50,
     borderRadius: 25,
-    marginTop: 30,
+    marginTop: 12,
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  secondaryLabel: { color: theme.text, fontSize: 15.5, fontWeight: '700' },
+  secondaryLabel: { color: theme.text, fontSize: 15, fontWeight: '700', marginLeft: 9 },
+  plain: { alignSelf: 'stretch', height: 46, marginTop: 24, alignItems: 'center', justifyContent: 'center' },
+  plainLabel: { color: theme.textDim, fontSize: 14.5, fontWeight: '600' },
+  working: { alignSelf: 'stretch', alignItems: 'center', marginTop: 32 },
+  workingLabel: { color: theme.textDim, fontSize: 14.5, marginTop: 14 },
+  track: {
+    alignSelf: 'stretch',
+    height: 4,
+    borderRadius: 2,
+    marginTop: 18,
+    backgroundColor: theme.surfaceHi,
+    overflow: 'hidden',
+  },
+  fill: { height: 4, borderRadius: 2, backgroundColor: theme.accent },
 });

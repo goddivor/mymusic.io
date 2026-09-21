@@ -27,6 +27,7 @@ generator. Nothing unit-sized should exist outside this table.
 | P1 | **Listening stats** | `modal from drawer` | [handoff](./handoffs/listening-stats.md) | `App.tsx` | ⬜ todo |
 | P2 | **Account connect** | `modal from drawer` | [handoff](./handoffs/account-connect.md) | `App.tsx` | ✅ done |
 | P1 | **Identify** | `modal from home header` | [handoff](./handoffs/identify.md) · [artifact](./mockups/identify.html) | `App.tsx` | ✅ done |
+| P1 | **Drive backup** | `account screen` | [handoff](./handoffs/drive-backup.md) | `AccountScreen` | ✅ done |
 | P2 | **Player styles** | `modal from drawer` | [handoff](./handoffs/player-styles.md) | `App.tsx` | ⬜ todo |
 
 Status vocabulary: `⬜ todo` · `🟡 in progress` · `✅ done`
@@ -34,7 +35,7 @@ Status vocabulary: `⬜ todo` · `🟡 in progress` · `✅ done`
 ## Suggested order
 
 1. **P0** — Home · Library · YouTube (native tab) · YouTube video page · Now playing
-2. **P1** — Queue · Search · Settings · Collection detail · Listening stats · Identify
+2. **P1** — Queue · Search · Settings · Collection detail · Listening stats · Identify · Drive backup
 3. **P2** — Recents · YouTube web fallback · Account connect · Player styles
 
 ## Regenerate
