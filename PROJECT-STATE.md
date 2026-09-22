@@ -6,7 +6,7 @@
 
 ## Now
 
-v1.11.0 releasing — Drive backup: the library and every downloaded audio file go to a MusicApp folder
+v1.11.1 releasing — Drive backup fixed for real libraries: the library and every downloaded audio file go to a MusicApp folder
 in the user's own Drive, and a restore brings back both the list and the sound on another phone.
 Direction settled: no web player and no relay; the phone keeps the files, Drive keeps the copy.
 OAuth consent screen stays in Testing (sessions expire weekly), Drive API enabled.
@@ -48,8 +48,9 @@ and language (fr/en/system) switch live. The app self-updates from GitHub Releas
 
 ## Next
 
-1. Confirm Drive backup and restore on a device — shipped untested there; sign-in itself is confirmed.
-2. Automatic Drive backup after each download, once the manual path is proven.
+1. Confirm Drive backup and restore on a device; 1.11.0 skipped private "<id>.webm" files and its restore matched nothing.
+2. Move downloads out of the app's private folder into Music/MusicApp — uninstall wipes the private one.
+3. Automatic Drive backup after each download, once the manual path is proven.
 3. Implement the now playing overflow actions — they are placeholders today.
 4. Identify: a floating bubble instead of the notification, if the system-overlay permission proves workable on MIUI.
 5. Listening stats screen — play counts are already tracked (unit `listening-stats`).
