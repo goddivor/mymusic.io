@@ -23,7 +23,7 @@ export type Progress = {
 };
 
 export type SyncResult =
-  | { kind: 'ok'; uploaded: number; skipped: number }
+  | { kind: 'ok'; uploaded: number; skipped: number; missing: number }
   | { kind: 'denied' }
   | { kind: 'offline' }
   | { kind: 'signed-out' };
@@ -122,14 +122,31 @@ async function fileBlob(uri: string): Promise<Blob | null> {
 
 export type Uploadable = { id: string; uri: string; name: string };
 
-/**
- * The file name the downloader already gave the track, "Title [videoId].ext".
- * Keeping it on Drive is what lets a restored file be recognised by the
- * library scanner on another phone, which reads the id out of the brackets.
- */
-export function driveName(uri: string): string | null {
+/** Track ids carry a "youtube:" prefix; file names carry the bare video id. */
+export function videoIdOf(trackId: string): string {
+  return trackId.replace(/^youtube:/, '');
+}
+
+function extensionOf(uri: string): string {
   const base = decodeURIComponent(uri.split('/').pop() ?? '');
-  return YT_ID_IN_NAME.test(base) ? base : null;
+  const dot = base.lastIndexOf('.');
+  return dot > 0 ? base.slice(dot + 1).toLowerCase() : 'webm';
+}
+
+/**
+ * The name a track gets on Drive, "Title [videoId].ext", built from the track
+ * rather than read off its file. Downloads have lived under two conventions —
+ * "<id>.webm" in the app's private folder and "Title [id].ext" in
+ * Music/MusicApp — so the local name cannot be trusted to carry the id. The
+ * bracketed form is the one the library scanner recognises after a restore.
+ */
+export function driveName(track: { id: string; title: string; url: string }): string {
+  const safe = (track.title || videoIdOf(track.id))
+    .replace(/[\\/:*?"<>|]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+  return `${safe} [${videoIdOf(track.id)}].${extensionOf(track.url)}`;
 }
 
 function mimeOf(name: string): string {
@@ -169,20 +186,32 @@ export async function backupToDrive(
       existing.get(LIBRARY_NAME)?.id,
     );
 
+    // Presence is decided by video id, not by name, so a file sent under an
+    // older name is still recognised and never uploaded twice.
+    const onDrive = new Set<string>();
+    for (const name of existing.keys()) {
+      const m = name.match(YT_ID_IN_NAME);
+      if (m) onDrive.add(m[1]);
+    }
+
     let uploaded = 0;
-    let skipped = 0;
-    const pending = tracks.filter(t => !existing.has(t.name));
-    skipped = tracks.length - pending.length;
+    let missing = 0;
+    const pending = tracks.filter(t => !onDrive.has(videoIdOf(t.id)));
+    const skipped = tracks.length - pending.length;
 
     for (const [i, track] of pending.entries()) {
       onProgress({ phase: 'audio', done: i, total: pending.length, name: track.name });
       const blob = await fileBlob(track.uri);
-      if (!blob) continue;
+      if (!blob || blob.size === 0) {
+        missing += 1;
+        continue;
+      }
       if (await upload(headers, parent, track.name, mimeOf(track.name), blob)) uploaded += 1;
+      else missing += 1;
     }
 
     onProgress({ phase: 'done', done: pending.length, total: pending.length });
-    return { kind: 'ok', uploaded, skipped };
+    return { kind: 'ok', uploaded, skipped, missing };
   } catch {
     return { kind: 'offline' };
   }
@@ -234,7 +263,7 @@ export async function restoreFromDrive(onProgress: (p: Progress) => void): Promi
     let missing = 0;
     for (const [i, track] of todo.entries()) {
       onProgress({ phase: 'audio', done: i, total: todo.length, name: track.title });
-      const file = byId.get(track.id);
+      const file = byId.get(videoIdOf(track.id));
       if (!file || !MediaSaver) {
         missing += 1;
         continue;

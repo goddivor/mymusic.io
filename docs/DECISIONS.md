@@ -41,3 +41,4 @@ there.
 - 2026-09-21 — The OAuth consent screen stays in Testing and the GitHub Pages site was removed — publishing required domain ownership checks the user chose not to pursue; sessions expire weekly as a result
 - 2026-09-21 — Drive backup uses the drive.file scope, asked on the first backup rather than at sign-in — the app sees only what it created, and the consent names the one thing granted
 - 2026-09-21 — Audio files keep their "Title [videoId].ext" name on Drive — the library scanner reads the id from the brackets, so a restored file is recognised on another phone
+- 2026-09-22 — Drive backup keys every file on the bare video id, taken from the track rather than the file name — downloads live under two naming conventions and track ids carry a "youtube:" prefix; reading either off the file skipped 122 of 124 tracks and broke every restore

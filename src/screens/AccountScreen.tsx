@@ -53,10 +53,9 @@ export default function AccountScreen({ visible, onClose }: Props) {
 
   // Only downloaded tracks carry a local file; streamed ones have nothing to send.
   const uploadables = (): Uploadable[] =>
-    lib.youtubeTracks.flatMap(t => {
-      const name = t.url ? driveName(t.url) : null;
-      return name ? [{ id: t.id, uri: t.url, name }] : [];
-    });
+    lib.youtubeTracks
+      .filter(t => !!t.url)
+      .map(t => ({ id: t.id, uri: t.url, name: driveName(t) }));
 
   const onBackup = async () => {
     setSyncing(true);
@@ -66,10 +65,15 @@ export default function AccountScreen({ visible, onClose }: Props) {
     setProgress(null);
     if (result.kind === 'denied') ToastAndroid.show(t('driveDenied'), ToastAndroid.LONG);
     else if (result.kind !== 'ok') ToastAndroid.show(t('driveOffline'), ToastAndroid.LONG);
-    else if (result.uploaded === 0) ToastAndroid.show(t('driveNothing'), ToastAndroid.SHORT);
-    else {
+    else if (result.uploaded === 0 && result.missing === 0) {
+      ToastAndroid.show(t('driveNothing'), ToastAndroid.SHORT);
+    } else {
       ToastAndroid.show(
-        t('driveDone', { uploaded: result.uploaded, skipped: result.skipped }),
+        t(result.missing ? 'driveDoneMissing' : 'driveDone', {
+          uploaded: result.uploaded,
+          skipped: result.skipped,
+          missing: result.missing,
+        }),
         ToastAndroid.LONG,
       );
     }
